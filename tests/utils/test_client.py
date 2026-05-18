@@ -289,7 +289,8 @@ class TestGetClient:
 
     def test_get_client_missing_file(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         """Missing config file returns default configs."""
-        # Clear env vars that could interfere with base_url resolution
+        # Ensure consistent environment for default OpenAI fallback
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
         monkeypatch.delenv("OPENAI_BASE_URL", raising=False)
         config_file = tmp_path / "nonexistent.toml"
         llm, emb = get_client(config_file)
