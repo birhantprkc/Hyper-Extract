@@ -260,6 +260,52 @@ class TestCompatibleEmbeddings:
             # Should have been called twice due to chunk_size=1
             assert mock_openai_client.embeddings.create.call_count == 2
 
+    def test_max_batch_size_splits_requests(self, mock_openai_client):
+        """Inputs are split so no request exceeds max_batch_size (issue #33).
+
+        Providers like Bailian/DashScope reject batches larger than 10. With
+        25 inputs and max_batch_size=10, embed_documents must issue 3 requests
+        (10 + 10 + 5) and never send more than 10 inputs in a single call.
+        """
+        emb = CompatibleEmbeddings(
+            model="test-model",
+            api_key="sk-test",
+            base_url="http://test/v1",
+            max_batch_size=10,
+        )
+
+        def fake_create(input, model):
+            # Echo back one embedding per input so indexing stays aligned.
+            return MagicMock(data=[MagicMock(embedding=[0.1, 0.2]) for _ in input])
+
+        mock_openai_client.embeddings.create.side_effect = fake_create
+        with patch.object(emb, "_client", mock_openai_client):
+            result = emb.embed_documents([f"text-{i}" for i in range(25)])
+
+        assert len(result) == 25
+        assert mock_openai_client.embeddings.create.call_count == 3
+        for call in mock_openai_client.embeddings.create.call_args_list:
+            assert len(call.kwargs["input"]) <= 10
+
+    def test_default_batch_size_is_conservative(self):
+        """Default max_batch_size stays within the strictest known provider cap."""
+        emb = CompatibleEmbeddings(
+            model="test-model",
+            api_key="sk-test",
+            base_url="http://test/v1",
+        )
+        assert emb._max_batch_size <= 10
+
+    def test_chunk_size_alias_back_compat(self):
+        """Legacy `chunk_size` keyword still controls the batch size."""
+        emb = CompatibleEmbeddings(
+            model="test-model",
+            api_key="sk-test",
+            base_url="http://test/v1",
+            chunk_size=5,
+        )
+        assert emb._max_batch_size == 5
+
 
 # =============================================================================
 # get_client (config file)
