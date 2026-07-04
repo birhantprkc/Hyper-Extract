@@ -8,6 +8,20 @@ from pathlib import Path
 from hyperextract.utils.template_engine.parsers import (
     load_template,
 )
+from hyperextract.utils.template_engine.parsers.loader import _localize_data
+
+
+class TestLocalizeData:
+    """_localize_data always returns a str, even for a missing language."""
+
+    def test_missing_language_falls_back_to_en(self):
+        assert _localize_data({"en": "Hello"}, "zh") == "Hello"
+
+    def test_missing_language_and_no_en_returns_empty(self):
+        assert _localize_data({"fr": "Bonjour"}, "zh") == ""
+
+    def test_present_language_used(self):
+        assert _localize_data({"en": "Hello", "zh": "你好"}, "zh") == "你好"
 
 
 class TestLoadTemplate:
