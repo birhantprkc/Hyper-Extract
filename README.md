@@ -58,6 +58,7 @@
 
 <!-- News snippets are derived from the latest merged PRs. Update as new releases land. -->
 
+- **🤖 DeepSeek Provider** — Use `deepseek-v4-flash` / `deepseek-v4-pro` directly via `create_client(llm="deepseek")`. V4 thinking mode is auto-disabled for structured extraction compatibility. *(#67)*
 - **🔌 MCP Server** — Query your knowledge abstracts from Claude Desktop and IDE agents with `he-mcp`. *(PR #40)*
 - **🧠 Anthropic Claude Support** — Use `claude-opus-4-8`, `claude-sonnet-4-6`, and `claude-haiku-4-5` directly as your LLM provider. *(PR #38)*
 - **📝 Obsidian Export** — Turn any graph into an Obsidian vault with Markdown notes linked by `[[wikilinks]]`. *(PR #37)*
@@ -131,10 +132,17 @@ Hyper-Extract relies on the LLM's structured output capability (`json_schema` or
 |----------|-----------------|
 | **OpenAI** | gpt-4o, gpt-4o-mini, gpt-5 |
 | **Anthropic** | claude-opus-4-8, claude-sonnet-4-6, claude-haiku-4-5 |
+| **DeepSeek** | deepseek-v4-flash, deepseek-v4-pro |
 | **阿里云百炼** | qwen-plus, qwen-turbo, deepseek-r1 |
 | **Local vLLM** | Qwen3.5-9B (GPTQ-Marlin) |
 
 **Embedding models** (semantic search) work with any OpenAI-compatible endpoint: `text-embedding-3-small`, `text-embedding-v4` (Bailian), `bge-m3` (local vLLM).
+
+> **DeepSeek note:** DeepSeek V4 models default to "thinking" mode, which Hyper-Extract auto-disables so structured extraction works. Set `DEEPSEEK_API_KEY`. DeepSeek has no embeddings API — pair it with an OpenAI-compatible embedder:
+> ```python
+> from hyperextract import create_client
+> llm, emb = create_client(llm="deepseek", embedder="openai:text-embedding-3-small")
+> ```
 
 > **Anthropic note:** Claude is used for the **LLM** (set `ANTHROPIC_API_KEY`). Anthropic has no embeddings API, so pair it with an OpenAI-compatible embedder:
 > ```python

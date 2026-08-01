@@ -1,6 +1,6 @@
 # Provider 系统
 
-Hyper-Extract 支持三种接入方式：**OpenAI**、**阿里云百炼**、**本地 vLLM**。统一使用 `create_client()` 接口，仅需修改第一行。
+Hyper-Extract 支持以下接入方式：**OpenAI**、**Anthropic**、**阿里云百炼**、**DeepSeek**、**本地 vLLM**。统一使用 `create_client()` 接口，仅需修改第一行。
 
 ---
 
@@ -12,6 +12,7 @@ Hyper-Extract 支持三种接入方式：**OpenAI**、**阿里云百炼**、**�
 |------|------|:------------------:|:------:|------|
 | **OpenAI** | gpt-4o / gpt-4o-mini / gpt-5 | ✅ | ✅ | 官方原生支持，推荐 |
 | **Anthropic** | claude-opus-4-8 / claude-sonnet-4-6 / claude-haiku-4-5 | ✅（工具调用） | ✅ | 仅 LLM——无嵌入接口（请搭配 OpenAI 兼容嵌入器）。需 `hyperextract[anthropic]` |
+| **DeepSeek** | deepseek-v4-flash / deepseek-v4-pro | ✅ | ✅ | OpenAI 兼容。V4 模型默认开启"thinking"模式，Hyper-Extract 会自动关闭以保证结构化抽取可用。仅 LLM——无嵌入接口。密钥：`DEEPSEEK_API_KEY` |
 | **阿里云百炼** | qwen-plus / qwen-turbo / qwen3.6-plus / deepseek-r1 | ✅ | ✅ | 直接使用，无需修改 |
 | **阿里云百炼** | qwen-max / deepseek-v3 | ❌ | ❌ | 仅支持 `json_object`，不支持 `json_schema` |
 
@@ -49,6 +50,14 @@ llm, emb = create_client("bailian", api_key="sk-xxx")
 llm, emb = create_client(
     llm="anthropic",  # 默认模型：claude-opus-4-8（用 "anthropic:<model>" 覆盖）
     embedder="openai:text-embedding-3-small",
+)
+
+# DeepSeek —— OpenAI 兼容，但无嵌入接口。V4 模型默认开启 "thinking" 模式，
+# Hyper-Extract 会自动关闭以保证工具调用（function_calling）结构化抽取可用。
+# 密钥：DEEPSEEK_API_KEY。用 "deepseek:deepseek-v4-pro" 覆盖模型。
+llm, emb = create_client(
+    llm="deepseek",
+    embedder="openai:text-embedding-3-small",  # 或 vllm:bge-m3@localhost:8001/v1
 )
 
 # 本地 vLLM

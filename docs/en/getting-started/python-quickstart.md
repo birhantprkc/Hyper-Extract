@@ -38,7 +38,7 @@ Create a `.env` file:
 echo "OPENAI_API_KEY=your-api-key" > .env
 ```
 
-**Option B — Bailian or vLLM**
+**Option B — Bailian, DeepSeek, or vLLM**
 
 See the [Provider Configuration Guide](../python/guides/provider-configuration.md) for platform-specific setup.
 

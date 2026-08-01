@@ -15,6 +15,9 @@ python providers/openai_demo.py
 # 百炼（阿里云）
 python providers/bailian_demo.py
 
+# DeepSeek
+python providers/deepseek_demo.py
+
 # 本地 vLLM
 python providers/vllm_demo.py
 ```
@@ -40,6 +43,7 @@ examples/
 ├── providers/                   # Provider 配置示例
 │   ├── openai_demo.py          # OpenAI 配置
 │   ├── bailian_demo.py         # 百炼（阿里云）配置
+│   ├── deepseek_demo.py        # DeepSeek 配置
 │   └── vllm_demo.py            # 本地 vLLM 配置
 ├── en/                          # 英文演示
 │   ├── tesla.md                # 特斯拉传记数据

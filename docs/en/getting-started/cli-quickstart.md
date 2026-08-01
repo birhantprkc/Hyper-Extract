@@ -27,6 +27,13 @@ Choose your deployment method and run the corresponding configuration command:
     he config init -p bailian -k YOUR_BAILIAN_API_KEY
     ```
 
+=== "DeepSeek"
+
+    ```bash
+    he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+    he config embedder -p openai -k YOUR_OPENAI_API_KEY
+    ```
+
 === "Local vLLM"
 
     ```bash

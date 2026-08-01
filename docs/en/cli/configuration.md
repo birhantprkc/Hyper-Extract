@@ -1,6 +1,6 @@
 # CLI Configuration Reference
 
-Configuration guide for Hyper-Extract CLI, supporting **OpenAI**, **Alibaba Cloud Bailian**, and **Local vLLM** deployments.
+Configuration guide for Hyper-Extract CLI, supporting **OpenAI**, **DeepSeek**, **Alibaba Cloud Bailian**, and **Local vLLM** deployments.
 
 ---
 

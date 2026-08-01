@@ -29,6 +29,12 @@ PROVIDER_PRESETS: Dict[str, Dict[str, str | None]] = {
         "default_llm": None,
         "default_embedder": None,
     },
+    # DeepSeek: OpenAI-compatible, no embeddings API.
+    "deepseek": {
+        "base_url": "https://api.deepseek.com",
+        "default_llm": "deepseek-v4-flash",
+        "default_embedder": None,
+    },
     # Anthropic (Claude): native client, no base_url, no embeddings API.
     "anthropic": {
         "base_url": "",
@@ -46,6 +52,7 @@ PROVIDER_PRESETS: Dict[str, Dict[str, str | None]] = {
 PROVIDER_API_KEY_ENV: Dict[str, tuple] = {
     "anthropic": ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"),
     "claude": ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"),
+    "deepseek": ("DEEPSEEK_API_KEY",),
 }
 
 

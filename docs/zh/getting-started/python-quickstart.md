@@ -38,7 +38,7 @@ pip install hyperextract
 echo "OPENAI_API_KEY=your-api-key" > .env
 ```
 
-**方式 B — 百炼或 vLLM**
+**方式 B — 百炼、DeepSeek 或 vLLM**
 
 平台特定配置见 [Provider 配置指南](../python/guides/provider-configuration.md)。
 

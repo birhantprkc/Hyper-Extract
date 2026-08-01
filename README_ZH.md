@@ -58,6 +58,7 @@
 
 <!-- 以下摘要来自最近合并的 PR，随版本更新而更新。 -->
 
+- **🤖 DeepSeek 提供商** — 直接通过 `create_client(llm="deepseek")` 使用 `deepseek-v4-flash` / `deepseek-v4-pro`。V4 thinking 模式自动关闭，保证结构化抽取兼容。*(#67)*
 - **🔌 MCP 服务器** — 通过 `he-mcp` 在 Claude Desktop 和 IDE 智能体中查询你的知识摘要。*(PR #40)*
 - **🧠 Anthropic Claude 支持** — 直接调用 `claude-opus-4-8`、`claude-sonnet-4-6`、`claude-haiku-4-5` 作为 LLM 提供商。*(PR #38)*
 - **📝 Obsidian 导出** — 将任意图谱导出为 Obsidian 知识库，Markdown 笔记通过 `[[双向链接]]` 关联。*(PR #37)*
@@ -131,10 +132,17 @@ Hyper-Extract 依赖大语言模型的结构化输出能力（`json_schema` 或 
 |----------|-----------------|
 | **OpenAI** | gpt-4o, gpt-4o-mini, gpt-5 |
 | **Anthropic** | claude-opus-4-8, claude-sonnet-4-6, claude-haiku-4-5 |
+| **DeepSeek** | deepseek-v4-flash, deepseek-v4-pro |
 | **阿里云百炼** | qwen-plus, qwen-turbo, deepseek-r1 |
 | **本地 vLLM** | Qwen3.5-9B (GPTQ-Marlin) |
 
 **嵌入模型**（语义搜索）支持任意 OpenAI 兼容端点：`text-embedding-3-small`、`text-embedding-v4`（百炼）、`bge-m3`（本地 vLLM）。
+
+> **DeepSeek 说明：** V4 模型默认开启 "thinking" 模式，Hyper-Extract 会自动关闭以保证结构化抽取可用。设置 `DEEPSEEK_API_KEY`。DeepSeek 没有嵌入接口，请搭配 OpenAI 兼容的嵌入模型使用：
+> ```python
+> from hyperextract import create_client
+> llm, emb = create_client(llm="deepseek", embedder="openai:text-embedding-3-small")
+> ```
 
 > **Anthropic 说明：** Claude 仅用于 **LLM**（设置 `ANTHROPIC_API_KEY`）。Anthropic 没有嵌入接口，请搭配 OpenAI 兼容的嵌入模型使用：
 > ```python

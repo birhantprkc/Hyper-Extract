@@ -44,6 +44,16 @@ PROVIDER_PRESETS: Dict[str, Dict[str, str | None]] = {
         "default_llm": None,
         "default_embedder": None,
     },
+    # DeepSeek. OpenAI-compatible endpoint. Current models are deepseek-v4-flash
+    # and deepseek-v4-pro; both default to "thinking" mode, which rejects the
+    # tool_choice that method="function_calling" relies on, so create_llm()
+    # disables thinking for this provider by default (override via extra_body).
+    # DeepSeek has no embeddings API — pair it with an OpenAI-compatible embedder.
+    "deepseek": {
+        "base_url": "https://api.deepseek.com",
+        "default_llm": "deepseek-v4-flash",
+        "default_embedder": None,
+    },
     # Anthropic (Claude). Uses the native ChatAnthropic client, so base_url is
     # left empty (the SDK targets api.anthropic.com by default). Anthropic has
     # no embeddings API, hence default_embedder is None — pair it with an
@@ -68,6 +78,7 @@ ANTHROPIC_PROVIDERS = ("anthropic", "claude")
 PROVIDER_API_KEY_ENV: Dict[str, Tuple[str, ...]] = {
     "anthropic": ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"),
     "claude": ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"),
+    "deepseek": ("DEEPSEEK_API_KEY",),
 }
 
 
@@ -357,12 +368,24 @@ def create_llm(
 
     from langchain_openai import ChatOpenAI
 
-    return ChatOpenAI(
+    # DeepSeek V4 models default to "thinking" mode, which rejects the
+    # tool_choice that method="function_calling" sends for structured output
+    # (HTTP 400: "Thinking mode does not support this tool_choice"). Disable it
+    # by default so Hyper-Extract's structured extraction works out of the box.
+    # Users who want thinking can override: extra_body={"thinking": {"type": "enabled"}}.
+    extra_body = dict(config.get("extra_body") or {})
+    if provider == "deepseek" and "thinking" not in extra_body:
+        extra_body["thinking"] = {"type": "disabled"}
+
+    chat_kwargs: dict[str, Any] = dict(
         model=config["model"],
         api_key=config["api_key"] or os.environ.get("OPENAI_API_KEY", ""),
         base_url=config.get("base_url") or None,
         temperature=config.get("temperature", 0),
     )
+    if extra_body:
+        chat_kwargs["extra_body"] = extra_body
+    return ChatOpenAI(**chat_kwargs)
 
 
 def create_embedder(

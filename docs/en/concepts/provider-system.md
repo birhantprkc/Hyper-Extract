@@ -1,6 +1,6 @@
 # Provider System
 
-Hyper-Extract supports three ways to connect to LLMs: **OpenAI**, **Alibaba Bailian**, and **local vLLM**. All use the same `create_client()` interface — only the first line changes.
+Hyper-Extract supports these ways to connect to LLMs: **OpenAI**, **Anthropic**, **Alibaba Bailian**, **DeepSeek**, and **local vLLM**. All use the same `create_client()` interface — only the first line changes.
 
 ---
 
@@ -12,6 +12,7 @@ Hyper-Extract supports three ways to connect to LLMs: **OpenAI**, **Alibaba Bail
 |----------|-------|:---------------------:|:----------:|-------|
 | **OpenAI** | gpt-4o / gpt-4o-mini / gpt-5 | ✅ | ✅ | Native support, recommended |
 | **Anthropic** | claude-opus-4-8 / claude-sonnet-4-6 / claude-haiku-4-5 | ✅ (tool calling) | ✅ | LLM only — no embeddings API (pair with an OpenAI-compatible embedder). Needs `hyperextract[anthropic]` |
+| **DeepSeek** | deepseek-v4-flash / deepseek-v4-pro | ✅ | ✅ | OpenAI-compatible. V4 models default to "thinking" mode, which Hyper-Extract auto-disables (`extra_body`) so structured extraction works. LLM only — no embeddings API. Keys: `DEEPSEEK_API_KEY` |
 | **Alibaba Bailian** | qwen-plus / qwen-turbo / qwen3.6-plus / deepseek-r1 | ✅ | ✅ | Works out of the box |
 | **Alibaba Bailian** | qwen-max / deepseek-v3 | ❌ | ❌ | Only `json_object`; `json_schema` not supported |
 
@@ -50,6 +51,15 @@ llm, emb = create_client("bailian", api_key="sk-xxx")
 llm, emb = create_client(
     llm="anthropic",  # default model: claude-opus-4-8 (override with "anthropic:<model>")
     embedder="openai:text-embedding-3-small",
+)
+
+# DeepSeek — OpenAI-compatible, but no embeddings API. The V4 models
+# default to "thinking" mode, which Hyper-Extract auto-disables so that
+# tool-calling (function_calling) structured extraction works out of the box.
+# Key: DEEPSEEK_API_KEY. Override model with "deepseek:deepseek-v4-pro".
+llm, emb = create_client(
+    llm="deepseek",
+    embedder="openai:text-embedding-3-small",  # or vllm:bge-m3@localhost:8001/v1
 )
 
 # Local vLLM

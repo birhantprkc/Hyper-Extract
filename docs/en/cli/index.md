@@ -95,6 +95,13 @@ flowchart TB
     he config init -p bailian -k YOUR_BAILIAN_API_KEY
     ```
 
+=== "DeepSeek"
+
+    ```bash
+    he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+    he config embedder -p openai -k YOUR_OPENAI_API_KEY
+    ```
+
 === "Local vLLM"
 
     First install [vLLM](https://docs.vllm.ai/) and start both services:

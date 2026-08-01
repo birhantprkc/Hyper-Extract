@@ -151,7 +151,7 @@ def llm(
         None,
         "--provider",
         "-p",
-        help="Provider preset: openai, anthropic, bailian, vllm",
+        help="Provider preset: openai, anthropic, deepseek, bailian, vllm",
     ),
     api_key: Optional[str] = typer.Option(
         None,
@@ -212,7 +212,7 @@ def embedder(
         None,
         "--provider",
         "-p",
-        help="Provider preset: openai, anthropic, bailian, vllm",
+        help="Provider preset: openai, anthropic, deepseek, bailian, vllm",
     ),
     api_key: Optional[str] = typer.Option(
         None,
@@ -275,7 +275,7 @@ def init(
         None,
         "--provider",
         "-p",
-        help="Provider preset: openai, anthropic, bailian, vllm",
+        help="Provider preset: openai, anthropic, deepseek, bailian, vllm",
     ),
     api_key: Optional[str] = typer.Option(
         None,
@@ -373,13 +373,14 @@ def init(
     providers = [
         ("openai", "OpenAI", "https://api.openai.com/v1"),
         ("bailian", "阿里云百炼", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
+        ("deepseek", "DeepSeek", "https://api.deepseek.com"),
         ("vllm", "本地 vLLM", "自定义地址"),
         ("custom", "其他 OpenAI 兼容接口", "自定义地址"),
     ]
     for i, (key, name, url) in enumerate(providers, 1):
         console.print(f"  [{i}] {name:<20} ({url})")
 
-    choice = console.input("\n请选择 [1-4]: ").strip()
+    choice = console.input(f"\n请选择 [1-{len(providers)}]: ").strip()
     try:
         selected = providers[int(choice) - 1][0] if choice.isdigit() else "openai"
     except (IndexError, ValueError):

@@ -25,6 +25,19 @@ llm, emb = create_client("bailian", api_key="sk-xxx")
 # 或换模型: create_client("bailian:qwen3.6-plus", api_key="sk-xxx")
 ```
 
+### DeepSeek
+
+```python
+from hyperextract import create_client, AutoGraph
+
+# DeepSeek 兼容 OpenAI 协议，但无嵌入接口——请搭配 OpenAI 兼容嵌入器。
+# V4 模型默认开启 "thinking" 模式，Hyper-Extract 会自动关闭以保证结构化抽取可用。
+llm, emb = create_client(
+    llm="deepseek",  # 默认：deepseek-v4-flash；用 "deepseek:deepseek-v4-pro" 覆盖
+    embedder="openai:text-embedding-3-small",
+)
+```
+
 ### 本地 vLLM
 
 ```python
@@ -62,6 +75,7 @@ print(f"节点: {len(graph.nodes)}, 关系: {len(graph.edges)}")
 |------|------|
 | **OpenAI** | `he config init -p openai -k sk-xxx` |
 | **百炼** | `he config init -p bailian -k sk-xxx` |
+| **DeepSeek** | `he config llm -p deepseek -k sk-xxx` + `he config embedder -p openai -k sk-xxx` |
 | **vLLM** | `he config init` → 选择「本地 vLLM」 |
 | **混合部署**（LLM=百炼 + Embedding=本地） | `he config llm -p bailian -k sk-xxx` + `he config embedder -p vllm -u http://localhost:8001/v1 -k dummy` |
 

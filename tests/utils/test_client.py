@@ -99,6 +99,23 @@ class TestCreateLLM:
         llm = create_llm("openai", api_key="sk-test")
         assert llm.model_name == "gpt-4o-mini"
 
+    def test_create_llm_deepseek(self):
+        """Create LLM with deepseek preset (OpenAI-compatible)."""
+        llm = create_llm("deepseek", api_key="sk-test")
+        assert llm.model_name == "deepseek-v4-flash"
+        assert llm.openai_api_base == "https://api.deepseek.com"
+        # Thinking is auto-disabled so function_calling structured output works.
+        assert llm.extra_body == {"thinking": {"type": "disabled"}}
+
+    def test_create_llm_deepseek_thinking_override(self):
+        """User-supplied extra_body overrides the default thinking-disable."""
+        llm = create_llm(
+            "deepseek",
+            api_key="sk-test",
+            extra_body={"thinking": {"type": "enabled"}},
+        )
+        assert llm.extra_body == {"thinking": {"type": "enabled"}}
+
     def test_create_llm_custom_model(self):
         """Override model via string shorthand."""
         llm = create_llm("bailian:qwen-plus", api_key="sk-test")
@@ -466,9 +483,13 @@ class TestProviderPresets:
         assert preset["default_llm"] is None
         assert preset["default_embedder"] is None
 
-    def test_no_deepseek_provider(self):
-        """DeepSeek should not have its own preset (accessed via Bailian)."""
-        assert "deepseek" not in PROVIDER_PRESETS
+    def test_deepseek_provider(self):
+        """DeepSeek has its own preset (OpenAI-compatible, no embeddings)."""
+        assert "deepseek" in PROVIDER_PRESETS
+        preset = PROVIDER_PRESETS["deepseek"]
+        assert preset["base_url"] == "https://api.deepseek.com"
+        assert preset["default_llm"] == "deepseek-v4-flash"
+        assert preset["default_embedder"] is None
 
     def test_all_presets_have_base_url_or_none(self):
         """Every preset has either a base_url or None (for vLLM)."""

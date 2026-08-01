@@ -1,6 +1,6 @@
 # CLI 配置参考
 
-Hyper-Extract CLI 的配置指南，支持 **OpenAI**、**阿里云百炼** 和 **本地 vLLM** 三种部署方式。
+Hyper-Extract CLI 的配置指南，支持 **OpenAI**、**DeepSeek**、**阿里云百炼** 和 **本地 vLLM** 部署方式。
 
 ---
 

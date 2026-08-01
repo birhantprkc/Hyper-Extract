@@ -15,6 +15,9 @@ python providers/openai_demo.py
 # Bailian (Alibaba Cloud)
 python providers/bailian_demo.py
 
+# DeepSeek
+python providers/deepseek_demo.py
+
 # Local vLLM
 python providers/vllm_demo.py
 ```
@@ -39,6 +42,7 @@ examples/
 ├── providers/                   # Provider configuration demos
 │   ├── openai_demo.py          # OpenAI setup
 │   ├── bailian_demo.py         # Bailian (Alibaba Cloud) setup
+│   ├── deepseek_demo.py        # DeepSeek setup
 │   └── vllm_demo.py            # Local vLLM setup
 ├── en/                          # English demos
 │   ├── tesla.md                # Tesla biography data

@@ -27,6 +27,7 @@ Initialize configuration. This is the **lazy one-step setup** — if you pass `-
 
 - **OpenAI preset**: `gpt-4o-mini` + `text-embedding-3-small`
 - **Bailian preset**: `qwen3.6-plus` + `text-embedding-v4`
+- **DeepSeek preset**: `deepseek-v4-flash` (LLM only — no embedder preset)
 
 ```bash
 he config init [OPTIONS]
@@ -36,7 +37,7 @@ he config init [OPTIONS]
 
 | Option | Short | Description |
 |--------|-------|-------------|
-| `--provider` | `-p` | Provider preset (`openai` / `bailian` / `vllm`) |
+| `--provider` | `-p` | Provider preset (`openai` / `bailian` / `deepseek` / `vllm`) |
 | `--api-key` | `-k` | API key for both LLM and embedder |
 | `--base-url` | `-u` | Custom API base URL (optional) |
 
@@ -50,6 +51,10 @@ he config init -p openai -k sk-your-api-key-here
 
 # Bailian (Alibaba Cloud)
 he config init -p bailian -k sk-your-api-key-here
+
+# DeepSeek (LLM only — pair with an OpenAI-compatible embedder)
+he config llm -p deepseek -k sk-your-deepseek-key
+he config embedder -p openai -k sk-your-openai-key
 ```
 
 This saves the preset's default model and API URL automatically.
