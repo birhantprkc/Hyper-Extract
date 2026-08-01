@@ -4,16 +4,16 @@ This module provides a unified registry for method templates, enabling
 consistent creation and management of method-based knowledge extraction.
 """
 
-from typing import Dict, Any, Type, Optional
+from typing import Any
+
 from pydantic import BaseModel
 
-
-_METHOD_REGISTRY: Dict[str, Dict[str, Any]] = {}
+_METHOD_REGISTRY: dict[str, dict[str, Any]] = {}
 
 
 def register_method(
     name: str,
-    method_class: Type,
+    method_class: type,
     autotype: str,
     description: str = "",
 ) -> None:
@@ -32,7 +32,7 @@ def register_method(
     }
 
 
-def get_method(name: str) -> Optional[Dict[str, Any]]:
+def get_method(name: str) -> dict[str, Any] | None:
     """Get method info by name.
 
     Args:
@@ -44,7 +44,7 @@ def get_method(name: str) -> Optional[Dict[str, Any]]:
     return _METHOD_REGISTRY.get(name)
 
 
-def list_methods() -> Dict[str, Dict[str, Any]]:
+def list_methods() -> dict[str, dict[str, Any]]:
     """List all registered methods.
 
     Returns:
@@ -61,7 +61,7 @@ class MethodCfg(BaseModel):
     description: str = ""
 
 
-def get_method_cfg(name: str) -> Optional[MethodCfg]:
+def get_method_cfg(name: str) -> MethodCfg | None:
     """Get method configuration as MethodCfg.
 
     Args:
@@ -80,7 +80,7 @@ def get_method_cfg(name: str) -> Optional[MethodCfg]:
     )
 
 
-def list_method_cfgs() -> Dict[str, MethodCfg]:
+def list_method_cfgs() -> dict[str, MethodCfg]:
     """List all method configurations.
 
     Returns:
@@ -99,13 +99,13 @@ def list_method_cfgs() -> Dict[str, MethodCfg]:
 def _init_registry():
     """Initialize the registry with built-in methods."""
     from hyperextract.methods.rag import (
-        Light_RAG,
-        Hyper_RAG,
-        HyperGraph_RAG,
         Cog_RAG,
         Graph_RAG,
+        Hyper_RAG,
+        HyperGraph_RAG,
+        Light_RAG,
     )
-    from hyperextract.methods.typical import iText2KG, iText2KG_Star, KG_Gen, Atom
+    from hyperextract.methods.typical import Atom, KG_Gen, iText2KG, iText2KG_Star
 
     register_method(
         name="graph_rag",

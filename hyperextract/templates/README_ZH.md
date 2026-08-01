@@ -430,9 +430,9 @@ embedder = OpenAIEmbeddings()
 # 使用文件路径加载自定义模板
 template = Template.create(
     "/path/to/my_template.yaml",  # 模板文件路径
-    "zh",                          # 语言
+    "zh",  # 语言
     llm,
-    embedder
+    embedder,
 )
 
 result = template.parse("您的文档文本...")

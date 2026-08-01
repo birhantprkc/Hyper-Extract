@@ -1,13 +1,13 @@
 """Config command for Hyper-Extract CLI."""
 
-from typing import Optional
+import typer
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
-from ..config import ConfigManager
 from hyperextract.utils.logging import get_logger
-import typer
+
+from ..config import ConfigManager
 
 logger = get_logger("he.config")
 console = Console()
@@ -147,25 +147,25 @@ def show(
 
 @app.command(name="llm")
 def llm(
-    provider: Optional[str] = typer.Option(
+    provider: str | None = typer.Option(
         None,
         "--provider",
         "-p",
         help="Provider preset: openai, anthropic, deepseek, bailian, vllm",
     ),
-    api_key: Optional[str] = typer.Option(
+    api_key: str | None = typer.Option(
         None,
         "--api-key",
         "-k",
         help="LLM API key",
     ),
-    model: Optional[str] = typer.Option(
+    model: str | None = typer.Option(
         None,
         "--model",
         "-m",
         help="LLM model name",
     ),
-    base_url: Optional[str] = typer.Option(
+    base_url: str | None = typer.Option(
         None,
         "--base-url",
         "-u",
@@ -208,25 +208,25 @@ def llm(
 
 @app.command(name="embedder")
 def embedder(
-    provider: Optional[str] = typer.Option(
+    provider: str | None = typer.Option(
         None,
         "--provider",
         "-p",
         help="Provider preset: openai, anthropic, deepseek, bailian, vllm",
     ),
-    api_key: Optional[str] = typer.Option(
+    api_key: str | None = typer.Option(
         None,
         "--api-key",
         "-k",
         help="Embedder API key",
     ),
-    model: Optional[str] = typer.Option(
+    model: str | None = typer.Option(
         None,
         "--model",
         "-m",
         help="Embedder model name",
     ),
-    base_url: Optional[str] = typer.Option(
+    base_url: str | None = typer.Option(
         None,
         "--base-url",
         "-u",
@@ -271,19 +271,19 @@ def embedder(
 
 @app.command(name="init")
 def init(
-    provider: Optional[str] = typer.Option(
+    provider: str | None = typer.Option(
         None,
         "--provider",
         "-p",
         help="Provider preset: openai, anthropic, deepseek, bailian, vllm",
     ),
-    api_key: Optional[str] = typer.Option(
+    api_key: str | None = typer.Option(
         None,
         "--api-key",
         "-k",
         help="API key for both LLM and Embedder",
     ),
-    base_url: Optional[str] = typer.Option(
+    base_url: str | None = typer.Option(
         None,
         "--base-url",
         "-u",
@@ -323,9 +323,7 @@ def init(
             )
         else:
             console.print(
-                "[yellow]Warning: Provider '{}' has no default embedder. Please configure embedder separately.[/yellow]".format(
-                    provider
-                )
+                f"[yellow]Warning: Provider '{provider}' has no default embedder. Please configure embedder separately.[/yellow]"
             )
 
         console.print("[bold green]Configuration saved successfully![/bold green]")

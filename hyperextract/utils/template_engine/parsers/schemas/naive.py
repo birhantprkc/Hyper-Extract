@@ -1,16 +1,16 @@
-from typing import Dict, List
 from pydantic import BaseModel
+
 from .base import VALID_MERGE_STRATEGIES, FieldSchema
 
 
 class NaiveGuidelineSchema(BaseModel):
-    target: str | List[str] | Dict[str, str]
-    rules: str | List[str] | Dict[str, str | List[str]]
+    target: str | list[str] | dict[str, str]
+    rules: str | list[str] | dict[str, str | list[str]]
 
 
 class NaiveOutputSchema(BaseModel):
-    description: str | Dict[str, str]
-    fields: List[FieldSchema]
+    description: str | dict[str, str]
+    fields: list[FieldSchema]
 
 
 class NaiveOptionsSchema(BaseModel):
@@ -19,7 +19,7 @@ class NaiveOptionsSchema(BaseModel):
     max_workers: int | None = None
     verbose: bool | None = None
     merge_strategy: VALID_MERGE_STRATEGIES | None = None
-    fields_for_search: List[str] | None = None
+    fields_for_search: list[str] | None = None
 
 
 class NaiveDisplaySchema(BaseModel):

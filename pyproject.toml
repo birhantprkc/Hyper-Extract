@@ -94,4 +94,13 @@ exclude = [
 packages = ["hyperextract"]
 
 [tool.ruff.lint]
-ignore = ["E731"]
+ignore = [
+    "E731",   # Lambda assignment is fine
+    "BLE001", # Blind except Exception — common pattern in this codebase
+    "DTZ005", # datetime.now() without tz — not needed for this project
+    "SIM102", # Nested if/else style preference
+    "TRY002", # Custom exception class design preference
+    "TRY004", # TypeError vs ValueError preference
+    "S110",   # try/except/pass — intentional in some places
+    "TC010",  # String forward-ref in X | Y union — needed for recursive types
+]

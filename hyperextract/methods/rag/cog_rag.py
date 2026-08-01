@@ -3,18 +3,18 @@ COG_RAG: Cognitive-Inspired Dual-Hypergraph RAG System Pattern
 Extracts and manages Theme-Entity relationships where Themes act as Hyperedges connecting multiple Entities.
 """
 
-import os
 import json
+import os
 from datetime import datetime
-from typing import List
 from hashlib import md5
-from pydantic import BaseModel, Field
-from hyperextract.types.hypergraph import AutoHypergraph, AutoHypergraphSchema
-from langchain_core.prompts import ChatPromptTemplate
+
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
+from langchain_core.prompts import ChatPromptTemplate
 from ontomem.merger import CustomRuleMerger
+from pydantic import BaseModel, Field
 
+from hyperextract.types.hypergraph import AutoHypergraph, AutoHypergraphSchema
 
 # ============================================================================
 # Node Schema
@@ -44,7 +44,7 @@ class ThemeSchema(BaseModel):
     # participants: List[str] = Field(
     #     description="Names of key entities involved in this theme"
     # )
-    participants: List[NodeSchema] = Field(
+    participants: list[NodeSchema] = Field(
         description="List of key entities involved in this theme, with their details."
     )
     description: str = Field(
@@ -60,13 +60,13 @@ class ThemeSchema(BaseModel):
 class EdgeSchema(BaseModel):
     """Represents a relationship or event connecting multiple entities (low-order or high-order)."""
 
-    participants: List[str] = Field(
+    participants: list[str] = Field(
         description="Names of entities involved in this relationship"
     )
     description: str = Field(
         description="Detailed explanation of the relationship or event"
     )
-    keywords: List[str] = Field(
+    keywords: list[str] = Field(
         description="List of keywords summarizing the relationship themes (e.g., ['conflict', 'trade', 'alliance'])",
     )
     strength: int = Field(

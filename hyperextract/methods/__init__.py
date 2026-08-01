@@ -6,24 +6,23 @@ the AutoTypes primitives. It's divided into:
 - typical: Typical/canonical graph construction pipelines
 """
 
-from . import rag
-from . import typical
+from . import rag, typical
 from .registry import (
-    register_method,
+    MethodCfg,
     get_method,
-    list_methods,
     get_method_cfg,
     list_method_cfgs,
-    MethodCfg,
+    list_methods,
+    register_method,
 )
 
 __all__ = [
-    "rag",
-    "typical",
-    "register_method",
+    "MethodCfg",
     "get_method",
-    "list_methods",
     "get_method_cfg",
     "list_method_cfgs",
-    "MethodCfg",
+    "list_methods",
+    "rag",
+    "register_method",
+    "typical",
 ]

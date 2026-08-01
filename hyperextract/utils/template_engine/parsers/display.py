@@ -1,13 +1,14 @@
 """Display parser - generates label extraction functions from YAML config."""
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
+from .identifiers import _extractor
 from .schemas import (
     VALID_AUTOTYPES,
-    NaiveDisplaySchema,
     GraphDisplaySchema,
+    NaiveDisplaySchema,
 )
-from .identifiers import _extractor
 
 
 def parse_display(

@@ -1,26 +1,25 @@
 """Output schema parser."""
 
-from typing import List, Optional
+from pydantic import BaseModel, Field, create_model
+
 from .schemas import (
     FieldSchema,
-    NaiveOutputSchema,
     GraphOutputSchema,
+    NaiveOutputSchema,
 )
-from pydantic import Field, create_model, BaseModel
-
 
 TYPE_MAPPING = {
     "str": str,
     "int": int,
     "float": float,
     "bool": bool,
-    "list": List[str],
+    "list": list[str],
 }
 
 
 def build_naive_schema(
     name: str,
-    fields: List[FieldSchema],
+    fields: list[FieldSchema],
     description: str,
 ) -> BaseModel:
     """Build Pydantic schema for naive types (model, list, set)."""
@@ -36,7 +35,7 @@ def build_naive_schema(
         # Use Optional type for non-required fields so None values pass validation
         base_type = TYPE_MAPPING[field.type]
         if field.required is False:
-            field_type = Optional[base_type]
+            field_type = base_type | None
         else:
             field_type = base_type
         schema_fields[field.name] = (

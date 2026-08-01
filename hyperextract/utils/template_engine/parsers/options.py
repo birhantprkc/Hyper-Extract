@@ -1,14 +1,13 @@
 """Options models and parser."""
 
-from typing import List
+from ontomem.merger import MergeStrategy
 from pydantic import BaseModel
 
-from ontomem.merger import MergeStrategy
 from .schemas import (
     VALID_AUTOTYPES,
     VALID_MERGE_STRATEGIES,
-    NaiveOptionsSchema,
     GraphOptionsSchema,
+    NaiveOptionsSchema,
 )
 
 
@@ -31,13 +30,13 @@ class Options(BaseModel):
     verbose: bool | None = None
 
     strategy_or_merger: str | None = None
-    fields_for_index: List[str] | None = None
+    fields_for_index: list[str] | None = None
 
     extraction_mode: str | None = None
     node_strategy_or_merger: str | None = None
     edge_strategy_or_merger: str | None = None
-    node_fields_for_index: List[str] | None = None
-    edge_fields_for_index: List[str] | None = None
+    node_fields_for_index: list[str] | None = None
+    edge_fields_for_index: list[str] | None = None
 
     observation_time: str | None = None
     observation_location: str | None = None

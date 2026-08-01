@@ -3,11 +3,12 @@ Light-RAG: Lightweight Graph-based Retrieval-Augmented Generation
 Extracts and manages entity-relationship knowledge graphs with standard binary edges.
 """
 
-from pydantic import BaseModel, Field
-from hyperextract.types import AutoGraph
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from ontomem.merger import CustomRuleMerger
+from pydantic import BaseModel, Field
+
+from hyperextract.types import AutoGraph
 
 # ============================================================================
 # Node Schema

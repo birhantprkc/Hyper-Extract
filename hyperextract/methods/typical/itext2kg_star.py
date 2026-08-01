@@ -7,13 +7,13 @@ standardized triple-based knowledge graphs.
 Prompts and schemas are adapted from the original iText2KG_Star implementation.
 """
 
-from typing import Optional
 from datetime import datetime
+
+from langchain_core.embeddings import Embeddings
+from langchain_core.language_models import BaseChatModel
+from ontomem.merger import MergeStrategy
 from pydantic import BaseModel, Field
 from semhash import SemHash
-from langchain_core.language_models import BaseChatModel
-from langchain_core.embeddings import Embeddings
-from ontomem.merger import MergeStrategy
 
 from hyperextract.types.graph import AutoGraph, AutoGraphSchema
 from hyperextract.utils.logging import get_logger
@@ -48,7 +48,7 @@ class NodeSchema(BaseModel):
 class EdgeProperties(BaseModel):
     """Properties for Knowledge Graph Edge"""
 
-    observation_date: Optional[str] = Field(
+    observation_date: str | None = Field(
         default=None,
         description=(
             "The date when the relationship was observed or recorded. "

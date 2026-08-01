@@ -52,28 +52,28 @@ import os
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 
 from .base import BaseAutoType
-from .model import AutoModel
-from .list import AutoList
-from .set import AutoSet
 from .graph import AutoGraph
 from .hypergraph import AutoHypergraph
-from .temporal_graph import AutoTemporalGraph
+from .list import AutoList
+from .model import AutoModel
+from .set import AutoSet
 from .spatial_graph import AutoSpatialGraph
 from .spatio_temporal_graph import AutoSpatioTemporalGraph
+from .temporal_graph import AutoTemporalGraph
 
 __all__ = [
-    # Base class
-    "BaseAutoType",
-    # Scalar types
-    "AutoModel",
-    # Collection types
-    "AutoList",
-    "AutoSet",
     # Graph types
     "AutoGraph",
-    "AutoTemporalGraph",
-    "AutoSpatialGraph",
-    "AutoSpatioTemporalGraph",
     # Hypergraph type
     "AutoHypergraph",
+    # Collection types
+    "AutoList",
+    # Scalar types
+    "AutoModel",
+    "AutoSet",
+    "AutoSpatialGraph",
+    "AutoSpatioTemporalGraph",
+    "AutoTemporalGraph",
+    # Base class
+    "BaseAutoType",
 ]

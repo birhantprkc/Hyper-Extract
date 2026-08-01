@@ -1,13 +1,12 @@
 """List command for Hyper-Extract CLI."""
 
-from typing import Optional
+import typer
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
-import typer
 
-from hyperextract.utils.template_engine import Gallery
 from hyperextract.utils.logging import get_logger
+from hyperextract.utils.template_engine import Gallery
 
 logger = get_logger("he.list")
 console = Console()
@@ -28,13 +27,13 @@ def _get_description(cfg, lang: str = "en") -> str:
 
 @app.command(name="template")
 def template(
-    query: Optional[str] = typer.Option(
+    query: str | None = typer.Option(
         None, "--query", "-q", help="Query to search templates"
     ),
-    autotype: Optional[str] = typer.Option(
+    autotype: str | None = typer.Option(
         None, "--autotype", "-a", help="Filter by autotype"
     ),
-    language: Optional[str] = typer.Option(
+    language: str | None = typer.Option(
         None, "--lang", "-l", help="Language filter (en/zh/all, default: en)"
     ),
     include_methods: bool = typer.Option(
@@ -113,7 +112,7 @@ def template(
 
 @app.command(name="method")
 def method(
-    query: Optional[str] = typer.Option(
+    query: str | None = typer.Option(
         None, "--query", "-q", help="Query to search methods"
     ),
 ):

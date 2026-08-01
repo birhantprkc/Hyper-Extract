@@ -7,11 +7,11 @@ Prompts are adapted from kg_gen/steps to ensure consistency with the original
 knowledge graph extraction logic.
 """
 
-from semhash import SemHash
-from pydantic import BaseModel, Field
-from langchain_core.language_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
+from langchain_core.language_models import BaseChatModel
 from ontomem.merger import MergeStrategy
+from pydantic import BaseModel, Field
+from semhash import SemHash
 
 from hyperextract.types.graph import AutoGraph, AutoGraphSchema
 from hyperextract.utils.logging import get_logger

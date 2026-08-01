@@ -430,9 +430,9 @@ embedder = OpenAIEmbeddings()
 # Load custom template by file path
 template = Template.create(
     "/path/to/my_template.yaml",  # Template file path
-    "zh",                          # Language
+    "zh",  # Language
     llm,
-    embedder
+    embedder,
 )
 
 result = template.parse("Your document text here...")

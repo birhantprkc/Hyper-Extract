@@ -1,32 +1,30 @@
 """CLI entry point for Hyper-Extract."""
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
-from rich.table import Table
-from rich.text import Text
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Prompt
+from rich.table import Table
+from rich.text import Text
 
-from hyperextract.utils.template_engine import Gallery, Template
 from hyperextract.utils.logging import configure_logging, get_logger
+from hyperextract.utils.template_engine import Gallery, Template
 
+from .commands import config_app, list_app
+from .config import (
+    load_ka_metadata,
+)
 from .utils import (
     LOGO,
+    get_template_from_ka,
     read_input,
     validate_config,
     validate_ka_path,
     validate_ka_with_data,
     validate_ka_with_index,
-    get_template_from_ka,
 )
-from .config import (
-    load_ka_metadata,
-)
-
-from .commands import list_app, config_app
 
 console = Console()
 logger = get_logger("he")
@@ -158,7 +156,7 @@ def main(
         raise typer.Exit()
 
 
-def select_template_interactive() -> Optional[str]:
+def select_template_interactive() -> str | None:
     """Interactive template selection when user doesn't specify one."""
     templates = Gallery.list()
 
@@ -223,13 +221,13 @@ def parse(
         ..., help="Input file path, directory, or '-' for stdin"
     ),
     output: str = typer.Option(..., "--output", "-o", help="Output directory"),
-    template: Optional[str] = typer.Option(
+    template: str | None = typer.Option(
         None, "--template", "-t", help="Template (omit for interactive selection)"
     ),
-    method: Optional[str] = typer.Option(
+    method: str | None = typer.Option(
         None, "--method", "-m", help="Method template (e.g., light_rag, hyper_rag)"
     ),
-    lang: Optional[str] = typer.Option(
+    lang: str | None = typer.Option(
         None,
         "--lang",
         "-l",
@@ -348,15 +346,14 @@ def parse(
         progress.update(task, description="Saving data...")
 
         template_config = Template.get(template)
-        if template_config is None:
-            if template.endswith(".yaml"):
-                import shutil
+        if template_config is None and template.endswith(".yaml"):
+            import shutil
 
-                filename = Path(template).name
-                shutil.copy(template, output_path / filename)
-                console.print(
-                    f"[dim]Custom template '{filename}' saved to KA directory[/dim]"
-                )
+            filename = Path(template).name
+            shutil.copy(template, output_path / filename)
+            console.print(
+                f"[dim]Custom template '{filename}' saved to KA directory[/dim]"
+            )
 
         ka.dump(output_path)
         logger.info("stage=data_saved output=%s", output_path)
@@ -454,7 +451,7 @@ export_app = typer.Typer(
 def export_obsidian_cmd(
     ka_path: str = typer.Argument(..., help="Knowledge Abstract directory"),
     output: str = typer.Option(..., "--output", "-o", help="Output vault directory"),
-    name: Optional[str] = typer.Option(
+    name: str | None = typer.Option(
         None, "--name", help="Vault name used for the index note"
     ),
     no_index: bool = typer.Option(
@@ -691,7 +688,7 @@ def chat_loop(ka, ka_path: str):
 @app.command(name="talk")
 def talk(
     ka_path: str = typer.Argument(..., help="Knowledge Abstract directory"),
-    query: Optional[str] = typer.Option(None, "--query", "-q", help="Question to ask"),
+    query: str | None = typer.Option(None, "--query", "-q", help="Question to ask"),
     top_k: int = typer.Option(3, "--top-k", "-n", help="Number of context items"),
     interactive: bool = typer.Option(
         False, "--interactive", "-i", help="Interactive mode"
@@ -773,8 +770,8 @@ def talk(
 def feed(
     ka_path: str = typer.Argument(..., help="Knowledge Abstract directory"),
     input: str = typer.Argument(..., help="Input file path or '-' for stdin"),
-    template: Optional[str] = typer.Option(None, "--template", "-t", help="Template"),
-    lang: Optional[str] = typer.Option(None, "--lang", "-l", help="Language"),
+    template: str | None = typer.Option(None, "--template", "-t", help="Template"),
+    lang: str | None = typer.Option(None, "--lang", "-l", help="Language"),
 ):
     """Append knowledge to an existing Knowledge Abstract."""
     logger.info("command=feed ka_path=%s input=%s", ka_path, input)

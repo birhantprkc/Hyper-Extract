@@ -17,8 +17,9 @@ Only the Python standard library is used; no extra dependency is introduced.
 
 import json
 import re
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -83,7 +84,7 @@ def _is_scalar(value: Any) -> bool:
     return not isinstance(value, (dict, list, tuple))
 
 
-def _emit_kv(key: str, value: Any, indent: int) -> List[str]:
+def _emit_kv(key: str, value: Any, indent: int) -> list[str]:
     """Emit ``key: value`` as YAML block-style lines."""
     pad = "  " * indent
     key_str = _yaml_scalar(key)
@@ -112,7 +113,7 @@ def _emit_kv(key: str, value: Any, indent: int) -> List[str]:
     return [f"{pad}{key_str}: {_yaml_scalar(value)}"]
 
 
-def _render_frontmatter(mapping: Dict[str, Any]) -> str:
+def _render_frontmatter(mapping: dict[str, Any]) -> str:
     """Render a mapping as a YAML front-matter block (with ``---`` fences)."""
     lines = ["---"]
     for key, value in mapping.items():
@@ -126,7 +127,7 @@ def _render_frontmatter(mapping: Dict[str, Any]) -> str:
 # ----------------------------------------------------------------------------
 
 
-def _first_field(model: BaseModel, candidates: Sequence[str]) -> Optional[str]:
+def _first_field(model: BaseModel, candidates: Sequence[str]) -> str | None:
     """Return the first present, non-empty candidate field as a string."""
     model_fields = type(model).model_fields
     for field in candidates:
@@ -137,13 +138,13 @@ def _first_field(model: BaseModel, candidates: Sequence[str]) -> Optional[str]:
     return None
 
 
-def _safe_call(func: Optional[Callable], arg: Any) -> Optional[str]:
+def _safe_call(func: Callable | None, arg: Any) -> str | None:
     """Call ``func(arg)`` defensively, returning a string or None."""
     if func is None:
         return None
     try:
         result = func(arg)
-    except Exception as exc:  # noqa: BLE001 - extractor is user-supplied
+    except Exception as exc:
         logger.debug("obsidian: extractor raised %s", exc)
         return None
     if result in (None, ""):
@@ -162,7 +163,7 @@ def sanitize_filename(name: str, fallback: str = "untitled") -> str:
     return cleaned[:120].strip()
 
 
-def _wikilink(stem: str, display: Optional[str] = None) -> str:
+def _wikilink(stem: str, display: str | None = None) -> str:
     """Build an Obsidian wikilink targeting ``stem`` with optional display text."""
     if display and display != stem:
         return f"[[{stem}|{display}]]"
@@ -177,7 +178,7 @@ def _wikilink(stem: str, display: Optional[str] = None) -> str:
 class _NoteEntry:
     """Resolved metadata for a single node note."""
 
-    __slots__ = ("node_id", "title", "stem", "model")
+    __slots__ = ("model", "node_id", "stem", "title")
 
     def __init__(self, node_id: str, title: str, stem: str, model: BaseModel):
         self.node_id = node_id
@@ -189,18 +190,18 @@ class _NoteEntry:
 def _resolve_notes(
     nodes: Sequence[BaseModel],
     node_id_extractor: Callable[[Any], str],
-    node_label_extractor: Optional[Callable[[Any], str]],
+    node_label_extractor: Callable[[Any], str] | None,
     reserved_stems: set,
-) -> Tuple[List[_NoteEntry], Dict[str, _NoteEntry]]:
+) -> tuple[list[_NoteEntry], dict[str, _NoteEntry]]:
     """Resolve titles and unique, collision-free filename stems for all nodes."""
     used_stems = set(reserved_stems)
-    entries: List[_NoteEntry] = []
-    by_id: Dict[str, _NoteEntry] = {}
+    entries: list[_NoteEntry] = []
+    by_id: dict[str, _NoteEntry] = {}
 
     for index, node in enumerate(nodes):
         try:
             node_id = str(node_id_extractor(node))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug("obsidian: node_id_extractor raised %s; skipping node", exc)
             continue
 
@@ -232,11 +233,11 @@ def _resolve_notes(
 
 def _incident_ids(
     edge: Any, incident_nodes_extractor: Callable[[Any], Sequence[str]]
-) -> List[str]:
+) -> list[str]:
     """Normalize an edge's incident node keys to a list of strings."""
     try:
         raw = incident_nodes_extractor(edge)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.debug("obsidian: incident_nodes_extractor raised %s; skipping edge", exc)
         return []
     if raw is None:
@@ -251,15 +252,15 @@ def _incident_ids(
 def _build_relationships(
     edges: Sequence[BaseModel],
     incident_nodes_extractor: Callable[[Any], Sequence[str]],
-    edge_label_extractor: Optional[Callable[[Any], str]],
-    by_id: Dict[str, _NoteEntry],
-) -> Tuple[Dict[str, List[str]], int]:
+    edge_label_extractor: Callable[[Any], str] | None,
+    by_id: dict[str, _NoteEntry],
+) -> tuple[dict[str, list[str]], int]:
     """Group edges into per-source-note relationship lines.
 
     Returns a mapping ``{source_node_id: [markdown bullet, ...]}`` and the count
     of edges that were skipped because no incident node was known.
     """
-    relationships: Dict[str, List[str]] = {}
+    relationships: dict[str, list[str]] = {}
     skipped = 0
 
     for edge in edges:
@@ -302,9 +303,9 @@ def _build_relationships(
 # ----------------------------------------------------------------------------
 
 
-def _build_frontmatter(entry: _NoteEntry) -> Dict[str, Any]:
+def _build_frontmatter(entry: _NoteEntry) -> dict[str, Any]:
     """Build the YAML front-matter mapping for a node note."""
-    data: Dict[str, Any] = dict(entry.model.model_dump())
+    data: dict[str, Any] = dict(entry.model.model_dump())
 
     # Ensure the original id / title remain resolvable as aliases, so wikilinks
     # written against either still point at this note.
@@ -327,7 +328,7 @@ def _build_frontmatter(entry: _NoteEntry) -> Dict[str, Any]:
     return data
 
 
-def _render_note(entry: _NoteEntry, relationship_lines: List[str]) -> str:
+def _render_note(entry: _NoteEntry, relationship_lines: list[str]) -> str:
     """Render a single node note's full Markdown content."""
     parts = [_render_frontmatter(_build_frontmatter(entry)), "", f"# {entry.title}", ""]
 
@@ -344,7 +345,7 @@ def _render_note(entry: _NoteEntry, relationship_lines: List[str]) -> str:
     return "\n".join(parts).rstrip() + "\n"
 
 
-def _render_index(entries: List[_NoteEntry], vault_name: str, edge_count: int) -> str:
+def _render_index(entries: list[_NoteEntry], vault_name: str, edge_count: int) -> str:
     """Render the vault index / map-of-content note."""
     parts = [
         _render_frontmatter({"tags": ["index"], "title": vault_name}),
@@ -356,7 +357,7 @@ def _render_index(entries: List[_NoteEntry], vault_name: str, edge_count: int) -
     ]
 
     # Group notes by a guessed "type" field for a tidy table of contents.
-    groups: Dict[str, List[_NoteEntry]] = {}
+    groups: dict[str, list[_NoteEntry]] = {}
     for entry in entries:
         group = _first_field(entry.model, _TYPE_FIELDS) or "Notes"
         groups.setdefault(group, []).append(entry)
@@ -383,8 +384,8 @@ def export_to_obsidian(
     node_id_extractor: Callable[[Any], str],
     incident_nodes_extractor: Callable[[Any], Sequence[str]],
     folder_path: str | Path,
-    node_label_extractor: Optional[Callable[[Any], str]] = None,
-    edge_label_extractor: Optional[Callable[[Any], str]] = None,
+    node_label_extractor: Callable[[Any], str] | None = None,
+    edge_label_extractor: Callable[[Any], str] | None = None,
     vault_name: str = "Knowledge Vault",
     include_index: bool = True,
     overwrite: bool = False,

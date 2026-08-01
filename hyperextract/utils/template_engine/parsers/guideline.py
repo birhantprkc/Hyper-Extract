@@ -1,8 +1,5 @@
 """Extraction prompt parser from guideline."""
 
-from typing import Tuple
-
-
 LABEL_MAPPING = {
     "zh": {
         "role_and_task": "角色与任务",
@@ -29,7 +26,7 @@ LABEL_MAPPING = {
 
 def parse_guideline(
     guideline, autotype: str, language: str = "en"
-) -> str | Tuple[str, str, str]:
+) -> str | tuple[str, str, str]:
     """Parse guideline and return prompts based on autotype (config is already localized).
 
     Args:

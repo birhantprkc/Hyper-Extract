@@ -7,10 +7,10 @@ standardized triple-based knowledge graphs.
 Prompts and schemas are adapted from the original iText2KG* implementation.
 """
 
-from pydantic import BaseModel, Field
-from langchain_core.language_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
+from langchain_core.language_models import BaseChatModel
 from ontomem.merger import MergeStrategy
+from pydantic import BaseModel, Field
 
 from hyperextract.types import AutoGraph
 from hyperextract.utils.logging import get_logger

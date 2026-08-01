@@ -1,19 +1,19 @@
 """Configuration management for Hyper-Extract CLI."""
 
-import os
 import json
+import os
 import tomllib
-import tomli_w
-from pathlib import Path
-from typing import Optional, Dict, Any
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
+import tomli_w
 
 DEFAULT_CONFIG_DIR = Path.home() / ".he"
 DEFAULT_CONFIG_FILE = DEFAULT_CONFIG_DIR / "config.toml"
 
 # Provider presets: base_url and default models for each provider
-PROVIDER_PRESETS: Dict[str, Dict[str, str | None]] = {
+PROVIDER_PRESETS: dict[str, dict[str, str | None]] = {
     "openai": {
         "base_url": "https://api.openai.com/v1",
         "default_llm": "gpt-4o-mini",
@@ -49,7 +49,7 @@ PROVIDER_PRESETS: Dict[str, Dict[str, str | None]] = {
 }
 
 # Environment variables checked (in order) for each provider's API key.
-PROVIDER_API_KEY_ENV: Dict[str, tuple] = {
+PROVIDER_API_KEY_ENV: dict[str, tuple] = {
     "anthropic": ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"),
     "claude": ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"),
     "deepseek": ("DEEPSEEK_API_KEY",),
@@ -75,7 +75,7 @@ class LLMConfig:
     api_key: str = ""
     base_url: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "provider": self.provider,
             "model": self.model,
@@ -84,7 +84,7 @@ class LLMConfig:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "LLMConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "LLMConfig":
         return cls(
             provider=data.get("provider", ""),
             model=data.get("model", "gpt-4o-mini"),
@@ -100,7 +100,7 @@ class EmbedderConfig:
     api_key: str = ""
     base_url: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "provider": self.provider,
             "model": self.model,
@@ -109,7 +109,7 @@ class EmbedderConfig:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "EmbedderConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "EmbedderConfig":
         return cls(
             provider=data.get("provider", ""),
             model=data.get("model", "text-embedding-3-small"),
@@ -121,7 +121,7 @@ class EmbedderConfig:
 class ConfigManager:
     """Manages Hyper-Extract CLI configuration."""
 
-    def __init__(self, config_path: Optional[Path] = None):
+    def __init__(self, config_path: Path | None = None):
         self.config_path = config_path or DEFAULT_CONFIG_FILE
         self.llm = LLMConfig()
         self.embedder = EmbedderConfig()
@@ -196,10 +196,10 @@ class ConfigManager:
 
     def set_llm(
         self,
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
+        provider: str | None = None,
+        model: str | None = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
     ) -> None:
         """Set LLM configuration."""
         if provider is not None:
@@ -214,10 +214,10 @@ class ConfigManager:
 
     def set_embedder(
         self,
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
+        provider: str | None = None,
+        model: str | None = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
     ) -> None:
         """Set Embedder configuration."""
         if provider is not None:
@@ -240,7 +240,7 @@ class ConfigManager:
         self.embedder = EmbedderConfig()
         self._save()
 
-    def show(self) -> Dict[str, Any]:
+    def show(self) -> dict[str, Any]:
         """Show current configuration."""
         return {
             "llm": self.get_llm_config().to_dict(),
@@ -274,7 +274,7 @@ class ConfigManager:
         return True, "Configuration is valid"
 
 
-def load_ka_metadata(ka_path: Path) -> Optional[Dict[str, Any]]:
+def load_ka_metadata(ka_path: Path) -> dict[str, Any] | None:
     """Load knowledge abstract metadata from directory."""
     metadata_path = ka_path / "metadata.json"
     if not metadata_path.exists():

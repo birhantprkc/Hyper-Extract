@@ -1,35 +1,35 @@
 """Config loader and template configuration models."""
 
-import yaml
 from pathlib import Path
-from typing import Dict, List, Union
+
+import yaml
 from pydantic import BaseModel
 
 from .schemas.base import VALID_AUTOTYPES, FieldSchema
-from .schemas.naive import (
-    NaiveGuidelineSchema,
-    NaiveOutputSchema,
-    NaiveOptionsSchema,
-    NaiveDisplaySchema,
-    NaiveIdentifierSchema,
-)
 from .schemas.graph import (
-    GraphGuidelineSchema,
-    GraphOutputSchema,
-    GraphOptionsSchema,
     GraphDisplaySchema,
+    GraphGuidelineSchema,
     GraphIdentifiersSchema,
+    GraphOptionsSchema,
+    GraphOutputSchema,
+)
+from .schemas.naive import (
+    NaiveDisplaySchema,
+    NaiveGuidelineSchema,
+    NaiveIdentifierSchema,
+    NaiveOptionsSchema,
+    NaiveOutputSchema,
 )
 
 
 class TemplateCfg(BaseModel):
     """Template configuration loaded from YAML."""
 
-    language: str | List[str] = "en"
+    language: str | list[str] = "en"
     name: str
     type: VALID_AUTOTYPES
-    tags: List[str]
-    description: str | Dict[str, str]
+    tags: list[str]
+    description: str | dict[str, str]
     output: NaiveOutputSchema | GraphOutputSchema
     guideline: NaiveGuidelineSchema | GraphGuidelineSchema
     identifiers: NaiveIdentifierSchema | GraphIdentifiersSchema | None = None
@@ -38,7 +38,7 @@ class TemplateCfg(BaseModel):
 
 
 def _localize_data(
-    value: str | List[str] | Dict[str, str | List[str]],
+    value: str | list[str] | dict[str, str | list[str]],
     language: str,
 ) -> str:
     """Get multilingual text value, supports list format
@@ -155,7 +155,7 @@ def localize_template(config: TemplateCfg, language: str) -> TemplateCfg:
     )
 
 
-def load_template(file_path: Union[str, Path]) -> TemplateCfg:
+def load_template(file_path: str | Path) -> TemplateCfg:
     """Load and validate template configuration."""
     path = Path(file_path)
     if not path.exists():

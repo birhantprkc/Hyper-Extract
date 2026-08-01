@@ -4,7 +4,7 @@ Auto-loads templates from presets directory.
 """
 
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 from .parsers import TemplateCfg, load_template
 
@@ -29,10 +29,10 @@ class Gallery:
     _instance: Optional["Gallery"] = None
 
     def __init__(self):
-        self._configs: Dict[str, TemplateCfg] = {}
+        self._configs: dict[str, TemplateCfg] = {}
 
     @classmethod
-    def get(cls, path: str) -> Optional[TemplateCfg]:
+    def get(cls, path: str) -> TemplateCfg | None:
         """Get template configuration by path.
 
         Args:
@@ -53,11 +53,11 @@ class Gallery:
     @classmethod
     def list(
         cls,
-        filter_by_query: str = None,
-        filter_by_type: str = None,
-        filter_by_tag: str = None,
-        filter_by_language: str = None,
-    ) -> Dict[str, "TemplateCfg"]:
+        filter_by_query: str | None = None,
+        filter_by_type: str | None = None,
+        filter_by_tag: str | None = None,
+        filter_by_language: str | None = None,
+    ) -> dict[str, "TemplateCfg"]:
         """List templates with optional filters.
 
         Args:

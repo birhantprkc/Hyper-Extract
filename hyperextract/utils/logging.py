@@ -2,7 +2,6 @@
 
 import logging
 import sys
-from typing import Optional
 
 import structlog
 
@@ -13,7 +12,7 @@ ENV_LOG_FILE = "HYPER_EXTRACT_LOG_FILE"
 def configure_logging(
     level: str = "WARNING",
     json_output: bool = False,
-    output_file: Optional[str] = None,
+    output_file: str | None = None,
 ) -> None:
     """Configure structlog for hyper-extract.
 
@@ -70,7 +69,7 @@ def configure_logging(
     root_logger.setLevel(level_value)
 
 
-def get_logger(name: str = None) -> structlog.stdlib.BoundLogger:
+def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
     """Get a configured structlog logger.
 
     Args:
@@ -92,4 +91,4 @@ def set_log_level(level: str) -> None:
     logging.getLogger().setLevel(level_value)
 
 
-__all__ = ["get_logger", "configure_logging", "set_log_level"]
+__all__ = ["configure_logging", "get_logger", "set_log_level"]

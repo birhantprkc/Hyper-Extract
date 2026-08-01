@@ -22,55 +22,55 @@ Usage:
 """
 
 # Core AutoType primitives
+from importlib.metadata import version
+
 from .types import (
-    BaseAutoType,
-    AutoModel,
-    AutoList,
-    AutoSet,
     AutoGraph,
     AutoHypergraph,
-    AutoTemporalGraph,
+    AutoList,
+    AutoModel,
+    AutoSet,
     AutoSpatialGraph,
     AutoSpatioTemporalGraph,
+    AutoTemporalGraph,
+    BaseAutoType,
 )
 
-# Template engine API
-from .utils.template_engine import Template
-
 # Client factory
-from .utils.client import create_client, create_llm, create_embedder, get_client
+from .utils.client import create_client, create_embedder, create_llm, get_client
 
 # Logging utilities
 from .utils.logging import configure_logging, get_logger, set_log_level
 
-from importlib.metadata import version
+# Template engine API
+from .utils.template_engine import Template
 
 __version__ = version("hyperextract")
 __author__ = "Yifan Feng"
 __email__ = "evanfeng97@gmail.com"
 
 __all__ = [
-    # Base class
-    "BaseAutoType",
-    # Scalar types
-    "AutoModel",
-    "AutoList",
-    "AutoSet",
     # Graph types
     "AutoGraph",
     "AutoHypergraph",
-    "AutoTemporalGraph",
+    "AutoList",
+    # Scalar types
+    "AutoModel",
+    "AutoSet",
     "AutoSpatialGraph",
     "AutoSpatioTemporalGraph",
+    "AutoTemporalGraph",
+    # Base class
+    "BaseAutoType",
     # Template engine
     "Template",
-    # Client factory
-    "create_client",
-    "create_llm",
-    "create_embedder",
-    "get_client",
     # Logging utilities
     "configure_logging",
+    # Client factory
+    "create_client",
+    "create_embedder",
+    "create_llm",
+    "get_client",
     "get_logger",
     "set_log_level",
 ]

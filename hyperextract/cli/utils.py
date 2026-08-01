@@ -1,9 +1,9 @@
 """Common utilities for Hyper-Extract CLI."""
 
 import sys
-import typer
 from pathlib import Path
-from typing import Tuple
+
+import typer
 from rich.console import Console
 
 from .config import ConfigManager
@@ -106,7 +106,7 @@ def validate_ka_with_index(ka_path: str) -> Path:
     return path
 
 
-def get_template_from_ka(ka_path: Path) -> Tuple[str, str]:
+def get_template_from_ka(ka_path: Path) -> tuple[str, str]:
     """Get template path for Knowledge Abstract.
 
     Load priority:
@@ -116,8 +116,9 @@ def get_template_from_ka(ka_path: Path) -> Tuple[str, str]:
     Raises:
         ValueError: If template not found and no local yaml file exists
     """
-    from .config import load_ka_metadata
     from hyperextract.utils.template_engine import Gallery
+
+    from .config import load_ka_metadata
 
     metadata = load_ka_metadata(ka_path)
     if metadata is None:

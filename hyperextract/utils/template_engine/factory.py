@@ -3,33 +3,32 @@
 Supports all 8 AutoType dynamic generation.
 """
 
-from typing import TYPE_CHECKING, Union, Optional
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from langchain_core.language_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
+from langchain_core.language_models import BaseChatModel
 
 from .parsers import (
     TemplateCfg,
     localize_template,
-    parse_output,
-    parse_identifiers,
-    parse_guideline,
-    parse_option,
     parse_display,
+    parse_guideline,
+    parse_identifiers,
+    parse_option,
+    parse_output,
 )
-
 
 if TYPE_CHECKING:
     from hyperextract.types import (
-        AutoModel,
-        AutoList,
-        AutoSet,
         AutoGraph,
         AutoHypergraph,
-        AutoTemporalGraph,
+        AutoList,
+        AutoModel,
+        AutoSet,
         AutoSpatialGraph,
         AutoSpatioTemporalGraph,
+        AutoTemporalGraph,
     )
 
 
@@ -379,8 +378,8 @@ class TemplateFactory:
     @classmethod
     def create(
         cls,
-        source: Union[str, TemplateCfg],
-        language: Optional[str] = None,
+        source: str | TemplateCfg,
+        language: str | None = None,
         llm_client: BaseChatModel = None,
         embedder: Embeddings = None,
         **kwargs,

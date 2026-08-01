@@ -3,12 +3,12 @@ Hyper-RAG: Hypergraph-based Retrieval-Augmented Generation
 Extracts and manages multi-entity relationships with support for n-ary hyperedges.
 """
 
-from typing import List
-from pydantic import BaseModel, Field
-from hyperextract.types import AutoHypergraph
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from ontomem.merger import CustomRuleMerger
+from pydantic import BaseModel, Field
+
+from hyperextract.types import AutoHypergraph
 
 # ============================================================================
 # Node Schema
@@ -35,13 +35,13 @@ class NodeSchema(BaseModel):
 class EdgeSchema(BaseModel):
     """Represents a relationship or event connecting multiple entities (low-order or high-order)."""
 
-    participants: List[str] = Field(
+    participants: list[str] = Field(
         description="Names of entities involved in this relationship"
     )
     description: str = Field(
         description="Detailed explanation of the relationship or event"
     )
-    keywords: List[str] = Field(
+    keywords: list[str] = Field(
         description="List of keywords summarizing the relationship themes (e.g., ['conflict', 'trade', 'alliance'])",
     )
     strength: int = Field(

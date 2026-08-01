@@ -1,27 +1,27 @@
 """List Knowledge Pattern - extracts a collection of objects from text."""
 
-from typing import (
-    Any,
-    List,
-    Type,
-    TypeVar,
-    Generic,
-    Iterator,
-    Callable,
-    Iterable,
-    TYPE_CHECKING,
-)
-from pathlib import Path
+from __future__ import annotations
+
+from collections.abc import Callable, Iterable, Iterator
 from datetime import datetime
-from pydantic import BaseModel, Field, create_model
+from pathlib import Path
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    TypeVar,
+)
+
+from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_community.vectorstores import FAISS
 from ontosight import view_nodes
+from pydantic import BaseModel, Field, create_model
+
+from hyperextract.utils.logging import get_logger
 
 from .base import BaseAutoType
-from hyperextract.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -42,7 +42,7 @@ DEFAULT_LIST_PROMPT = (
 class AutoListSchema(BaseModel, Generic[ItemSchema]):
     """Generic schema container for list-based knowledge patterns."""
 
-    items: List[ItemSchema] = Field(default_factory=list, description="Item list")
+    items: list[ItemSchema] = Field(default_factory=list, description="Item list")
 
 
 class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
@@ -63,21 +63,21 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
 
     if TYPE_CHECKING:
         # Use generic version during type checking to maintain complete type hints
-        item_list_schema: Type[AutoListSchema[ItemSchema]]
+        item_list_schema: type[AutoListSchema[ItemSchema]]
 
     def __init__(
         self,
-        item_schema: Type[ItemSchema],
+        item_schema: type[ItemSchema],
         llm_client: BaseChatModel,
         embedder: Embeddings,
         *,
         prompt: str = "",
-        item_label_extractor: Callable[[ItemSchema], str] = None,
+        item_label_extractor: Callable[[ItemSchema], str] | None = None,
         chunk_size: int = 2048,
         chunk_overlap: int = 256,
         max_workers: int = 10,
         verbose: bool = False,
-        fields_for_index: List[str] | None = None,
+        fields_for_index: list[str] | None = None,
     ):
         """Initialize AutoList with item schema and configuration.
 
@@ -101,7 +101,7 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
         self.item_list_schema = create_model(
             container_name,
             items=(
-                List[item_schema],
+                list[item_schema],
                 Field(default_factory=list, description="Item list"),
             ),
         )
@@ -132,7 +132,7 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
         return DEFAULT_LIST_PROMPT
 
     @property
-    def items(self) -> List[ItemSchema]:
+    def items(self) -> list[ItemSchema]:
         """Returns the internal list of extracted items."""
         return getattr(self._data, "items", [])
 
@@ -209,7 +209,7 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
 
     # ==================== Core Methods ====================
 
-    def merge_batch_data(self, data_list: List[AutoListSchema]) -> AutoListSchema:
+    def merge_batch_data(self, data_list: list[AutoListSchema]) -> AutoListSchema:
         """Pure data merge method implementing list append strategy.
 
         Merge strategy: Collects all items from all container objects and merges them
@@ -275,7 +275,7 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
                 logger.error("FAISS not available. Install with: pip install faiss-cpu")
                 raise
 
-    def search(self, query: str, top_k: int = 3) -> List[ItemSchema]:
+    def search(self, query: str, top_k: int = 3) -> list[ItemSchema]:
         """Searches items in the list using semantic similarity.
 
         Args:
@@ -293,7 +293,7 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
             raise Exception("Vector store not initialized")
 
         docs = self._index.similarity_search(query, k=top_k)
-        results: List[ItemSchema] = []
+        results: list[ItemSchema] = []
         for doc in docs:
             # Attempt to restore as object
             try:
@@ -326,7 +326,7 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
 
     def show(
         self,
-        item_label_extractor: Callable[[ItemSchema], str] = None,
+        item_label_extractor: Callable[[ItemSchema], str] | None = None,
         *,
         top_k_for_search: int = 3,
         top_k_for_chat: int = 3,
@@ -891,8 +891,10 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
             extra = got_field_names - expected_field_names
 
             error_parts = [
-                f"Item schema mismatch. Expected {self.item_schema.__name__}, "
-                f"but got {type(item).__name__}."
+                (
+                    f"Item schema mismatch. Expected {self.item_schema.__name__}, "
+                    f"but got {type(item).__name__}."
+                )
             ]
 
             if missing:

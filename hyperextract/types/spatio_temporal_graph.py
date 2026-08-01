@@ -1,17 +1,19 @@
 """Generic temporal graph implementation supporting custom schemas with time-aware deduplication."""
 
-from typing import Type, Callable, Tuple, Any, List
+from collections.abc import Callable
 from datetime import datetime
-from langchain_core.language_models import BaseChatModel
+from typing import Any
+
 from langchain_core.embeddings import Embeddings
-from ontomem.merger import MergeStrategy, BaseMerger
+from langchain_core.language_models import BaseChatModel
+from ontomem.merger import BaseMerger, MergeStrategy
 
 from .graph import (
     AutoGraph,
-    NodeSchema,
+    EdgeListSchema,
     EdgeSchema,
     NodeListSchema,
-    EdgeListSchema,
+    NodeSchema,
 )
 
 # ==============================================================================
@@ -143,13 +145,13 @@ class AutoSpatioTemporalGraph(AutoGraph[NodeSchema, EdgeSchema]):
 
     def __init__(
         self,
-        node_schema: Type[NodeSchema],
-        edge_schema: Type[EdgeSchema],
+        node_schema: type[NodeSchema],
+        edge_schema: type[EdgeSchema],
         node_key_extractor: Callable[[NodeSchema], str],
         edge_key_extractor: Callable[[EdgeSchema], str],
         time_in_edge_extractor: Callable[[EdgeSchema], str],
         location_in_edge_extractor: Callable[[EdgeSchema], str],
-        nodes_in_edge_extractor: Callable[[EdgeSchema], Tuple[str, str]],
+        nodes_in_edge_extractor: Callable[[EdgeSchema], tuple[str, str]],
         llm_client: BaseChatModel,
         embedder: Embeddings,
         observation_time: str | None = None,
@@ -164,8 +166,8 @@ class AutoSpatioTemporalGraph(AutoGraph[NodeSchema, EdgeSchema]):
         chunk_overlap: int = 256,
         max_workers: int = 10,
         verbose: bool = False,
-        node_fields_for_index: List[str] | None = None,
-        edge_fields_for_index: List[str] | None = None,
+        node_fields_for_index: list[str] | None = None,
+        edge_fields_for_index: list[str] | None = None,
         **kwargs: Any,
     ):
         """
@@ -265,8 +267,8 @@ class AutoSpatioTemporalGraph(AutoGraph[NodeSchema, EdgeSchema]):
     # ==============================================================================
 
     def _extract_edges_batch(
-        self, chunks: List[str], node_lists: List[NodeListSchema[NodeSchema]]
-    ) -> List[EdgeListSchema[EdgeSchema]]:
+        self, chunks: list[str], node_lists: list[NodeListSchema[NodeSchema]]
+    ) -> list[EdgeListSchema[EdgeSchema]]:
         """Inject observation_time and observation_location into edge extraction."""
         inputs = []
         for chunk, node_list in zip(chunks, node_lists):

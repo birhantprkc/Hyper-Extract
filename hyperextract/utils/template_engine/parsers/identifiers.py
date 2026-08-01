@@ -1,12 +1,13 @@
 """Identifier parser - generates extraction functions from YAML config."""
 
 import re
-from typing import Any, Callable, Tuple
+from collections.abc import Callable
+from typing import Any
 
 from .schemas import (
     VALID_AUTOTYPES,
-    NaiveIdentifierSchema,
     GraphIdentifiersSchema,
+    NaiveIdentifierSchema,
 )
 
 
@@ -42,7 +43,7 @@ def _extractor(field_or_template: str) -> Callable[[Any], str]:
 
 def _members_extractor(
     members: dict[str, str] | str | list[str],
-) -> Callable[[Any], Tuple[str, ...]]:
+) -> Callable[[Any], tuple[str, ...]]:
     """Relation members extractor:
     Graph:    {source: 's', target: 't'} -> lambda x: (x.s, x.t)
     Hypergraph: 'members' -> lambda x: tuple(sorted(x.members)) or
@@ -51,12 +52,12 @@ def _members_extractor(
     # Handle Graph
     if isinstance(members, dict):
 
-        def extractor(item: Any) -> Tuple[str, str]:
+        def extractor(item: Any) -> tuple[str, str]:
             return tuple(
                 sorted(
                     [
-                        str(getattr(item, "source")),
-                        str(getattr(item, "target")),
+                        str(item.source),
+                        str(item.target),
                     ]
                 )
             )
@@ -66,12 +67,12 @@ def _members_extractor(
     # Handle Hypergraph
     if isinstance(members, str):
 
-        def extractor(item: Any) -> Tuple[str, ...]:
+        def extractor(item: Any) -> tuple[str, ...]:
             return tuple(sorted(getattr(item, members)))
 
         return extractor
 
-    def extractor(item: str | list[str]) -> Tuple[str, ...]:
+    def extractor(item: str | list[str]) -> tuple[str, ...]:
         result = []
         for m in members:
             result.append(tuple(sorted(getattr(item, m))))
@@ -85,8 +86,8 @@ def parse_identifiers(
     autotype: VALID_AUTOTYPES,
 ) -> (
     Callable[[Any], str]
-    | Tuple[
-        Callable[[Any], str], Callable[[Any], str], Callable[[Any], Tuple[str, ...]]
+    | tuple[
+        Callable[[Any], str], Callable[[Any], str], Callable[[Any], tuple[str, ...]]
     ]
 ):
     """Parse identifiers config and return extractors based on autotype.

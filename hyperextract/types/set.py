@@ -4,28 +4,26 @@ Provides automatic deduplication based on a user-specified unique key field.
 Supports multiple merge strategies including LLM-powered intelligent merging.
 """
 
-from typing import (
-    Any,
-    List,
-    Type,
-    TypeVar,
-    Generic,
-    Optional,
-    Callable,
-    Iterator,
-    TYPE_CHECKING,
-)
-from pathlib import Path
+from collections.abc import Callable, Iterator
 from datetime import datetime
-from pydantic import BaseModel, Field, create_model
+from pathlib import Path
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    TypeVar,
+)
+
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.chat_models import BaseChatModel
 from ontomem import OMem
-from ontomem.merger import MergeStrategy, create_merger, BaseMerger
+from ontomem.merger import BaseMerger, MergeStrategy, create_merger
 from ontosight import view_nodes
+from pydantic import BaseModel, Field, create_model
+
+from hyperextract.utils.logging import get_logger
 
 from .base import BaseAutoType
-from hyperextract.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -46,7 +44,7 @@ DEFAULT_SET_PROMPT = (
 class AutoSetSchema(BaseModel, Generic[ItemSchema]):
     """Generic schema container for set-based knowledge patterns."""
 
-    items: List[ItemSchema] = Field(
+    items: list[ItemSchema] = Field(
         default_factory=list, description="Set of unique items"
     )
 
@@ -97,23 +95,23 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
 
     if TYPE_CHECKING:
         # Use generic version during type checking to maintain complete type hints
-        item_set_schema: Type[AutoSetSchema[ItemSchema]]
+        item_set_schema: type[AutoSetSchema[ItemSchema]]
 
     def __init__(
         self,
-        item_schema: Type[ItemSchema],
+        item_schema: type[ItemSchema],
         llm_client: BaseChatModel,
         embedder: Embeddings,
         key_extractor: Callable[[ItemSchema], Any],
         *,
         strategy_or_merger: MergeStrategy | BaseMerger = MergeStrategy.LLM.BALANCED,
         prompt: str = "",
-        item_label_extractor: Callable[[ItemSchema], str] = None,
+        item_label_extractor: Callable[[ItemSchema], str] | None = None,
         chunk_size: int = 2048,
         chunk_overlap: int = 256,
         max_workers: int = 10,
         verbose: bool = False,
-        fields_for_index: List[str] | None = None,
+        fields_for_index: list[str] | None = None,
         **kwargs: Any,
     ):
         """Initialize AutoSet with key extractor and merge strategy.
@@ -150,7 +148,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         self.item_set_schema = create_model(
             container_name,
             items=(
-                List[item_schema],
+                list[item_schema],
                 Field(default_factory=list, description="Set of unique items"),
             ),
         )
@@ -249,7 +247,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         return self._data_memory.empty()
 
     @property
-    def items(self) -> List[ItemSchema]:
+    def items(self) -> list[ItemSchema]:
         """Returns the internal items as a list (for external interface compatibility).
 
         Returns:
@@ -258,7 +256,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         return self._data_memory.items
 
     @property
-    def keys(self) -> List[Any]:
+    def keys(self) -> list[Any]:
         """Returns all unique key values.
 
         Returns:
@@ -306,7 +304,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
     # ==================== Core Override Methods ====================
 
     def merge_batch_data(
-        self, data_list: List[AutoSetSchema[ItemSchema]]
+        self, data_list: list[AutoSetSchema[ItemSchema]]
     ) -> AutoSetSchema[ItemSchema]:
         """Merges multiple data containers with automatic deduplication.
 
@@ -346,7 +344,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         """
         self._data_memory.build_index(force=force)
 
-    def search(self, query: str, top_k: int = 3) -> List[ItemSchema]:
+    def search(self, query: str, top_k: int = 3) -> list[ItemSchema]:
         """Searches items in the set using semantic similarity.
 
         Args:
@@ -375,7 +373,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
 
     def show(
         self,
-        item_label_extractor: Callable[[ItemSchema], str] = None,
+        item_label_extractor: Callable[[ItemSchema], str] | None = None,
         *,
         top_k_for_search: int = 3,
         top_k_for_chat: int = 3,
@@ -476,7 +474,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         self.clear_index()
         self.metadata["updated_at"] = datetime.now()
 
-    def remove(self, key: Any) -> Optional[ItemSchema]:
+    def remove(self, key: Any) -> ItemSchema | None:
         """Removes an item by its unique key value.
 
         Args:
@@ -509,9 +507,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         """
         return self._data_memory.get(key) is not None
 
-    def get(
-        self, key: Any, default: Optional[ItemSchema] = None
-    ) -> Optional[ItemSchema]:
+    def get(self, key: Any, default: ItemSchema | None = None) -> ItemSchema | None:
         """Gets an item by its unique key value.
 
         Args:
@@ -524,7 +520,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         result = self._data_memory.get(key)
         return result if result is not None else default
 
-    def update(self, items: List[ItemSchema]) -> None:
+    def update(self, items: list[ItemSchema]) -> None:
         """Batch adds multiple items.
 
         Args:
@@ -793,7 +789,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
 
     # ==================== Set Comparison Operations ====================
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Equality comparison: set1 == set2.
 
         Two sets are equal if they have the same schema and key set.
@@ -816,7 +812,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
 
         return self.keys == other.keys
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         """Inequality comparison: set1 != set2.
 
         Returns:

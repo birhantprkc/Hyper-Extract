@@ -3,13 +3,13 @@
 Provides a clean API for searching and creating knowledge extraction templates.
 """
 
-from typing import Dict, Optional, Any
+from typing import Any
 
-from langchain_core.language_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
+from langchain_core.language_models import BaseChatModel
 
-from hyperextract.types.base import BaseAutoType
 from hyperextract.methods import get_method_cfg
+from hyperextract.types.base import BaseAutoType
 
 from .gallery import Gallery
 from .parsers import TemplateCfg
@@ -39,9 +39,9 @@ class Template:
     @staticmethod
     def create(
         source: str,
-        language: Optional[str] = None,
-        llm_client: Optional[BaseChatModel] = None,
-        embedder: Optional[Embeddings] = None,
+        language: str | None = None,
+        llm_client: BaseChatModel | None = None,
+        embedder: Embeddings | None = None,
         **kwargs: Any,
     ) -> "BaseAutoType":
         """Create template instance.
@@ -89,7 +89,7 @@ class Template:
         return TemplateFactory.create(source, language, llm_client, embedder, **kwargs)
 
     @staticmethod
-    def get(path: str) -> Optional[TemplateCfg]:
+    def get(path: str) -> TemplateCfg | None:
         """Get template configuration by path.
 
         Args:
@@ -105,12 +105,12 @@ class Template:
 
     @staticmethod
     def list(
-        filter_by_query: Optional[str] = None,
-        filter_by_type: Optional[str] = None,
-        filter_by_tag: Optional[str] = None,
-        filter_by_language: Optional[str] = None,
+        filter_by_query: str | None = None,
+        filter_by_type: str | None = None,
+        filter_by_tag: str | None = None,
+        filter_by_language: str | None = None,
         include_methods: bool = True,
-    ) -> Dict[str, TemplateCfg]:
+    ) -> dict[str, TemplateCfg]:
         """List templates with optional filters.
 
         Args:

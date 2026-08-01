@@ -5,13 +5,15 @@ Extracts and manages entity-relationship knowledge graphs with standard binary e
 
 import json
 from pathlib import Path
-from typing import List, Dict, Optional, Any, Tuple
-from pydantic import BaseModel, Field
+from typing import Any
+
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
-from hyperextract.types import AutoGraph
 from ontomem.merger import CustomRuleMerger
+from pydantic import BaseModel, Field
+
+from hyperextract.types import AutoGraph
 
 try:
     from graspologic.partition import hierarchical_leiden
@@ -89,10 +91,10 @@ class CommunityReport(BaseModel):
         description="Detailed executive summary of the community's structure and key entities"
     )
     rating: float = Field(description="Impact severity rating (0-10)")
-    findings: List[CommunityFinding] = Field(description="List of key findings")
+    findings: list[CommunityFinding] = Field(description="List of key findings")
     # Optional fields (filled programmatically)
-    id: Optional[str] = Field(default=None, description="Community ID")
-    key_entities: Optional[List[str]] = Field(
+    id: str | None = Field(default=None, description="Community ID")
+    key_entities: list[str] | None = Field(
         default_factory=list, description="List of key entities in this community"
     )
 
@@ -285,13 +287,13 @@ class Graph_RAG(AutoGraph[NodeSchema, EdgeSchema]):
         )
 
         # Community Management
-        self.community_reports: Dict[str, CommunityReport] = {}
-        self._community_graph: Optional[Any] = None
-        self._community_hierarchy: Dict[
-            int, Dict[str, List[str]]
+        self.community_reports: dict[str, CommunityReport] = {}
+        self._community_graph: Any | None = None
+        self._community_hierarchy: dict[
+            int, dict[str, list[str]]
         ] = {}  # level -> {community_id: [node_names]}
-        self._node_to_community: Dict[
-            str, Dict[str, Any]
+        self._node_to_community: dict[
+            str, dict[str, Any]
         ] = {}  # node_name -> {level: community_id}
 
     def dump(self, folder_path: str | Path) -> None:
@@ -541,7 +543,7 @@ class Graph_RAG(AutoGraph[NodeSchema, EdgeSchema]):
         top_k_edges: int = 3,
         top_k: int | None = None,
         use_community: bool = False,
-    ) -> Tuple[List, List, Optional[Dict]]:
+    ) -> tuple[list, list, dict | None]:
         """Unified graph search interface with optional community enhancement.
 
         Args:
@@ -565,7 +567,7 @@ class Graph_RAG(AutoGraph[NodeSchema, EdgeSchema]):
         query: str,
         top_k_nodes: int = 3,
         top_k_edges: int = 3,
-    ) -> Tuple[List, List, Dict]:
+    ) -> tuple[list, list, dict]:
         """Internal implementation for community-enhanced search."""
         if not self.community_reports:
             if self.verbose:
@@ -577,7 +579,7 @@ class Graph_RAG(AutoGraph[NodeSchema, EdgeSchema]):
 
         return nodes, edges, community_context
 
-    def _get_community_context_for_query(self, query: str) -> Dict:
+    def _get_community_context_for_query(self, query: str) -> dict:
         """Get community context related to the query."""
         if not self.community_reports:
             return {}

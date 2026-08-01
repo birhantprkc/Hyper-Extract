@@ -1,6 +1,6 @@
-from typing import Any, Dict, Literal
-from pydantic import BaseModel
+from typing import Any, Literal
 
+from pydantic import BaseModel
 
 VALID_MERGE_STRATEGIES = Literal[
     "merge_field",
@@ -27,6 +27,6 @@ VALID_FIELD_TYPES = Literal["str", "int", "float", "bool", "list"]
 class FieldSchema(BaseModel):
     name: str
     type: VALID_FIELD_TYPES
-    description: str | Dict[str, str]
+    description: str | dict[str, str]
     required: bool | None = None
     default: Any | None = None

@@ -7,17 +7,17 @@ standardized triple-based knowledge graphs.
 Prompts and schemas are adapted from the original Atom implementation.
 """
 
-from typing import Optional, List
 from datetime import datetime
-from pydantic import BaseModel, Field
-from semhash import SemHash
+
+from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.embeddings import Embeddings
-from ontomem.merger import MergeStrategy, CustomRuleMerger
+from ontomem.merger import CustomRuleMerger, MergeStrategy
+from pydantic import BaseModel, Field
+from semhash import SemHash
 
-from hyperextract.utils.logging import get_logger
 from hyperextract.types.graph import AutoGraph, AutoGraphSchema
+from hyperextract.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -82,7 +82,7 @@ class EdgeSchema(BaseModel):
             "AVOID preposition-only relation names like 'of', 'in', 'at' - use descriptive present-tense verbs instead."
         )
     )
-    t_start: Optional[list[str]] = Field(
+    t_start: list[str] | None = Field(
         default_factory=list,
         description=(
             "A time or interval indicating when this relationship begins or is active. "
@@ -101,7 +101,7 @@ class EdgeSchema(BaseModel):
             "Leave it [] if not specified."
         ),
     )
-    t_end: Optional[list[str]] = Field(
+    t_end: list[str] | None = Field(
         default_factory=list,
         description=(
             "A time or interval indicating when this relationship ceases to hold. "
@@ -117,14 +117,14 @@ class EdgeSchema(BaseModel):
             "Leave it [] if no end date/time is given."
         ),
     )
-    t_obs: Optional[list[str]] = Field(
+    t_obs: list[str] | None = Field(
         default=None,
         description=(
             "DO NOT EXTRACT OR INFER THIS FIELD. Leave it null/None. "
             "This field represents the extraction timestamp and will be populated manually by the user post-processing."
         ),
     )
-    atomic_facts: Optional[list[str]] = Field(
+    atomic_facts: list[str] | None = Field(
         default_factory=list,
         description=(
             "A list of exact string copies of the atomic facts or sentences from the source text that provide evidence for this relationship. "
@@ -441,7 +441,7 @@ class Atom(AutoGraph[NodeSchema, EdgeSchema]):
             {"source_text": chunk, "observation_time": obs_date_str}
             for chunk in raw_chunks
         ]
-        chunk_fact_lists: List[AtomicFactSchema] = fact_chain.batch(
+        chunk_fact_lists: list[AtomicFactSchema] = fact_chain.batch(
             fact_inputs, config={"max_concurrency": self.max_workers}
         )
 

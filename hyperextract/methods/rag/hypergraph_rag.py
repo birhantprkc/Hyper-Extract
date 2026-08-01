@@ -10,12 +10,12 @@ each hyperedge encodes a complete semantic unit (sentence or event), maintaining
 the natural information flow and contextual dependencies of the source material.
 """
 
-from typing import List
 from hashlib import md5
-from pydantic import BaseModel, Field
+
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from ontomem.merger import MergeStrategy
+from pydantic import BaseModel, Field
 
 from hyperextract.types.hypergraph import AutoHypergraph, AutoHypergraphSchema
 
@@ -58,7 +58,7 @@ class EdgeSchema(BaseModel):
     # related_entities: List[str] = Field(
     #     description="A list of all entity names involved in or referenced by this knowledge segment."
     # )
-    related_entities: List[NodeSchema] = Field(
+    related_entities: list[NodeSchema] = Field(
         description="A list of all entities involved in or referenced by this knowledge segment."
     )
 

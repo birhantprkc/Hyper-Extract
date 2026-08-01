@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any
 
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -38,14 +38,14 @@ SERVER_NAME = "hyper-extract"
 # ---------------------------------------------------------------------------
 
 
-def _get_clients() -> Tuple[BaseChatModel, Embeddings]:
+def _get_clients() -> tuple[BaseChatModel, Embeddings]:
     """Return (llm, embedder) from the user's ~/.he/config.toml."""
     from hyperextract.utils.client import get_client
 
     return get_client()
 
 
-def _template_and_lang(path: Path) -> Tuple[str, str]:
+def _template_and_lang(path: Path) -> tuple[str, str]:
     """Read the template name and language from a KA's metadata.json."""
     meta_path = path / "metadata.json"
     if not meta_path.exists():

@@ -11,10 +11,10 @@ String shorthand format: provider:model@url
     - "vllm:Qwen3.5-9B@http://localhost:8000/v1" → full specification
 """
 
-import os
 import logging
+import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -28,7 +28,7 @@ DEFAULT_CONFIG_FILE = DEFAULT_CONFIG_DIR / "config.toml"
 OPENAI_API_URL = "https://api.openai.com/v1"
 
 # Provider presets: base_url and default models for each provider
-PROVIDER_PRESETS: Dict[str, Dict[str, str | None]] = {
+PROVIDER_PRESETS: dict[str, dict[str, str | None]] = {
     "openai": {
         "base_url": "https://api.openai.com/v1",
         "default_llm": "gpt-4o-mini",
@@ -75,7 +75,7 @@ PROVIDER_PRESETS: Dict[str, Dict[str, str | None]] = {
 ANTHROPIC_PROVIDERS = ("anthropic", "claude")
 
 # Environment variables checked (in order) for each provider's API key.
-PROVIDER_API_KEY_ENV: Dict[str, Tuple[str, ...]] = {
+PROVIDER_API_KEY_ENV: dict[str, tuple[str, ...]] = {
     "anthropic": ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"),
     "claude": ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"),
     "deepseek": ("DEEPSEEK_API_KEY",),
@@ -107,10 +107,10 @@ class CompatibleEmbeddings(Embeddings):
     def __init__(
         self,
         model: str = "text-embedding-ada-002",
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
         max_batch_size: int = 10,
-        chunk_size: Optional[int] = None,
+        chunk_size: int | None = None,
         max_retries: int = 2,
         **kwargs: Any,
     ):
@@ -146,12 +146,12 @@ class CompatibleEmbeddings(Embeddings):
         # Max tokens per request (8191 is the limit for most OpenAI embedders)
         self._max_tokens = kwargs.get("embedding_ctx_length", 8191)
 
-    def _split_texts(self, texts: List[str]) -> List[Tuple[str, int]]:
+    def _split_texts(self, texts: list[str]) -> list[tuple[str, int]]:
         """Split texts into chunks that fit within token limits.
 
         Returns list of (text_chunk, original_index) tuples.
         """
-        chunks: List[Tuple[str, int]] = []
+        chunks: list[tuple[str, int]] = []
         for i, text in enumerate(texts):
             tokens = self._encoding.encode(text)
             if len(tokens) <= self._max_tokens:
@@ -164,7 +164,7 @@ class CompatibleEmbeddings(Embeddings):
                     chunks.append((chunk_text, i))
         return chunks
 
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
 
@@ -173,16 +173,16 @@ class CompatibleEmbeddings(Embeddings):
             return []
 
         # Group chunks into batches no larger than max_batch_size
-        all_embeddings: List[Optional[List[float]]] = [None] * len(texts)
-        batch: List[Tuple[str, int]] = []
+        all_embeddings: list[list[float] | None] = [None] * len(texts)
+        batch: list[tuple[str, int]] = []
 
         # Accumulate a running sum and count per text so multi-chunk texts get a
         # true mean. A pairwise (prev + curr) / 2 only yields the mean for two
         # chunks; for three or more it biases toward later chunks.
-        sums: Dict[int, List[float]] = {}
-        counts: Dict[int, int] = {}
+        sums: dict[int, list[float]] = {}
+        counts: dict[int, int] = {}
 
-        def _embed_batch(b: List[Tuple[str, int]]) -> None:
+        def _embed_batch(b: list[tuple[str, int]]) -> None:
             # Skip blank chunks: many OpenAI-compatible providers (e.g. Bailian /
             # DashScope) reject empty-string input with a 400. Blank texts are
             # backfilled with a zero vector after all batches complete.
@@ -215,7 +215,7 @@ class CompatibleEmbeddings(Embeddings):
             _embed_batch(batch)
 
         # Divide each running sum by its chunk count to get the mean embedding.
-        dim: Optional[int] = None
+        dim: int | None = None
         for orig_idx, running in sums.items():
             count = counts[orig_idx]
             mean = [v / count for v in running]
@@ -242,7 +242,7 @@ class CompatibleEmbeddings(Embeddings):
 
         return all_embeddings  # type: ignore[return-value]
 
-    def embed_query(self, text: str) -> List[float]:
+    def embed_query(self, text: str) -> list[float]:
         return self.embed_documents([text])[0]
 
 
@@ -251,7 +251,7 @@ def _parse_client_spec(
     *,
     api_key: str = "",
     default_kind: str = "llm",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Parse a client specification string or dict into a config dict.
 
     String formats:
@@ -377,12 +377,12 @@ def create_llm(
     if provider == "deepseek" and "thinking" not in extra_body:
         extra_body["thinking"] = {"type": "disabled"}
 
-    chat_kwargs: dict[str, Any] = dict(
-        model=config["model"],
-        api_key=config["api_key"] or os.environ.get("OPENAI_API_KEY", ""),
-        base_url=config.get("base_url") or None,
-        temperature=config.get("temperature", 0),
-    )
+    chat_kwargs: dict[str, Any] = {
+        "model": config["model"],
+        "api_key": config["api_key"] or os.environ.get("OPENAI_API_KEY", ""),
+        "base_url": config.get("base_url") or None,
+        "temperature": config.get("temperature", 0),
+    }
     if extra_body:
         chat_kwargs["extra_body"] = extra_body
     return ChatOpenAI(**chat_kwargs)
@@ -445,7 +445,7 @@ def create_client(
     provider: str = "",
     api_key: str = "",
     **kwargs: Any,
-) -> Tuple[BaseChatModel, Embeddings]:
+) -> tuple[BaseChatModel, Embeddings]:
     """Create both LLM and Embedder clients in one call.
 
     Supports three patterns:
@@ -513,7 +513,9 @@ def create_client(
     return llm_client, embedder_client
 
 
-def get_client(config_path: str | Path = None) -> Tuple[BaseChatModel, Embeddings]:
+def get_client(
+    config_path: str | Path | None = None,
+) -> tuple[BaseChatModel, Embeddings]:
     """Get OpenAI LLM client and Embedder from config.
 
     Backward-compatible: reads ~/.he/config.toml.

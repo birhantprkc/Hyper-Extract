@@ -12,21 +12,20 @@ Main Components:
 - parse_identifiers: Parses identifier extractors from config
 """
 
-from .template import Template
-from .gallery import Gallery
 from .factory import TemplateFactory
+from .gallery import Gallery
 from .parsers import (
     TemplateCfg,
     load_template,
     localize_template,
 )
-
+from .template import Template
 
 __all__ = [
-    "Template",
     "Gallery",
-    "TemplateFactory",
+    "Template",
     "TemplateCfg",
+    "TemplateFactory",
     "load_template",
     "localize_template",
 ]

@@ -1,20 +1,22 @@
 """Unit Knowledge Pattern - extracts a single structured object from text."""
 
-from pathlib import Path
+from collections.abc import Callable
 from datetime import datetime
-from typing import List, Any, Type, Callable, Union, TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Union
 
 if TYPE_CHECKING:
     from .list import AutoList
-from ontomem.merger import MergeStrategy, create_merger, BaseMerger
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.embeddings import Embeddings
-from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
+from langchain_core.documents import Document
+from langchain_core.embeddings import Embeddings
+from langchain_core.language_models.chat_models import BaseChatModel
+from ontomem.merger import BaseMerger, MergeStrategy, create_merger
 from ontosight import view_nodes
 
-from .base import BaseAutoType, T
 from hyperextract.utils.logging import get_logger
+
+from .base import BaseAutoType, T
 
 logger = get_logger(__name__)
 
@@ -50,13 +52,13 @@ class AutoModel(BaseAutoType[T]):
 
     def __init__(
         self,
-        data_schema: Type[T],
+        data_schema: type[T],
         llm_client: BaseChatModel,
         embedder: Embeddings,
         *,
         strategy_or_merger: MergeStrategy | BaseMerger = MergeStrategy.LLM.BALANCED,
         prompt: str = "",
-        label_extractor: Callable[[T], str] = None,
+        label_extractor: Callable[[T], str] | None = None,
         chunk_size: int = 2048,
         chunk_overlap: int = 256,
         max_workers: int = 10,
@@ -206,7 +208,7 @@ class AutoModel(BaseAutoType[T]):
 
     # ==================== Core Methods ====================
 
-    def merge_batch_data(self, data_list: List[T]) -> T:
+    def merge_batch_data(self, data_list: list[T]) -> T:
         """Merge multiple extracted objects using configured strategy.
 
         Leverages ontomem's merge strategies to intelligently combine results from
@@ -264,7 +266,7 @@ class AutoModel(BaseAutoType[T]):
         self._index = FAISS.from_documents(documents, self.embedder)
         logger.info(f"Built FAISS index with {len(documents)} documents")
 
-    def search(self, query: str, top_k: int = 3) -> List[Any]:
+    def search(self, query: str, top_k: int = 3) -> list[Any]:
         """Searches all indexed fields using semantic similarity.
 
         Args:
@@ -315,7 +317,7 @@ class AutoModel(BaseAutoType[T]):
 
     def show(
         self,
-        label_extractor: Callable[[T], str] = None,
+        label_extractor: Callable[[T], str] | None = None,
         *,
         top_k: int = 3,
     ) -> None:

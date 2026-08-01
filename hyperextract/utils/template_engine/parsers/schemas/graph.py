@@ -1,21 +1,21 @@
-from typing import Dict, List
 from pydantic import BaseModel
+
 from .base import VALID_MERGE_STRATEGIES
 from .naive import NaiveOutputSchema
 
 
 class GraphGuidelineSchema(BaseModel):
-    target: str | List[str] | Dict[str, str]
-    rules_for_entities: str | List[str] | Dict[str, str | List[str]]
-    rules_for_relations: str | List[str] | Dict[str, str | List[str]]
+    target: str | list[str] | dict[str, str]
+    rules_for_entities: str | list[str] | dict[str, str | list[str]]
+    rules_for_relations: str | list[str] | dict[str, str | list[str]]
     # Only for AutoTemporalGraph, AutoSpatioTemporalGraph
-    rules_for_time: str | List[str] | Dict[str, str | List[str]] | None = None
+    rules_for_time: str | list[str] | dict[str, str | list[str]] | None = None
     # Only for AutoSpatialGraph, AutoSpatioTemporalGraph
-    rules_for_location: str | List[str] | Dict[str, str | List[str]] | None = None
+    rules_for_location: str | list[str] | dict[str, str | list[str]] | None = None
 
 
 class GraphOutputSchema(BaseModel):
-    description: str | Dict[str, str]
+    description: str | dict[str, str]
     entities: NaiveOutputSchema
     relations: NaiveOutputSchema
 
@@ -28,8 +28,8 @@ class GraphOptionsSchema(BaseModel):
     entity_merge_strategy: VALID_MERGE_STRATEGIES | None = None
     relation_merge_strategy: VALID_MERGE_STRATEGIES | None = None
     extraction_mode: str | None = None
-    entity_fields_for_search: List[str] | None = None
-    relation_fields_for_search: List[str] | None = None
+    entity_fields_for_search: list[str] | None = None
+    relation_fields_for_search: list[str] | None = None
     # Only for AutoTemporalGraph, AutoSpatioTemporalGraph
     observation_time: str | None = None
     # Only for AutoSpatialGraph, AutoSpatioTemporalGraph
@@ -44,7 +44,7 @@ class GraphDisplaySchema(BaseModel):
 class GraphIdentifiersSchema(BaseModel):
     entity_id: str = None
     relation_id: str = None
-    relation_members: str | Dict[str, str] | List[str] = None
+    relation_members: str | dict[str, str] | list[str] = None
     # Only for AutoTemporalGraph, AutoSpatioTemporalGraph
     time_field: str | None = None
     # Only for AutoSpatialGraph, AutoSpatioTemporalGraph

@@ -1,14 +1,15 @@
 import json
-from pathlib import Path
-from datetime import datetime
-from pydantic import BaseModel
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, Any, Dict, Type, List
-from langchain_core.messages import AIMessage
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Generic, TypeVar
+
 from langchain_core.embeddings import Embeddings
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import AIMessage
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from pydantic import BaseModel
 
 from hyperextract.utils.logging import get_logger
 
@@ -41,7 +42,7 @@ class BaseAutoType(ABC, Generic[T]):
 
     def __init__(
         self,
-        data_schema: Type[T],
+        data_schema: type[T],
         llm_client: BaseChatModel,
         embedder: Embeddings,
         *,
@@ -92,7 +93,7 @@ class BaseAutoType(ABC, Generic[T]):
         self._init_internal_state()
 
         # Internal state storing the extracted knowledge
-        self.metadata: Dict[str, Any] = {
+        self.metadata: dict[str, Any] = {
             "created_at": datetime.now(),
             "updated_at": datetime.now(),
         }
@@ -122,12 +123,11 @@ class BaseAutoType(ABC, Generic[T]):
 
         Subclasses must implement this to provide a prompt tailored to their extraction pattern.
         """
-        pass
 
     # ==================== Data Access Interface ====================
 
     @property
-    def data_schema(self) -> Type[T]:
+    def data_schema(self) -> type[T]:
         """Returns the Pydantic schema class used by this knowledge instance.
 
         Returns:
@@ -147,7 +147,6 @@ class BaseAutoType(ABC, Generic[T]):
         Returns:
             The internal knowledge data as a Pydantic model instance (or converted form).
         """
-        pass
 
     @abstractmethod
     def empty(self) -> bool:
@@ -156,7 +155,6 @@ class BaseAutoType(ABC, Generic[T]):
         Returns:
             True if no data is stored, False otherwise.
         """
-        pass
 
     # ==================== Data Management Operations ====================
 
@@ -196,7 +194,6 @@ class BaseAutoType(ABC, Generic[T]):
         Subclasses must implement this to set up internal structures that may be optimized
         beyond the standard Pydantic schema (e.g., OMem for AutoSet, dict-based for others).
         """
-        pass
 
     @abstractmethod
     def _set_data_state(self, data: T) -> None:
@@ -212,7 +209,6 @@ class BaseAutoType(ABC, Generic[T]):
         Args:
             data: The new data object to set.
         """
-        pass
 
     @abstractmethod
     def _update_data_state(self, incoming_data: T) -> None:
@@ -230,7 +226,6 @@ class BaseAutoType(ABC, Generic[T]):
         Args:
             incoming_data: The incremental data to merge into the current state.
         """
-        pass
 
     @abstractmethod
     def _init_index_state(self) -> None:
@@ -243,7 +238,6 @@ class BaseAutoType(ABC, Generic[T]):
 
         This separation allows index implementation to be decoupled from base class.
         """
-        pass
 
     # ==================== Extraction & Merge ====================
 
@@ -420,7 +414,7 @@ class BaseAutoType(ABC, Generic[T]):
         return self
 
     @abstractmethod
-    def merge_batch_data(self, data_list: List[T]) -> T:
+    def merge_batch_data(self, data_list: list[T]) -> T:
         """Merges multiple knowledge data objects into a single unified object.
 
         This is a pure data transformation method that does not modify internal state.
@@ -439,7 +433,6 @@ class BaseAutoType(ABC, Generic[T]):
         Returns:
             A new merged knowledge object.
         """
-        pass
 
     # ==================== Indexing & Search & Chat ====================
 
@@ -450,10 +443,9 @@ class BaseAutoType(ABC, Generic[T]):
         Subclasses must implement this method to define how the vector index is constructed
         from the knowledge data. Uses FAISS as the vector store backend.
         """
-        pass
 
     @abstractmethod
-    def search(self, query: str, top_k: int = 3) -> List[Any]:
+    def search(self, query: str, top_k: int = 3) -> list[Any]:
         """Performs semantic search over the knowledge abstract.
 
         Standard search workflow:
@@ -470,7 +462,6 @@ class BaseAutoType(ABC, Generic[T]):
         Returns:
             List of relevant knowledge items.
         """
-        pass
 
     def chat(self, query: str, top_k: int = 3) -> AIMessage:
         """Performs a chat-like interaction with the knowledge abstract.
@@ -672,7 +663,6 @@ class BaseAutoType(ABC, Generic[T]):
         Args:
             folder_path: Target folder path for saving index files.
         """
-        pass
 
     @abstractmethod
     def load_index(self, folder_path: str | Path) -> None:
@@ -684,7 +674,6 @@ class BaseAutoType(ABC, Generic[T]):
         Args:
             folder_path: Source folder path containing index files.
         """
-        pass
 
     # ==================== Operator Overloads ====================
 
