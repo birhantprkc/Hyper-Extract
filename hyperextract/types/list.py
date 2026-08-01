@@ -136,7 +136,7 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
         """Returns the internal list of extracted items."""
         return getattr(self._data, "items", [])
 
-    def _create_empty_instance(self) -> "AutoList[ItemSchema]":
+    def _create_empty_instance(self) -> AutoList[ItemSchema]:
         """Creates a new empty instance with the same configuration.
 
         Overrides base class method to handle AutoList's item_schema parameter.
@@ -387,7 +387,7 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
         """Returns the number of elements in the list."""
         return len(self.items)
 
-    def __getitem__(self, key: int | slice) -> ItemSchema | "AutoList[ItemSchema]":
+    def __getitem__(self, key: int | slice) -> ItemSchema | AutoList[ItemSchema]:
         """Support index access and slicing.
 
         Args:
@@ -445,7 +445,7 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
         self.clear_index()
         self.metadata["updated_at"] = datetime.now()
 
-    def __add__(self, other: "BaseAutoType[ItemSchema]") -> "AutoList[ItemSchema]":
+    def __add__(self, other: BaseAutoType[ItemSchema]) -> AutoList[ItemSchema]:
         """Operator overload for '+' to combine knowledge instances.
 
         Supports multiple combination patterns:
@@ -617,7 +617,7 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
         self.clear_index()
         self.metadata["updated_at"] = datetime.now()
 
-    def extend(self, items: Iterable[ItemSchema] | "AutoList[ItemSchema]") -> None:
+    def extend(self, items: Iterable[ItemSchema] | AutoList[ItemSchema]) -> None:
         """Extend the list by appending multiple items.
 
         Args:
@@ -789,7 +789,7 @@ class AutoList(BaseAutoType[AutoListSchema[ItemSchema]], Generic[ItemSchema]):
                 count += 1
         return count
 
-    def copy(self) -> "AutoList[ItemSchema]":
+    def copy(self) -> AutoList[ItemSchema]:
         """Create a deep copy of this AutoList instance.
 
         Returns:
