@@ -155,13 +155,50 @@ Hyper-Extract relies on the LLM's structured output capability (`json_schema` or
 
 ## ⚡ 30-Second Quick Start
 
+**1. Install:**
+
 ```bash
-# Install
+# Install uv first (if you haven't)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install Hyper-Extract CLI
 uv tool install hyperextract
+# or: pipx install hyperextract
+```
 
-# Configure API key
-he config init -k YOUR_OPENAI_API_KEY
+**2. Configure your provider** (pick one):
 
+**OpenAI:**
+```bash
+he config init -p openai -k YOUR_OPENAI_API_KEY
+```
+
+**Anthropic (Claude):**
+```bash
+he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
+he config embedder -p openai -k YOUR_OPENAI_API_KEY
+```
+
+**DeepSeek:**
+```bash
+he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+he config embedder -p openai -k YOUR_OPENAI_API_KEY
+```
+
+**Bailian (Alibaba Cloud):**
+```bash
+he config init -p bailian -k YOUR_BAILIAN_API_KEY
+```
+
+**Local vLLM:**
+```bash
+he config llm -p vllm -u http://localhost:8000/v1 -k dummy -m Qwen/Qwen3.5-9B
+he config embedder -p vllm -u http://localhost:8001/v1 -k dummy -m BAAI/bge-m3
+```
+
+**3. Extract, query & visualize:**
+
+```bash
 # Extract knowledge from a document
 he parse examples/en/tesla.md -t general/biography_graph -o ./output/ -l en
 
@@ -174,6 +211,8 @@ he show ./output/
 # Export to an Obsidian vault (Markdown notes + [[wikilinks]])
 he export obsidian ./output/ -o ./vault/
 ```
+
+> **Which provider should I use?** OpenAI and Bailian provide both LLM and embedding models in one API. Anthropic and DeepSeek are LLM-only (pair them with an OpenAI embedder for search/chat). Local vLLM is free but requires a GPU. DeepSeek is the most cost-effective option (~$0.001-0.005/page vs ~$0.01-0.05/page for OpenAI gpt-4o-mini).
 
 <details>
 <summary><b>🐍 Python API</b> (click to expand)</summary>

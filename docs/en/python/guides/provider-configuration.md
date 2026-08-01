@@ -25,6 +25,19 @@ llm, emb = create_client("bailian", api_key="sk-xxx")
 # Or override model: create_client("bailian:qwen3.6-plus", api_key="sk-xxx")
 ```
 
+### Anthropic (Claude)
+
+```python
+from hyperextract import create_client, AutoGraph
+
+# Anthropic is LLM only — pair it with an OpenAI-compatible embedder.
+# Keys: ANTHROPIC_API_KEY (or CLAUDE_API_KEY) for the LLM, OPENAI_API_KEY for embeddings.
+llm, emb = create_client(
+    llm="anthropic",  # default model: claude-opus-4-8 (override with "anthropic:<model>")
+    embedder="openai:text-embedding-3-small",
+)
+```
+
 ### DeepSeek
 
 ```python
@@ -76,6 +89,7 @@ print(f"Nodes: {len(graph.nodes)}, Edges: {len(graph.edges)}")
 |----------|---------|
 | **OpenAI** | `he config init -p openai -k sk-xxx` |
 | **Bailian** | `he config init -p bailian -k sk-xxx` |
+| **Anthropic** | `he config llm -p anthropic -k sk-ant-xxx` + `he config embedder -p openai -k sk-xxx` |
 | **DeepSeek** | `he config llm -p deepseek -k sk-xxx` + `he config embedder -p openai -k sk-xxx` |
 | **vLLM** | `he config init` → select "local vLLM" |
 | **Mixed** (LLM=Bailian, Embedder=vLLM) | `he config llm -p bailian -k sk-xxx` + `he config embedder -p vllm -u http://localhost:8001/v1 -k dummy` |

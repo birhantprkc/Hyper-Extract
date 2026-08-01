@@ -28,6 +28,7 @@ he config [COMMAND] [OPTIONS]
 - **OpenAI preset**: `gpt-4o-mini` + `text-embedding-3-small`
 - **百炼 preset**: `qwen3.6-plus` + `text-embedding-v4`
 - **DeepSeek preset**: `deepseek-v4-flash`（仅 LLM —— 无嵌入预设）
+- **Anthropic preset**: `claude-opus-4-8`（仅 LLM —— 无嵌入预设，请搭配 OpenAI 兼容嵌入器）
 
 ```bash
 he config init [OPTIONS]
@@ -37,7 +38,7 @@ he config init [OPTIONS]
 
 | 选项 | 简写 | 描述 |
 |--------|-------|-------------|
-| `--provider` | `-p` | 提供商 preset (`openai` / `bailian` / `deepseek` / `vllm`) |
+| `--provider` | `-p` | 提供商 preset (`openai` / `anthropic` / `deepseek` / `bailian` / `vllm`) |
 | `--api-key` | `-k` | LLM 和嵌入模型的 API 密钥 |
 | `--base-url` | `-u` | 自定义 API 基础 URL（可选） |
 
@@ -54,6 +55,10 @@ he config init -p bailian -k sk-your-api-key-here
 
 # DeepSeek（仅 LLM —— 请搭配 OpenAI 兼容嵌入器）
 he config llm -p deepseek -k sk-your-deepseek-key
+he config embedder -p openai -k sk-your-openai-key
+
+# Anthropic（仅 LLM —— 请搭配 OpenAI 兼容嵌入器）
+he config llm -p anthropic -k sk-your-anthropic-key
 he config embedder -p openai -k sk-your-openai-key
 ```
 
@@ -109,6 +114,7 @@ he config llm [OPTIONS]
 
 | 选项 | 简写 | 描述 |
 |--------|-------|-------------|
+| `--provider` | `-p` | 提供商 preset（如 `openai`、`anthropic`、`deepseek`、`bailian`、`vllm`） |
 | `--api-key` | `-k` | LLM API 密钥 |
 | `--model` | `-m` | LLM 模型名称 |
 | `--base-url` | `-u` | 自定义 API 基础 URL |
@@ -151,6 +157,7 @@ he config embedder [OPTIONS]
 
 | 选项 | 简写 | 描述 |
 |--------|-------|-------------|
+| `--provider` | `-p` | 提供商 preset（如 `openai`、`anthropic`、`deepseek`、`bailian`、`vllm`） |
 | `--api-key` | `-k` | 嵌入模型 API 密钥 |
 | `--model` | `-m` | 嵌入模型名称 |
 | `--base-url` | `-u` | 自定义 API 基础 URL |

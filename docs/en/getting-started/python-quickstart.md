@@ -38,9 +38,35 @@ Create a `.env` file:
 echo "OPENAI_API_KEY=your-api-key" > .env
 ```
 
-**Option B — Bailian, DeepSeek, or vLLM**
+**Option B — Other providers (Anthropic, DeepSeek, Bailian, vLLM)**
 
-See the [Provider Configuration Guide](../python/guides/provider-configuration.md) for platform-specific setup.
+Set the appropriate environment variables in `.env`:
+
+```bash
+# Anthropic
+ANTHROPIC_API_KEY=sk-ant-xxx
+OPENAI_API_KEY=sk-xxx          # for embeddings
+
+# DeepSeek
+DEEPSEEK_API_KEY=sk-xxx
+OPENAI_API_KEY=sk-xxx          # for embeddings
+
+# Bailian (Alibaba Cloud)
+OPENAI_API_KEY=sk-xxx
+OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+```
+
+Then configure the client in your script:
+
+```python
+from hyperextract import create_client, Template
+
+# Example: DeepSeek LLM + OpenAI embedder
+llm, emb = create_client(llm="deepseek", embedder="openai:text-embedding-3-small")
+ka = Template.create("general/biography_graph", language="en", llm_client=llm, embedder=emb)
+```
+
+See the [Provider Configuration Guide](../python/guides/provider-configuration.md) for full details.
 
 ---
 
@@ -241,14 +267,12 @@ def main():
     result.show()
     
     print("\nDone!")
-```
-
-![Interactive Knowledge Graph Visualization](../../assets/en_show.jpg)
-
 
 if __name__ == "__main__":
     main()
 ```
+
+![Interactive Knowledge Graph Visualization](../../assets/en_show.jpg)
 
 ---
 

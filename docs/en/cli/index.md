@@ -40,7 +40,7 @@ he --version
 | `he build-index` | Build/rebuild search index | `-f` force rebuild |
 | `he clean` | Remove a KA's index (or the whole KA) | `-a` all, `-y` yes |
 | `he list` | List templates and methods | `template` or `method` |
-| `he config` | Manage configuration | `init`, `show`, `set` |
+| `he config` | Manage configuration | `init`, `show`, `llm`, `embedder` |
 
 ---
 
@@ -99,6 +99,15 @@ flowchart TB
 
     ```bash
     he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+    he config embedder -p openai -k YOUR_OPENAI_API_KEY
+    ```
+
+=== "Anthropic (Claude)"
+
+    Anthropic provides LLM only — pair with an OpenAI-compatible embedder:
+
+    ```bash
+    he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
     he config embedder -p openai -k YOUR_OPENAI_API_KEY
     ```
 

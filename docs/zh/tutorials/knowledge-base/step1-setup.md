@@ -76,6 +76,16 @@ backup_dir: "./backups"
 
 ## 管理脚本
 
+### 前置依赖
+
+安装所需的包：
+
+```bash
+pip install pyyaml hyperextract python-dotenv
+```
+
+> **注意：** 管理脚本使用 `pyyaml` 处理配置文件，使用 `python-dotenv` 加载 API 密钥。这些不包含在 Hyper-Extract 的默认依赖中。
+
 ### kb_manager.py（入门版）
 
 ```python
@@ -174,6 +184,8 @@ EOF
 ```
 
 ### 2. 运行设置
+
+确保已安装 `pyyaml` 和 `python-dotenv`（参见上方的前置依赖部分）：
 
 ```bash
 python kb_manager.py

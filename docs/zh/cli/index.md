@@ -40,7 +40,7 @@ he --version
 | `he build-index` | 构建/重建搜索索引 | `-f` 强制重建 |
 | `he clean` | 删除 KA 的索引（或整个 KA） | `-a` all, `-y` yes |
 | `he list` | 列出模板和方法 | `template` 或 `method` |
-| `he config` | 管理配置 | `init`, `show`, `set` |
+| `he config` | 管理配置 | `init`, `show`, `llm`, `embedder` |
 
 ---
 
@@ -99,6 +99,15 @@ flowchart TB
 
     ```bash
     he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+    he config embedder -p openai -k YOUR_OPENAI_API_KEY
+    ```
+
+=== "Anthropic (Claude)"
+
+    Anthropic 仅提供 LLM —— 请搭配 OpenAI 兼容嵌入器：
+
+    ```bash
+    he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
     he config embedder -p openai -k YOUR_OPENAI_API_KEY
     ```
 
@@ -206,7 +215,7 @@ he parse doc.md -m light_rag
 
 ```bash
 # 英文
-he parse doc.md -t general/biography_graph -l zh
+he parse doc.md -t general/biography_graph -l en
 
 # 中文
 he parse doc.md -t general/biography_graph -l zh

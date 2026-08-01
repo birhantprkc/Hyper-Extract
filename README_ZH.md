@@ -155,13 +155,50 @@ Hyper-Extract 依赖大语言模型的结构化输出能力（`json_schema` 或 
 
 ## ⚡ 30 秒快速上手
 
+**1. 安装：**
+
 ```bash
-# 安装
+# 先安装 uv（如果还没有）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 安装 Hyper-Extract CLI
 uv tool install hyperextract
+# 或：pipx install hyperextract
+```
 
-# 配置 API Key
-he config init -k YOUR_OPENAI_API_KEY
+**2. 配置你的 provider**（任选其一）：
 
+**OpenAI：**
+```bash
+he config init -p openai -k YOUR_OPENAI_API_KEY
+```
+
+**Anthropic (Claude)：**
+```bash
+he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
+he config embedder -p openai -k YOUR_OPENAI_API_KEY
+```
+
+**DeepSeek：**
+```bash
+he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+he config embedder -p openai -k YOUR_OPENAI_API_KEY
+```
+
+**百炼（阿里云）：**
+```bash
+he config init -p bailian -k YOUR_BAILIAN_API_KEY
+```
+
+**本地 vLLM：**
+```bash
+he config llm -p vllm -u http://localhost:8000/v1 -k dummy -m Qwen/Qwen3.5-9B
+he config embedder -p vllm -u http://localhost:8001/v1 -k dummy -m BAAI/bge-m3
+```
+
+**3. 提取、查询与可视化：**
+
+```bash
 # 从文档提取知识
 he parse examples/zh/sushi.md -t general/biography_graph -o ./output/ -l zh
 
@@ -174,6 +211,8 @@ he show ./output/
 # 导出为 Obsidian 知识库（Markdown 笔记 + [[双向链接]]）
 he export obsidian ./output/ -o ./vault/
 ```
+
+> **该用哪个 provider？** OpenAI 和百炼同时提供 LLM 和 embedding 模型。Anthropic 和 DeepSeek 仅提供 LLM（搜索/聊天功能需搭配 OpenAI 的 embedder）。本地 vLLM 免费但需要 GPU。DeepSeek 最经济（约 $0.001-0.005/页，而 OpenAI gpt-4o-mini 约 $0.01-0.05/页）。
 
 <details>
 <summary><b>🐍 Python API</b>（点击展开）</summary>

@@ -76,6 +76,16 @@ backup_dir: "./backups"
 
 ## Management Script
 
+### Prerequisites
+
+Install the required packages:
+
+```bash
+pip install pyyaml hyperextract python-dotenv
+```
+
+> **Note:** The management script uses `pyyaml` for config files and `python-dotenv` for loading API keys. These are not included in Hyper-Extract's default dependencies.
+
 ### kb_manager.py (Starter)
 
 ```python
@@ -174,6 +184,8 @@ EOF
 ```
 
 ### 2. Run Setup
+
+Ensure `pyyaml` and `python-dotenv` are installed (see [Prerequisites](#prerequisites) above):
 
 ```bash
 python kb_manager.py

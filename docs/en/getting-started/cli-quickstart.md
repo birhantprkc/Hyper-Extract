@@ -48,7 +48,18 @@ Choose your deployment method and run the corresponding configuration command:
       -m BAAI/bge-m3
     ```
 
+=== "Anthropic (Claude)"
+
+    Anthropic provides LLM only — pair with an OpenAI-compatible embedder for search/chat:
+
+    ```bash
+    he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
+    he config embedder -p openai -k YOUR_OPENAI_API_KEY
+    ```
+
 This creates a configuration file at `~/.he/config.toml`. You only need to do this once.
+
+> **Note:** Anthropic and DeepSeek provide LLM only. For search (`he search`) and chat (`he talk`) features, pair them with an OpenAI-compatible embedder as shown above.
 
 ---
 
@@ -224,7 +235,7 @@ he build-index ./output/
 ## Troubleshooting
 
 **"No API key found"**
-→ Run `he config init -k YOUR_API_KEY`
+→ Run `he config init -p openai -k YOUR_OPENAI_API_KEY` (or use `-p bailian`, `-p deepseek`, etc.)
 
 **"Template not found"**
 → List available templates with `he list template`

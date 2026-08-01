@@ -10,6 +10,14 @@ If you want to use the `he` command from anywhere:
 
 === "uv (recommended)"
 
+    Install [uv](https://docs.astral.sh/uv/) first (if you haven't):
+
+    ```bash
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    ```
+
+    Then install Hyper-Extract:
+
     ```bash
     uv tool install hyperextract
     ```
@@ -19,6 +27,8 @@ If you want to use the `he` command from anywhere:
     ```bash
     pipx install hyperextract
     ```
+
+    > Don't have pipx? Install it with `pip install pipx`.
 
 ---
 
@@ -51,7 +61,7 @@ If you want to use Hyper-Extract in your Python code:
     You should see something like:
 
     ```
-    Hyper-Extract CLI version 0.1.3.dev0
+    Hyper-Extract CLI version 0.4.0
     ```
 
 === "Python"
@@ -68,11 +78,13 @@ If you want to use Hyper-Extract in your Python code:
 If you want to contribute or modify the source code:
 
 ```bash
-# Clone the repository
 git clone https://github.com/yifanfeng97/hyper-extract.git
 cd hyper-extract
 
-# Install in editable mode with dev dependencies
+# Install with uv (recommended)
+uv sync --extra dev
+
+# Or with pip
 pip install -e ".[dev]"
 ```
 

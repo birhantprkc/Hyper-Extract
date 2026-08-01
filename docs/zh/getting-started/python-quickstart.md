@@ -38,9 +38,35 @@ pip install hyperextract
 echo "OPENAI_API_KEY=your-api-key" > .env
 ```
 
-**方式 B — 百炼、DeepSeek 或 vLLM**
+**方式 B — 其他 Provider（Anthropic、DeepSeek、百炼、vLLM）**
 
-平台特定配置见 [Provider 配置指南](../python/guides/provider-configuration.md)。
+在 `.env` 中设置相应的环境变量：
+
+```bash
+# Anthropic
+ANTHROPIC_API_KEY=sk-ant-xxx
+OPENAI_API_KEY=sk-xxx          # 用于 embeddings
+
+# DeepSeek
+DEEPSEEK_API_KEY=sk-xxx
+OPENAI_API_KEY=sk-xxx          # 用于 embeddings
+
+# 百炼（阿里云）
+OPENAI_API_KEY=sk-xxx
+OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+```
+
+然后在脚本中配置客户端：
+
+```python
+from hyperextract import create_client, Template
+
+# 示例：DeepSeek LLM + OpenAI embedder
+llm, emb = create_client(llm="deepseek", embedder="openai:text-embedding-3-small")
+ka = Template.create("general/biography_graph", language="zh", llm_client=llm, embedder=emb)
+```
+
+详见 [Provider 配置指南](../python/guides/provider-configuration.md)。
 
 ---
 
@@ -241,7 +267,6 @@ if __name__ == "__main__":
 ```
 
 ![交互式知识图谱可视化](../../assets/zh_show.jpg)
-```
 
 ---
 

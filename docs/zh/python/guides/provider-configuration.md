@@ -25,6 +25,19 @@ llm, emb = create_client("bailian", api_key="sk-xxx")
 # 或换模型: create_client("bailian:qwen3.6-plus", api_key="sk-xxx")
 ```
 
+### Anthropic (Claude)
+
+```python
+from hyperextract import create_client, AutoGraph
+
+# Anthropic 仅提供 LLM——请搭配 OpenAI 兼容嵌入器。
+# 密钥：LLM 使用 ANTHROPIC_API_KEY（或 CLAUDE_API_KEY），嵌入使用 OPENAI_API_KEY。
+llm, emb = create_client(
+    llm="anthropic",  # 默认模型：claude-opus-4-8（用 "anthropic:<model>" 覆盖）
+    embedder="openai:text-embedding-3-small",
+)
+```
+
 ### DeepSeek
 
 ```python
@@ -75,6 +88,7 @@ print(f"节点: {len(graph.nodes)}, 关系: {len(graph.edges)}")
 |------|------|
 | **OpenAI** | `he config init -p openai -k sk-xxx` |
 | **百炼** | `he config init -p bailian -k sk-xxx` |
+| **Anthropic** | `he config llm -p anthropic -k sk-ant-xxx` + `he config embedder -p openai -k sk-xxx` |
 | **DeepSeek** | `he config llm -p deepseek -k sk-xxx` + `he config embedder -p openai -k sk-xxx` |
 | **vLLM** | `he config init` → 选择「本地 vLLM」 |
 | **混合部署**（LLM=百炼 + Embedding=本地） | `he config llm -p bailian -k sk-xxx` + `he config embedder -p vllm -u http://localhost:8001/v1 -k dummy` |

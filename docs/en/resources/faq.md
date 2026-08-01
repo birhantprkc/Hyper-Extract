@@ -20,7 +20,7 @@ Hyper-Extract is an LLM-powered knowledge extraction framework that transforms u
 
 ### Is it free?
 
-The software is open-source (Apache-2.0). You need to provide your own OpenAI API key for LLM calls.
+The software is open-source (Apache-2.0). You need an API key from a supported LLM provider (OpenAI, Anthropic, DeepSeek, Alibaba Bailian, or local vLLM).
 
 ---
 
@@ -29,7 +29,7 @@ The software is open-source (Apache-2.0). You need to provide your own OpenAI AP
 ### What are the requirements?
 
 - Python 3.11+
-- OpenAI API key
+- An API key from any supported provider (OpenAI, Anthropic, DeepSeek, Bailian, or local vLLM)
 
 ### How do I install it?
 
@@ -58,31 +58,59 @@ pip install hyperextract
 ### Where do I set my API key?
 
 **Option 1**: CLI
+
 ```bash
-he config init -k YOUR_API_KEY
+# OpenAI / Bailian (one-step)
+he config init -p openai -k YOUR_API_KEY
+he config init -p bailian -k YOUR_API_KEY
+
+# Anthropic / DeepSeek (LLM + separate embedder)
+he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+he config embedder -p openai -k YOUR_OPENAI_API_KEY
 ```
 
 **Option 2**: Environment variable
+
 ```bash
-export OPENAI_API_KEY=your-api-key
+export OPENAI_API_KEY=your-api-key        # OpenAI/Bailian
+export ANTHROPIC_API_KEY=your-api-key     # Anthropic
+export DEEPSEEK_API_KEY=your-api-key      # DeepSeek
 ```
 
-**Option 3**: .env file
+**Option 3**: `.env` file
 ```
 OPENAI_API_KEY=your-api-key
 ```
 
 ### Can I use a different LLM provider?
 
-Yes, set the base URL:
+Yes! Hyper-Extract supports OpenAI, Anthropic, DeepSeek, Alibaba Bailian, and local vLLM out of the box:
+
 ```bash
-he config set llm.base_url https://your-provider.com/v1
+# OpenAI / Bailian
+he config init -p openai -k YOUR_API_KEY
+
+# DeepSeek / Anthropic (LLM only, pair with OpenAI embedder)
+he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+he config embedder -p openai -k YOUR_OPENAI_API_KEY
 ```
+
+For custom OpenAI-compatible endpoints:
+```bash
+he config llm --base-url https://your-provider.com/v1 -k YOUR_API_KEY
+```
+
+See [Provider System](../concepts/provider-system.md) for the full compatibility list.
 
 ### Which models are supported?
 
-- OpenAI models (gpt-4o, gpt-4o-mini, etc.)
-- Any OpenAI-compatible API
+- **OpenAI**: gpt-4o, gpt-4o-mini, gpt-5
+- **Anthropic**: claude-opus-4-8, claude-sonnet-4-6, claude-haiku-4-5
+- **DeepSeek**: deepseek-v4-flash, deepseek-v4-pro
+- **Alibaba Bailian**: qwen-plus, qwen-turbo, qwen3.6-plus
+- **Local vLLM**: Any model served via vLLM (e.g. Qwen/Qwen3.5-9B)
+
+See [Provider System](../concepts/provider-system.md) for the full compatibility table.
 
 ---
 
@@ -196,9 +224,10 @@ data_dict = result.data.model_dump()
 
 ### "API key not found"
 
-Run:
 ```bash
-he config init -k YOUR_API_KEY
+# Specify your provider
+he config init -p openai -k YOUR_API_KEY
+# or: -p bailian, -p deepseek, etc.
 ```
 
 ### "Template not found"

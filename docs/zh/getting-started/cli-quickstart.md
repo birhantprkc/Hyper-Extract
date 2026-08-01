@@ -48,7 +48,18 @@
       -m BAAI/bge-m3
     ```
 
+=== "Anthropic (Claude)"
+
+    Anthropic 仅提供 LLM —— 搜索/对话功能需搭配 OpenAI 兼容的 embedder：
+
+    ```bash
+    he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
+    he config embedder -p openai -k YOUR_OPENAI_API_KEY
+    ```
+
 这会在 `~/.he/config.toml` 创建配置文件，只需配置一次。
+
+> **注意：** Anthropic 和 DeepSeek 仅提供 LLM。如需使用搜索（`he search`）和对话（`he talk`）功能，请按上文所示搭配 OpenAI 兼容的 embedder。
 
 ---
 
@@ -219,7 +230,7 @@ he build-index ./output/
 ## 故障排除
 
 **"No API key found"**
-→ 运行 `he config init -k YOUR_API_KEY`
+→ 运行 `he config init -p openai -k YOUR_OPENAI_API_KEY`（或使用 `-p bailian`、`-p deepseek` 等）
 
 **"Template not found"**
 → 使用 `he list template` 查看可用模板

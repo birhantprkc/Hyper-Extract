@@ -20,7 +20,7 @@ Hyper-Extract 是一个基于大语言模型的知识提取框架，可以将非
 
 ### 它是免费的吗？
 
-本软件是开源的（Apache-2.0 协议）。您需要提供自己的 OpenAI API 密钥来进行大语言模型调用。
+本软件是开源的（Apache-2.0 协议）。您需要从支持的 LLM 提供商获取 API 密钥（OpenAI、Anthropic、DeepSeek、阿里云百炼或本地 vLLM）。
 
 ---
 
@@ -29,7 +29,7 @@ Hyper-Extract 是一个基于大语言模型的知识提取框架，可以将非
 ### 系统要求是什么？
 
 - Python 3.11+
-- OpenAI API 密钥
+- 任意支持的提供商的 API 密钥（OpenAI、Anthropic、DeepSeek、百炼或本地 vLLM）
 
 ### 如何安装？
 
@@ -58,31 +58,59 @@ pip install hyperextract
 ### 在哪里设置 API 密钥？
 
 **选项 1**：命令行
+
 ```bash
-he config init -k YOUR_API_KEY
+# OpenAI / 百炼（一步到位）
+he config init -p openai -k YOUR_API_KEY
+he config init -p bailian -k YOUR_API_KEY
+
+# Anthropic / DeepSeek（LLM + 独立嵌入器）
+he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+he config embedder -p openai -k YOUR_OPENAI_API_KEY
 ```
 
 **选项 2**：环境变量
+
 ```bash
-export OPENAI_API_KEY=your-api-key
+export OPENAI_API_KEY=your-api-key        # OpenAI/百炼
+export ANTHROPIC_API_KEY=your-api-key     # Anthropic
+export DEEPSEEK_API_KEY=your-api-key      # DeepSeek
 ```
 
-**选项 3**：.env 文件
+**选项 3**：`.env` 文件
 ```
 OPENAI_API_KEY=your-api-key
 ```
 
 ### 可以使用其他大语言模型提供商吗？
 
-可以，设置 base URL：
+可以！Hyper-Extract 开箱即用支持 OpenAI、Anthropic、DeepSeek、阿里云百炼和本地 vLLM：
+
 ```bash
-he config set llm.base_url https://your-provider.com/v1
+# OpenAI / 百炼
+he config init -p openai -k YOUR_API_KEY
+
+# DeepSeek / Anthropic（仅 LLM，需搭配 OpenAI 嵌入器）
+he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+he config embedder -p openai -k YOUR_OPENAI_API_KEY
 ```
+
+对于自定义的 OpenAI 兼容端点：
+```bash
+he config llm --base-url https://your-provider.com/v1 -k YOUR_API_KEY
+```
+
+参见 [Provider 系统](../concepts/provider-system.md) 了解完整兼容性列表。
 
 ### 支持哪些模型？
 
-- OpenAI 模型（gpt-4o、gpt-4o-mini 等）
-- 任何兼容 OpenAI API 的接口
+- **OpenAI**：gpt-4o、gpt-4o-mini、gpt-5
+- **Anthropic**：claude-opus-4-8、claude-sonnet-4-6、claude-haiku-4-5
+- **DeepSeek**：deepseek-v4-flash、deepseek-v4-pro
+- **阿里云百炼**：qwen-plus、qwen-turbo、qwen3.6-plus
+- **本地 vLLM**：通过 vLLM 提供的任意模型（如 Qwen/Qwen3.5-9B）
+
+参见 [Provider 系统](../concepts/provider-system.md) 了解完整兼容性表格。
 
 ---
 
@@ -196,9 +224,10 @@ data_dict = result.data.model_dump()
 
 ### "API key not found"
 
-运行：
 ```bash
-he config init -k YOUR_API_KEY
+# 指定您的提供商
+he config init -p openai -k YOUR_API_KEY
+# 或：-p bailian、-p deepseek 等
 ```
 
 ### "Template not found"

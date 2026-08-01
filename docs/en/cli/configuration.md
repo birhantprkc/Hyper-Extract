@@ -1,6 +1,6 @@
 # CLI Configuration Reference
 
-Configuration guide for Hyper-Extract CLI, supporting **OpenAI**, **DeepSeek**, **Alibaba Cloud Bailian**, and **Local vLLM** deployments.
+Configuration guide for Hyper-Extract CLI, supporting **OpenAI**, **Anthropic**, **DeepSeek**, **Alibaba Cloud Bailian**, and **Local vLLM** deployments.
 
 ---
 
@@ -27,6 +27,32 @@ Choose your deployment method and follow the steps.
     This creates `~/.he/config.toml` with Bailian presets:
     - **LLM**: `qwen3.6-plus`
     - **Embedder**: `text-embedding-v4`
+
+=== "Anthropic (Claude)"
+
+    Anthropic provides LLM only — pair with an OpenAI-compatible embedder:
+
+    ```bash
+    he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
+    he config embedder -p openai -k YOUR_OPENAI_API_KEY
+    ```
+
+    This creates `~/.he/config.toml` with:
+    - **LLM**: `claude-opus-4-8` (Anthropic)
+    - **Embedder**: `text-embedding-3-small` (OpenAI)
+
+=== "DeepSeek"
+
+    DeepSeek provides LLM only — pair with an OpenAI-compatible embedder:
+
+    ```bash
+    he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+    he config embedder -p openai -k YOUR_OPENAI_API_KEY
+    ```
+
+    This creates `~/.he/config.toml` with:
+    - **LLM**: `deepseek-v4-flash` (DeepSeek, auto-disables thinking mode)
+    - **Embedder**: `text-embedding-3-small` (OpenAI)
 
 === "Local vLLM"
 
@@ -137,6 +163,22 @@ he config embedder --unset
 
     # Or switch model
     he config llm -p bailian -k sk-your-key -m qwen-plus
+    ```
+
+=== "Anthropic (Claude)"
+
+    ```bash
+    # LLM via Anthropic, Embedder via OpenAI
+    he config llm -p anthropic -k sk-ant-your-key
+    he config embedder -p openai -k sk-your-openai-key
+    ```
+
+=== "DeepSeek"
+
+    ```bash
+    # LLM via DeepSeek, Embedder via OpenAI
+    he config llm -p deepseek -k sk-your-key
+    he config embedder -p openai -k sk-your-openai-key
     ```
 
 === "Local vLLM"

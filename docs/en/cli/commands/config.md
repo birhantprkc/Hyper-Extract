@@ -28,6 +28,7 @@ Initialize configuration. This is the **lazy one-step setup** — if you pass `-
 - **OpenAI preset**: `gpt-4o-mini` + `text-embedding-3-small`
 - **Bailian preset**: `qwen3.6-plus` + `text-embedding-v4`
 - **DeepSeek preset**: `deepseek-v4-flash` (LLM only — no embedder preset)
+- **Anthropic preset**: `claude-opus-4-8` (LLM only — no embedder preset, pair with an OpenAI-compatible embedder)
 
 ```bash
 he config init [OPTIONS]
@@ -37,7 +38,7 @@ he config init [OPTIONS]
 
 | Option | Short | Description |
 |--------|-------|-------------|
-| `--provider` | `-p` | Provider preset (`openai` / `bailian` / `deepseek` / `vllm`) |
+| `--provider` | `-p` | Provider preset (`openai` / `anthropic` / `deepseek` / `bailian` / `vllm`) |
 | `--api-key` | `-k` | API key for both LLM and embedder |
 | `--base-url` | `-u` | Custom API base URL (optional) |
 
@@ -54,6 +55,10 @@ he config init -p bailian -k sk-your-api-key-here
 
 # DeepSeek (LLM only — pair with an OpenAI-compatible embedder)
 he config llm -p deepseek -k sk-your-deepseek-key
+he config embedder -p openai -k sk-your-openai-key
+
+# Anthropic (LLM only — pair with an OpenAI-compatible embedder)
+he config llm -p anthropic -k sk-your-anthropic-key
 he config embedder -p openai -k sk-your-openai-key
 ```
 
@@ -109,6 +114,7 @@ he config llm [OPTIONS]
 
 | Option | Short | Description |
 |--------|-------|-------------|
+| `--provider` | `-p` | Provider preset (e.g. `openai`, `anthropic`, `deepseek`, `bailian`, `vllm`) |
 | `--api-key` | `-k` | LLM API key |
 | `--model` | `-m` | LLM model name |
 | `--base-url` | `-u` | Custom API base URL |
@@ -151,6 +157,7 @@ he config embedder [OPTIONS]
 
 | Option | Short | Description |
 |--------|-------|-------------|
+| `--provider` | `-p` | Provider preset (e.g. `openai`, `anthropic`, `deepseek`, `bailian`, `vllm`) |
 | `--api-key` | `-k` | Embedder API key |
 | `--model` | `-m` | Embedder model name |
 | `--base-url` | `-u` | Custom API base URL |

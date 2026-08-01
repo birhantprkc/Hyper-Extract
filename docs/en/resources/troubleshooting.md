@@ -44,12 +44,19 @@ Solutions to common issues.
 
 1. **CLI Configuration** (recommended):
    ```bash
-   he config init -k YOUR_API_KEY
+   # OpenAI / Bailian (one-step)
+   he config init -p openai -k YOUR_API_KEY
+   
+   # Anthropic / DeepSeek (LLM + separate embedder)
+   he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+   he config embedder -p openai -k YOUR_OPENAI_API_KEY
    ```
 
 2. **Environment Variable**:
    ```bash
    export OPENAI_API_KEY=your-api-key
+   export ANTHROPIC_API_KEY=your-api-key    # for Anthropic
+   export DEEPSEEK_API_KEY=your-api-key     # for DeepSeek
    ```
 
 3. **Verify Configuration**:
@@ -65,8 +72,9 @@ Solutions to common issues.
 
 1. Verify key is correct
 2. Check for extra spaces
-3. Try regenerating key in OpenAI dashboard
-4. Check if key has available credits
+3. For Anthropic: ensure `ANTHROPIC_API_KEY` (not `OPENAI_API_KEY`)
+4. For DeepSeek: ensure `DEEPSEEK_API_KEY` (not `OPENAI_API_KEY`)
+5. Check if key has available credits/quota
 
 ---
 

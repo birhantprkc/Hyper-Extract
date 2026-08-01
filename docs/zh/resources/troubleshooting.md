@@ -42,12 +42,19 @@
 
 1. **CLI 配置**（推荐）：
    ```bash
-   he config init -k YOUR_API_KEY
+   # OpenAI / 百炼（一步到位）
+   he config init -p openai -k YOUR_API_KEY
+   
+   # Anthropic / DeepSeek（LLM + 独立嵌入器）
+   he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+   he config embedder -p openai -k YOUR_OPENAI_API_KEY
    ```
 
 2. **环境变量**：
    ```bash
    export OPENAI_API_KEY=your-api-key
+   export ANTHROPIC_API_KEY=your-api-key    # 用于 Anthropic
+   export DEEPSEEK_API_KEY=your-api-key     # 用于 DeepSeek
    ```
 
 3. **验证配置**：
@@ -62,8 +69,9 @@
 **解决方案**：
 1. 验证密钥是否正确
 2. 检查是否有额外的空格
-3. 尝试在 OpenAI 控制台重新生成密钥
-4. 检查密钥是否有可用额度
+3. Anthropic：确保使用 `ANTHROPIC_API_KEY`（而非 `OPENAI_API_KEY`）
+4. DeepSeek：确保使用 `DEEPSEEK_API_KEY`（而非 `OPENAI_API_KEY`）
+5. 检查密钥是否有可用额度/配额
 
 ---
 

@@ -1,6 +1,6 @@
 # CLI 配置参考
 
-Hyper-Extract CLI 的配置指南，支持 **OpenAI**、**DeepSeek**、**阿里云百炼** 和 **本地 vLLM** 部署方式。
+Hyper-Extract CLI 的配置指南，支持 **OpenAI**、**Anthropic**、**DeepSeek**、**阿里云百炼** 和 **本地 vLLM** 部署方式。
 
 ---
 
@@ -27,6 +27,32 @@ Hyper-Extract CLI 的配置指南，支持 **OpenAI**、**DeepSeek**、**阿里�
     这会创建 `~/.he/config.toml`，使用百炼预设：
     - **LLM**: `qwen3.6-plus`
     - **嵌入模型**: `text-embedding-v4`
+
+=== "Anthropic (Claude)"
+
+    Anthropic 仅提供 LLM —— 请搭配 OpenAI 兼容嵌入器：
+
+    ```bash
+    he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
+    he config embedder -p openai -k YOUR_OPENAI_API_KEY
+    ```
+
+    这会创建 `~/.he/config.toml`：
+    - **LLM**: `claude-opus-4-8` (Anthropic)
+    - **嵌入模型**: `text-embedding-3-small` (OpenAI)
+
+=== "DeepSeek"
+
+    DeepSeek 仅提供 LLM —— 请搭配 OpenAI 兼容嵌入器：
+
+    ```bash
+    he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+    he config embedder -p openai -k YOUR_OPENAI_API_KEY
+    ```
+
+    这会创建 `~/.he/config.toml`：
+    - **LLM**: `deepseek-v4-flash` (DeepSeek，自动关闭思考模式)
+    - **嵌入模型**: `text-embedding-3-small` (OpenAI)
 
 === "本地 vLLM"
 
@@ -137,6 +163,22 @@ he config embedder --unset
 
     # 或换模型
     he config llm -p bailian -k sk-your-key -m qwen-plus
+    ```
+
+=== "Anthropic (Claude)"
+
+    ```bash
+    # LLM 用 Anthropic，Embedding 用 OpenAI
+    he config llm -p anthropic -k sk-ant-your-key
+    he config embedder -p openai -k sk-your-openai-key
+    ```
+
+=== "DeepSeek"
+
+    ```bash
+    # LLM 用 DeepSeek，Embedding 用 OpenAI
+    he config llm -p deepseek -k sk-your-key
+    he config embedder -p openai -k sk-your-openai-key
     ```
 
 === "本地 vLLM"
