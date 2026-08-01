@@ -41,10 +41,10 @@ jobs:
           uv pip install build hatchling twine
 
       - name: Build package
-        run: uv run python -m build
+        run: uv run --no-project python -m build
 
       - name: Check distribution
-        run: uv run twine check dist/*
+        run: uv run --no-project twine check dist/*
 
       - name: Upload distribution packages
         uses: actions/upload-artifact@v7
