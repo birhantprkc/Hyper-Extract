@@ -73,6 +73,27 @@ class TestAutoGraphMerge:
 
         assert len(graph.nodes) == 1
 
+    def test_merge_batch_data_filters_none(self, llm_client, embedder):
+        """A failed single-chunk invoke ([None]) yields an empty graph.
+
+        Previously [None] fell through to the tuple branch and raised
+        AssertionError instead of degrading gracefully.
+        """
+        graph = AutoGraph(
+            node_schema=Entity,
+            edge_schema=Relation,
+            node_key_extractor=lambda x: x.name,
+            edge_key_extractor=lambda x: f"{x.source}-{x.relation_type}-{x.target}",
+            nodes_in_edge_extractor=lambda x: (x.source, x.target),
+            llm_client=llm_client,
+            embedder=embedder,
+        )
+
+        result = graph.merge_batch_data([None])
+
+        assert result.nodes == []
+        assert result.edges == []
+
     def test_merge_batch_data_empty_first_chunk(self, llm_client, embedder):
         """merge_batch_data tolerates a chunk that produced no nodes/edges.
 
