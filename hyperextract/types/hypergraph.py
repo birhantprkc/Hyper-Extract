@@ -613,6 +613,13 @@ class AutoHypergraph(
             logger.warning("stage=merge_batch_empty input_is_empty")
             return self.graph_schema(nodes=[], edges=[])
 
+        # Drop failed (None) chunk results from the list form; otherwise a single
+        # failed invoke() ([None]) falls through to the tuple branch and asserts.
+        if isinstance(data_list_or_tuple, list):
+            data_list_or_tuple = [g for g in data_list_or_tuple if g is not None]
+            if not data_list_or_tuple:
+                return self.graph_schema(nodes=[], edges=[])
+
         if isinstance(data_list_or_tuple, list) and isinstance(
             data_list_or_tuple[0], self.graph_schema
         ):

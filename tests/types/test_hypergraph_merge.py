@@ -58,3 +58,12 @@ class TestAutoHypergraphMerge:
 
         assert {n.name for n in result.nodes} == {"Apple"}
         assert len(result.edges) == 1
+
+    def test_merge_batch_data_filters_none(self, llm_client, embedder):
+        """A failed single-chunk invoke ([None]) yields an empty hypergraph."""
+        graph = self._make_graph(llm_client, embedder)
+
+        result = graph.merge_batch_data([None])
+
+        assert result.nodes == []
+        assert result.edges == []
