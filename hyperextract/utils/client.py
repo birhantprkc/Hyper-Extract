@@ -54,6 +54,15 @@ PROVIDER_PRESETS: dict[str, dict[str, str | None]] = {
         "default_llm": "deepseek-v4-flash",
         "default_embedder": None,
     },
+    # OrcaRouter. OpenAI-compatible model routing gateway exposing 150+ models
+    # from OpenAI, Anthropic, Google, DeepSeek, Qwen, MiniMax, xAI and others
+    # behind a single endpoint and API key. Namespaced model ids such as
+    # "orcarouter/auto" route to a matching upstream.
+    "orcarouter": {
+        "base_url": "https://api.orcarouter.ai/v1",
+        "default_llm": "orcarouter/auto",
+        "default_embedder": "openai/text-embedding-3-small",
+    },
     # Anthropic (Claude). Uses the native ChatAnthropic client, so base_url is
     # left empty (the SDK targets api.anthropic.com by default). Anthropic has
     # no embeddings API, hence default_embedder is None — pair it with an
@@ -79,6 +88,7 @@ PROVIDER_API_KEY_ENV: dict[str, tuple[str, ...]] = {
     "anthropic": ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"),
     "claude": ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"),
     "deepseek": ("DEEPSEEK_API_KEY",),
+    "orcarouter": ("ORCAROUTER_API_KEY",),
 }
 
 
@@ -379,7 +389,7 @@ def create_llm(
 
     chat_kwargs: dict[str, Any] = {
         "model": config["model"],
-        "api_key": config["api_key"] or os.environ.get("OPENAI_API_KEY", ""),
+        "api_key": config["api_key"] or _env_api_key(provider),
         "base_url": config.get("base_url") or None,
         "temperature": config.get("temperature", 0),
     }
@@ -424,7 +434,7 @@ def create_embedder(
     if uses_custom:
         return CompatibleEmbeddings(
             model=config["model"],
-            api_key=config["api_key"] or os.environ.get("OPENAI_API_KEY", ""),
+            api_key=config["api_key"] or _env_api_key(config.get("provider", "")),
             base_url=base_url,
             **kwargs,
         )
@@ -433,7 +443,7 @@ def create_embedder(
 
         return OpenAIEmbeddings(
             model=config["model"],
-            api_key=config["api_key"] or os.environ.get("OPENAI_API_KEY", ""),
+            api_key=config["api_key"] or _env_api_key(config.get("provider", "")),
             **kwargs,
         )
 

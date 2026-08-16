@@ -1,6 +1,6 @@
 # Provider System
 
-Hyper-Extract supports these ways to connect to LLMs: **OpenAI**, **Anthropic**, **Alibaba Bailian**, **DeepSeek**, and **local vLLM**. All use the same `create_client()` interface — only the first line changes.
+Hyper-Extract supports these ways to connect to LLMs: **OpenAI**, **Anthropic**, **Alibaba Bailian**, **DeepSeek**, **OrcaRouter**, and **local vLLM**. All use the same `create_client()` interface — only the first line changes.
 
 ---
 
@@ -13,6 +13,7 @@ Hyper-Extract supports these ways to connect to LLMs: **OpenAI**, **Anthropic**,
 | **OpenAI** | gpt-4o / gpt-4o-mini / gpt-5 | ✅ | ✅ | Native support, recommended |
 | **Anthropic** | claude-opus-4-8 / claude-sonnet-4-6 / claude-haiku-4-5 | ✅ (tool calling) | ✅ | LLM only — no embeddings API (pair with an OpenAI-compatible embedder). Needs `hyperextract[anthropic]` |
 | **DeepSeek** | deepseek-v4-flash / deepseek-v4-pro | ✅ | ✅ | OpenAI-compatible. V4 models default to "thinking" mode, which Hyper-Extract auto-disables (`extra_body`) so structured extraction works. LLM only — no embeddings API. Keys: `DEEPSEEK_API_KEY` |
+| **OrcaRouter** | `orcarouter/auto`, `openai/gpt-4o-mini`, `anthropic/claude-haiku-4-5`, `deepseek/...`, `gemini/...` | ✅ | ✅ | OpenAI-compatible gateway routing 150+ models from OpenAI, Anthropic, Google, DeepSeek, Qwen, MiniMax, xAI behind one endpoint and key. Keys: `ORCAROUTER_API_KEY` |
 | **Alibaba Bailian** | qwen-plus / qwen-turbo / qwen3.6-plus / deepseek-r1 | ✅ | ✅ | Works out of the box |
 | **Alibaba Bailian** | qwen-max / deepseek-v3 | ❌ | ❌ | Only `json_object`; `json_schema` not supported |
 
@@ -61,6 +62,13 @@ llm, emb = create_client(
     llm="deepseek",
     embedder="openai:text-embedding-3-small",  # or vllm:bge-m3@localhost:8001/v1
 )
+
+# OrcaRouter — OpenAI-compatible gateway routing 150+ models (OpenAI,
+# Anthropic, Google, DeepSeek, Qwen, MiniMax, xAI) behind one key. The default
+# "orcarouter/auto" model routes to a suitable upstream; override with
+# namespaced ids like "openai:gpt-4o-mini" or "anthropic:claude-haiku-4-5".
+# Key: ORCAROUTER_API_KEY (fallback: OPENAI_API_KEY).
+llm, emb = create_client("orcarouter")
 
 # Local vLLM
 llm, emb = create_client(

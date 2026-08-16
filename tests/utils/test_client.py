@@ -56,6 +56,20 @@ class TestParseClientSpec:
         result = _parse_client_spec("bailian", api_key="sk-test", default_kind="embedder")
         assert result["model"] == "text-embedding-v4"  # default_embedder preset
 
+    def test_provider_orcarouter(self):
+        """OrcaRouter preset defaults (OpenAI-compatible gateway)."""
+        result = _parse_client_spec("orcarouter", api_key="sk-test")
+        assert result["provider"] == "orcarouter"
+        assert result["model"] == "orcarouter/auto"  # default_llm preset
+        assert result["base_url"] == "https://api.orcarouter.ai/v1"
+
+    def test_provider_orcarouter_embedder(self):
+        """OrcaRouter embedder default uses the namespaced embedder model."""
+        result = _parse_client_spec(
+            "orcarouter", api_key="sk-test", default_kind="embedder"
+        )
+        assert result["model"] == "openai/text-embedding-3-small"
+
     def test_dict_input(self):
         """Dict input is passed through with api_key fallback."""
         result = _parse_client_spec(
@@ -116,6 +130,18 @@ class TestCreateLLM:
         )
         assert llm.extra_body == {"thinking": {"type": "enabled"}}
 
+    def test_create_llm_orcarouter(self):
+        """Create LLM with orcarouter preset (OpenAI-compatible gateway)."""
+        llm = create_llm("orcarouter", api_key="sk-test")
+        assert llm.model_name == "orcarouter/auto"
+        assert llm.openai_api_base == "https://api.orcarouter.ai/v1"
+
+    def test_create_llm_orcarouter_env_key(self, monkeypatch):
+        """OrcaRouter key is read from ORCAROUTER_API_KEY when api_key is omitted."""
+        monkeypatch.setenv("ORCAROUTER_API_KEY", "sk-orca-test")
+        llm = create_llm("orcarouter")
+        assert llm.openai_api_key.get_secret_value() == "sk-orca-test"
+
     def test_create_llm_custom_model(self):
         """Override model via string shorthand."""
         llm = create_llm("bailian:qwen-plus", api_key="sk-test")
@@ -155,6 +181,18 @@ class TestCreateEmbedder:
         )
         assert isinstance(emb, CompatibleEmbeddings)
         assert emb._model == "bge-m3"
+
+    def test_create_embedder_orcarouter(self):
+        """OrcaRouter embedder uses CompatibleEmbeddings (custom base_url)."""
+        emb = create_embedder("orcarouter", api_key="sk-test")
+        assert isinstance(emb, CompatibleEmbeddings)
+        assert emb._model == "openai/text-embedding-3-small"
+
+    def test_create_embedder_orcarouter_env_key(self, monkeypatch):
+        """OrcaRouter embedder reads ORCAROUTER_API_KEY when api_key is omitted."""
+        monkeypatch.setenv("ORCAROUTER_API_KEY", "sk-orca-test")
+        emb = create_embedder("orcarouter")
+        assert emb._client.api_key == "sk-orca-test"
 
 
 # =============================================================================
@@ -490,6 +528,14 @@ class TestProviderPresets:
         assert preset["base_url"] == "https://api.deepseek.com"
         assert preset["default_llm"] == "deepseek-v4-flash"
         assert preset["default_embedder"] is None
+
+    def test_orcarouter_provider(self):
+        """OrcaRouter has its own preset (OpenAI-compatible, named models)."""
+        assert "orcarouter" in PROVIDER_PRESETS
+        preset = PROVIDER_PRESETS["orcarouter"]
+        assert preset["base_url"] == "https://api.orcarouter.ai/v1"
+        assert preset["default_llm"] == "orcarouter/auto"
+        assert preset["default_embedder"] == "openai/text-embedding-3-small"
 
     def test_all_presets_have_base_url_or_none(self):
         """Every preset has either a base_url or None (for vLLM)."""
