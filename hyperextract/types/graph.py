@@ -1023,11 +1023,15 @@ class AutoGraph(
             )
 
             def search_callback(query: str) -> None:
-                return self.search(
+                # search() may return (nodes, edges) or, in subclasses like
+                # Graph_RAG, (nodes, edges, context); ontosight only wants the
+                # first two.
+                result = self.search(
                     query,
                     top_k_nodes=top_k_nodes_for_search,
                     top_k_edges=top_k_edges_for_search,
                 )
+                return result[0], result[1]
 
             def chat_callback(question: str) -> None:
                 response = self.chat(
