@@ -49,17 +49,18 @@ def _members_extractor(
     Hypergraph: 'members' -> lambda x: tuple(sorted(x.members)) or
                 'members' -> lambda x: tuple(sorted(x.m) for m in x.members)
     """
-    # Handle Graph
+    # Handle Graph: preserve (source, target) order for directed edges
     if isinstance(members, dict):
+        source_field = members["source"]
+        target_field = members["target"]
 
         def extractor(item: Any) -> tuple[str, str]:
-            return tuple(
-                sorted(
-                    [
-                        str(item.source),
-                        str(item.target),
-                    ]
-                )
+            missing = [f for f in (source_field, target_field) if not hasattr(item, f)]
+            if missing:
+                raise AttributeError(f"Missing fields: {missing}")
+            return (
+                str(getattr(item, source_field)),
+                str(getattr(item, target_field)),
             )
 
         return extractor
