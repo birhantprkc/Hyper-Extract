@@ -10,10 +10,12 @@
 pip install hyperextract
 ```
 
-开发安装：
+开发安装请克隆仓库并安装 `dev` 依赖组：
 
 ```bash
-pip install hyperextract[dev]
+git clone https://github.com/yifanfeng97/hyper-extract.git
+cd hyper-extract
+uv sync
 ```
 
 ---
