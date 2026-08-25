@@ -145,6 +145,7 @@ for risk in result.data.items:
 | `general/concept_graph` | Research concepts |
 | `finance/ownership_graph` | Company ownership |
 | `medicine/anatomy_graph` | Anatomy |
+| `education/course_concept_graph` | Course knowledge points |
 
 **Example:**
 ```python
@@ -252,6 +253,7 @@ response = result.chat("What happened between 1880-1890?")
 | Template | Domain |
 |----------|--------|
 | `general/base_hypergraph` | General purpose |
+| `education/curriculum_structure` | Course syllabi |
 
 **Note:** Hypergraphs are advanced. Most use cases can be satisfied with AutoGraph.
 

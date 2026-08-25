@@ -265,6 +265,8 @@ he parse drug_info.md -t medicine/drug_interaction -l en -o ./drugs/
 | Case timeline | `legal/case_fact_timeline` | temporal_graph |
 | Hospital timeline | `medicine/hospital_timeline` | temporal_graph |
 | Drug interactions | `medicine/drug_interaction` | graph |
+| Course knowledge points | `education/course_concept_graph` | graph |
+| Course syllabus structure | `education/curriculum_structure` | hypergraph |
 
 ---
 

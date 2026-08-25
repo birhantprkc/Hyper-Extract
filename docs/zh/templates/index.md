@@ -77,6 +77,15 @@
     - [安全控制](reference/industry.md)
     - [操作流程](reference/industry.md)
 
+-   :material-school:{ .lg .middle } **课程材料与教学大纲**
+
+    ---
+
+    提取知识点依赖和课程结构
+
+    - [课程概念图](reference/education.md) — *推荐*
+    - [课程结构](reference/education.md)
+
 </div>
 
 ---

@@ -145,6 +145,7 @@ for risk in result.data.items:
 | `general/concept_graph` | 研究概念 |
 | `finance/ownership_graph` | 公司股权 |
 | `medicine/anatomy_graph` | 解剖学 |
+| `education/course_concept_graph` | 课程知识点 |
 
 **示例：**
 ```python
@@ -252,6 +253,7 @@ response = result.chat("1080年到1090年间发生了什么？")
 | 模板 | 领域 |
 |------|------|
 | `general/base_hypergraph` | 通用 |
+| `education/curriculum_structure` | 教学大纲 |
 
 **注意：** 超图是高级功能。大多数用例可以用 AutoGraph 满足。
 
