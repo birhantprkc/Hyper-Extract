@@ -12,7 +12,7 @@ from rich.text import Text
 from hyperextract.utils.logging import configure_logging, get_logger
 from hyperextract.utils.template_engine import Gallery, Template
 
-from .commands import config_app, list_app
+from .commands import config_app, list_app, template_app
 from .config import (
     load_ka_metadata,
 )
@@ -38,6 +38,7 @@ app = typer.Typer(
 
 app.add_typer(list_app, name="list")
 app.add_typer(config_app, name="config")
+app.add_typer(template_app, name="template")
 
 
 @app.callback()
@@ -110,6 +111,7 @@ def main(
                 [
                     ("he list template", "List available templates"),
                     ("he list method", "List extraction methods"),
+                    ("he template validate <yaml>", "Validate a template YAML file"),
                     ("he config --help", "Manage LLM/Embedder config"),
                 ],
             ),
