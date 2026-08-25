@@ -40,6 +40,7 @@ he --version
 | `he build-index` | Build/rebuild search index | `-f` force rebuild |
 | `he clean` | Remove a KA's index (or the whole KA) | `-a` all, `-y` yes |
 | `he list` | List templates and methods | `template` or `method` |
+| `he template validate` | Validate a template YAML file | `--json`, `--all` |
 | `he config` | Manage configuration | `init`, `show`, `llm`, `embedder` |
 
 ---
@@ -173,6 +174,7 @@ he show ./output/
 - **[`he build-index`](commands/build-index.md)** — Build search index
 - **[`he clean`](commands/clean.md)** — Remove a KA's index, or the whole KA
 - **[`he list`](commands/list.md)** — List available templates/methods
+- **[`he template validate`](commands/template.md)** — Validate a template YAML file
 - **[`he config`](commands/config.md)** — Configuration management
 
 ---

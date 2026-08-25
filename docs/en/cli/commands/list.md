@@ -145,5 +145,6 @@ he list method | grep -q light_rag && echo "Available"
 ## See Also
 
 - [`he parse`](parse.md) — Use templates/methods
+- [`he template validate`](template.md) — Check a template YAML file
 - [Template Library](../../templates/index.md) — Detailed template documentation
 - [Choosing Methods](../../concepts/methods.md) — Method selection guide

@@ -81,6 +81,7 @@ plugins:
                     - cli/commands/talk.md
                     - cli/commands/info.md
                     - cli/commands/list.md
+                    - cli/commands/template.md
                     - cli/commands/config.md
                 - cli/configuration.md
             - MCP Server: mcp.md
@@ -175,6 +176,7 @@ plugins:
                     - zh/cli/commands/talk.md
                     - zh/cli/commands/info.md
                     - zh/cli/commands/list.md
+                    - zh/cli/commands/template.md
                     - zh/cli/commands/config.md
                 - zh/cli/configuration.md
             - MCP 服务器: zh/mcp.md

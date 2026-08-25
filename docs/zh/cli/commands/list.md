@@ -145,5 +145,6 @@ he list method | grep -q light_rag && echo "Available"
 ## 另请参见
 
 - [`he parse`](parse.md) — 使用模板/方法
+- [`he template validate`](template.md) — 校验模板 YAML 文件
 - [模板库](../../templates/index.md) — 详细模板文档
 - [选择方法](../../concepts/methods.md) — 方法选择指南
