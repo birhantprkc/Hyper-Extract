@@ -227,6 +227,8 @@ Running `he config init` automatically creates `~/.he/config.toml`.
 - **Linux/macOS**: `~/.he/config.toml`
 - **Windows**: `%USERPROFILE%\.he\config.toml`
 
+On Linux/macOS, `he config` saves this file as mode `0600` (owner read/write only). If an existing file is group- or world-readable, the CLI warns on load and tightens the mode on the next save. Prefer environment variables over writing API keys into the file.
+
 ### Configuration Format
 
 === "Cloud API — Bailian"
