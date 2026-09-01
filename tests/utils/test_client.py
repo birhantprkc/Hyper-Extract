@@ -116,6 +116,42 @@ class TestCreateLLM:
         )
         assert llm.extra_body == {"thinking": {"type": "enabled"}}
 
+    def test_create_llm_deepseek_reads_provider_env_key(self, monkeypatch):
+        """create_llm('deepseek') uses DEEPSEEK_API_KEY when api_key is omitted."""
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-deepseek-test")
+        llm = create_llm("deepseek")
+        assert llm.openai_api_key.get_secret_value() == "sk-deepseek-test"
+
+    def test_create_llm_deepseek_prefers_provider_env_over_openai(self, monkeypatch):
+        """DeepSeek prefers DEEPSEEK_API_KEY when both provider and OpenAI keys are set."""
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-deepseek-test")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-test")
+        llm = create_llm("deepseek")
+        assert llm.openai_api_key.get_secret_value() == "sk-deepseek-test"
+
+    def test_create_llm_openai_still_uses_openai_env_key(self, monkeypatch):
+        """OpenAI shorthand still resolves OPENAI_API_KEY (regression)."""
+        monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-test")
+        llm = create_llm("openai:gpt-4o-mini")
+        assert llm.model_name == "gpt-4o-mini"
+        assert llm.openai_api_key.get_secret_value() == "sk-openai-test"
+
+    def test_create_llm_explicit_api_key_wins(self, monkeypatch):
+        """Explicit api_key= takes priority over provider and OpenAI env vars."""
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-deepseek-test")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-test")
+        llm = create_llm("deepseek", api_key="sk-explicit")
+        assert llm.openai_api_key.get_secret_value() == "sk-explicit"
+
+    def test_create_llm_deepseek_falls_back_to_openai_env_key(self, monkeypatch):
+        """DeepSeek still falls back to OPENAI_API_KEY when DEEPSEEK_API_KEY is unset."""
+        monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-test")
+        llm = create_llm("deepseek")
+        assert llm.openai_api_key.get_secret_value() == "sk-openai-test"
+
     def test_create_llm_custom_model(self):
         """Override model via string shorthand."""
         llm = create_llm("bailian:qwen-plus", api_key="sk-test")
@@ -155,6 +191,26 @@ class TestCreateEmbedder:
         )
         assert isinstance(emb, CompatibleEmbeddings)
         assert emb._model == "bge-m3"
+
+    def test_create_embedder_reads_openai_env_key(self, monkeypatch):
+        """create_embedder uses _env_api_key so OPENAI_API_KEY is picked up."""
+        monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-emb")
+        emb = create_embedder("openai")
+        assert emb.openai_api_key.get_secret_value() == "sk-openai-emb"
+
+    def test_create_embedder_explicit_api_key_wins(self, monkeypatch):
+        """Explicit api_key= still wins for embedders (regression)."""
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-emb")
+        emb = create_embedder("openai", api_key="sk-explicit-emb")
+        assert emb.openai_api_key.get_secret_value() == "sk-explicit-emb"
+
+    def test_create_embedder_custom_url_reads_openai_env_key(self, monkeypatch):
+        """CompatibleEmbeddings path also resolves the env key via the factory."""
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-emb")
+        emb = create_embedder("bailian")
+        assert isinstance(emb, CompatibleEmbeddings)
+        assert emb._client.api_key == "sk-openai-emb"
 
 
 # =============================================================================
