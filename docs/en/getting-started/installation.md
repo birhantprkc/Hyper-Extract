@@ -81,11 +81,11 @@ If you want to contribute or modify the source code:
 git clone https://github.com/yifanfeng97/hyper-extract.git
 cd hyper-extract
 
-# Install with uv (recommended)
-uv sync --extra dev
+# Install with uv (recommended) — includes the `dev` dependency group
+uv sync
 
-# Or with pip
-pip install -e ".[dev]"
+# Or with pip (pip 25.1+)
+pip install -e . --group dev
 ```
 
 ---

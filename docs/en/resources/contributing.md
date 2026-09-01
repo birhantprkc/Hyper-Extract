@@ -26,12 +26,13 @@ cd hyper-extract
 ### 2. Set Up Development Environment
 
 ```bash
-# Create virtual environment
+# Recommended: uv (installs the `dev` dependency group by default)
+uv sync
+
+# Or with pip (pip 25.1+)
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install in editable mode
-pip install -e ".[dev]"
+pip install -e . --group dev
 ```
 
 ### 3. Run Tests
