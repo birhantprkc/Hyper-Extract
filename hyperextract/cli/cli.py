@@ -647,7 +647,7 @@ def search(
     )
 
 
-def chat_loop(ka, ka_path: str):
+def chat_loop(ka, ka_path: str, top_k: int = 3):
     """Interactive chat loop."""
     console.print(
         "\n[bold green]Entering interactive mode. Type 'exit' or 'quit' to stop.[/bold green]\n"
@@ -669,7 +669,7 @@ def chat_loop(ka, ka_path: str):
                 break
             if not query.strip():
                 continue
-            response = ka.chat(query)
+            response = ka.chat(query, top_k=top_k)
             console.print()
             console.print(response.content)
             console.print()
@@ -740,7 +740,7 @@ def talk(
             raise typer.Exit(1)
 
     if interactive:
-        chat_loop(ka, ka_path)
+        chat_loop(ka, ka_path, top_k=top_k)
     else:
         with console.status("[bold blue]Thinking..."):
             try:
