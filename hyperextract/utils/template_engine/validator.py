@@ -4,6 +4,11 @@
 documented in ``hyperextract-skills/yaml-validator/`` so authors can catch
 identifier, display, and spatiotemporal mistakes before extraction.
 
+Each ``HE-T*`` rule points at the matching skill file and
+``hyperextract/templates/DESIGN_GUIDE.md`` section. Lookup of fixes:
+``hyperextract-skills/yaml-validator/references/rules-errors.md`` and
+DESIGN_GUIDE Part 5 Common Errors.
+
 The runtime loader is intentionally left unchanged.
 """
 
@@ -133,10 +138,15 @@ def validate_template_dir(directory: str | Path) -> list[ValidationResult]:
 
 
 def validate_template(path: str | Path) -> ValidationResult:
-    """Validate one template YAML file.
+    """Validate one template YAML file (HE-T001 through HE-T009).
 
     Returns a :class:`ValidationResult`. ``ok`` is True when there are no
     error-severity diagnostics (warnings do not fail the result).
+
+    See also:
+        hyperextract-skills/yaml-validator/SKILL.md
+        hyperextract-skills/yaml-validator/references/rules-errors.md
+        hyperextract/templates/DESIGN_GUIDE.md (Part 5 Validation, Common Errors)
     """
     file_path = Path(path)
     result = ValidationResult(file=str(file_path))
@@ -174,6 +184,12 @@ def validate_template(path: str | Path) -> ValidationResult:
 
 
 def _load_yaml(path: Path) -> tuple[dict[str, Any] | None, list[Diagnostic]]:
+    """Parse YAML text (HE-T001).
+
+    See also:
+        hyperextract-skills/yaml-validator/references/rules-syntax.md
+        hyperextract/templates/DESIGN_GUIDE.md (Part 5 Validation)
+    """
     try:
         with open(path, encoding="utf-8") as handle:
             raw = yaml.safe_load(handle)
@@ -205,6 +221,12 @@ def _load_yaml(path: Path) -> tuple[dict[str, Any] | None, list[Diagnostic]]:
 def _parse_config(
     raw: dict[str, Any],
 ) -> tuple[TemplateCfg | None, list[Diagnostic]]:
+    """Match the document to ``TemplateCfg`` (HE-T002).
+
+    See also:
+        hyperextract-skills/yaml-validator/references/rules-types.md
+        hyperextract/templates/DESIGN_GUIDE.md (Part 2 Type-Specific Design)
+    """
     try:
         return TemplateCfg(**raw), []
     except ValidationError as exc:
@@ -242,6 +264,12 @@ def _check_localize(config: TemplateCfg) -> list[Diagnostic]:
 
 
 def _check_output_shape(config: TemplateCfg) -> list[Diagnostic]:
+    """Require type-specific output keys (HE-T002).
+
+    See also:
+        hyperextract-skills/yaml-validator/references/rules-types.md
+        hyperextract/templates/DESIGN_GUIDE.md (Part 2 Type-Specific Design)
+    """
     if config.type in GRAPH_TYPES and not isinstance(config.output, GraphOutputSchema):
         return [
             Diagnostic(
@@ -314,6 +342,12 @@ def _record_fields(config: TemplateCfg) -> set[str]:
 
 
 def _check_identifiers(config: TemplateCfg) -> list[Diagnostic]:
+    """Check identifier field references (HE-T003).
+
+    See also:
+        hyperextract-skills/yaml-validator/references/rules-identifiers.md
+        hyperextract/templates/DESIGN_GUIDE.md (Part 3 Identifiers Configuration)
+    """
     if config.type in RECORD_TYPES:
         return _check_record_identifiers(config)
     if config.type in GRAPH_TYPES:
@@ -440,6 +474,18 @@ def _check_relation_members(
     relation_fields: set[str],
     config: TemplateCfg,
 ) -> list[Diagnostic]:
+    """Check ``relation_members`` shape vs AutoType (HE-T004).
+
+    Binary graph types require a dict whose values name edge-schema fields
+    (direction preserved). Hypergraph requires a string or list of list-typed
+    relation fields, not a dict.
+
+    See also:
+        hyperextract-skills/yaml-validator/references/rules-identifiers.md
+            (Binary Relations, Hypergraph)
+        hyperextract/templates/DESIGN_GUIDE.md
+            (Part 2 graph vs hypergraph)
+    """
     diags: list[Diagnostic] = []
     if members is None:
         diags.append(
@@ -555,6 +601,14 @@ def _check_relation_members(
 
 
 def _check_spatiotemporal(config: TemplateCfg) -> list[Diagnostic]:
+    """Require ``time_field`` / ``location_field`` (HE-T006).
+
+    See also:
+        hyperextract-skills/yaml-validator/references/rules-identifiers.md
+            (Temporal Graph, Spatial Graph)
+        hyperextract/templates/DESIGN_GUIDE.md
+            (Part 2 temporal_graph / spatial_graph)
+    """
     if config.type not in TEMPORAL_TYPES | SPATIAL_TYPES:
         return []
     if not isinstance(config.identifiers, GraphIdentifiersSchema):
@@ -612,6 +666,12 @@ def _check_spatiotemporal(config: TemplateCfg) -> list[Diagnostic]:
 
 
 def _check_display(config: TemplateCfg) -> list[Diagnostic]:
+    """Check display ``{placeholder}`` names (HE-T005).
+
+    See also:
+        hyperextract-skills/yaml-validator/SKILL.md (Field validation)
+        hyperextract/templates/DESIGN_GUIDE.md (Part 3 Display Configuration)
+    """
     display = config.display
     diags: list[Diagnostic] = []
 
@@ -700,6 +760,11 @@ def _walk_bilingual(value: Any, path: str, langs: list[str]) -> list[Diagnostic]
 
 
 def _check_bilingual(config: TemplateCfg) -> list[Diagnostic]:
+    """Warn when declared languages are missing on bilingual fields (HE-T007).
+
+    See also:
+        hyperextract/templates/DESIGN_GUIDE.md (Part 4 Multi-language Rules)
+    """
     langs = _declared_languages(config)
     payload = {
         "description": config.description,
@@ -710,6 +775,13 @@ def _check_bilingual(config: TemplateCfg) -> list[Diagnostic]:
 
 
 def _check_field_count(config: TemplateCfg) -> list[Diagnostic]:
+    """Warn when entity/relation field count exceeds the DESIGN_GUIDE limit (HE-T008).
+
+    See also:
+        hyperextract-skills/yaml-validator/SKILL.md (Validation Levels)
+        hyperextract/templates/DESIGN_GUIDE.md
+            (Quick Reference Field Count Guidelines, Part 4 Field Count Optimization)
+    """
     if not isinstance(config.output, GraphOutputSchema):
         return []
     diags: list[Diagnostic] = []
@@ -781,6 +853,11 @@ def _preset_files_for_key(key: str) -> list[Path]:
 
 
 def _check_gallery_collision(path: Path, config: TemplateCfg) -> list[Diagnostic]:
+    """Warn when ``domain/name`` collides with a Gallery preset (HE-T009).
+
+    See also:
+        hyperextract/templates/DESIGN_GUIDE.md (Appendix Template Directory Structure)
+    """
     domain = _domain_for(path)
     if not domain:
         return []
