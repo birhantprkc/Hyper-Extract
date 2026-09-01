@@ -560,7 +560,9 @@ class Graph_RAG(AutoGraph[NodeSchema, EdgeSchema]):
         """
         if use_community:
             return self._global_search_impl(query, top_k_nodes, top_k_edges)
-        return super().search(query, top_k_nodes, top_k_edges, top_k)
+        # Keep the 3-tuple contract: no community context in the default path.
+        nodes, edges = super().search(query, top_k_nodes, top_k_edges, top_k)
+        return nodes, edges, None
 
     def _global_search_impl(
         self,

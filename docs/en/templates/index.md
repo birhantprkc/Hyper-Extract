@@ -77,6 +77,15 @@ Choose a template based on what you want to extract.
     - [Safety Controls](reference/industry.md)
     - [Operation Flow](reference/industry.md)
 
+-   :material-school:{ .lg .middle } **Course Materials & Syllabi**
+
+    ---
+
+    Extract knowledge-point dependencies and curriculum structure
+
+    - [Course Concept Graph](reference/education.md) — *Recommended*
+    - [Curriculum Structure](reference/education.md)
+
 </div>
 
 ---

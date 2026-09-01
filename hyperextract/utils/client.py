@@ -97,10 +97,12 @@ def _env_api_key(provider: str) -> str:
 
     Falls back to OPENAI_API_KEY for OpenAI-compatible providers.
     """
-    for var in PROVIDER_API_KEY_ENV.get(provider, ("OPENAI_API_KEY",)):
+    for var in PROVIDER_API_KEY_ENV.get(provider, ()):
         value = os.environ.get(var, "")
         if value:
             return value
+    if provider not in ANTHROPIC_PROVIDERS:
+        return os.environ.get("OPENAI_API_KEY", "")
     return ""
 
 
@@ -431,10 +433,12 @@ def create_embedder(
     base_url = config.get("base_url", "")
     uses_custom = bool(base_url and base_url.rstrip("/") != OPENAI_API_URL)
 
+    resolved_key = config["api_key"] or _env_api_key(config.get("provider", ""))
+
     if uses_custom:
         return CompatibleEmbeddings(
             model=config["model"],
-            api_key=config["api_key"] or _env_api_key(config.get("provider", "")),
+            api_key=resolved_key,
             base_url=base_url,
             **kwargs,
         )
@@ -443,7 +447,7 @@ def create_embedder(
 
         return OpenAIEmbeddings(
             model=config["model"],
-            api_key=config["api_key"] or _env_api_key(config.get("provider", "")),
+            api_key=resolved_key,
             **kwargs,
         )
 

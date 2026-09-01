@@ -81,11 +81,11 @@ Hyper-Extract 需要 **Python 3.11+**。
 git clone https://github.com/yifanfeng97/hyper-extract.git
 cd hyper-extract
 
-# 使用 uv 安装（推荐）
-uv sync --extra dev
+# 使用 uv 安装（推荐）——会安装 `dev` 依赖组
+uv sync
 
-# 或使用 pip
-pip install -e ".[dev]"
+# 或使用 pip（pip 25.1+）
+pip install -e . --group dev
 ```
 
 ---

@@ -266,6 +266,8 @@ he parse drug_info.md -t medicine/drug_interaction -l zh -o ./drugs/
 | 案例时间线 | `legal/case_fact_timeline` | temporal_graph |
 | 住院时间线 | `medicine/hospital_timeline` | temporal_graph |
 | 药物相互作用 | `medicine/drug_interaction` | graph |
+| 课程知识点 | `education/course_concept_graph` | graph |
+| 教学大纲结构 | `education/curriculum_structure` | hypergraph |
 
 ---
 

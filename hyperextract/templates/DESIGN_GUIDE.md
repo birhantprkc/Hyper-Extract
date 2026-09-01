@@ -571,6 +571,10 @@ identifiers:
     target: target
 ```
 
+The dict values name the relation fields that hold each endpoint, so custom
+field names work too (e.g. `source: subject` / `target: object`). Endpoint
+order is preserved as `(source, target)` for directed edges.
+
 #### For hypergraph (simple)
 
 ```yaml

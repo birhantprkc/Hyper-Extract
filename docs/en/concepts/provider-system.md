@@ -8,16 +8,16 @@ Hyper-Extract supports these ways to connect to LLMs: **OpenAI**, **Anthropic**,
 
 ### Cloud API
 
-| Platform | Model | `json_schema` Support | Compatible | Notes |
-|----------|-------|:---------------------:|:----------:|-------|
+| Platform | Model | Function calling | Compatible | Notes |
+|----------|-------|:----------------:|:----------:|-------|
 | **OpenAI** | gpt-4o / gpt-4o-mini / gpt-5 | ✅ | ✅ | Native support, recommended |
 | **Anthropic** | claude-opus-4-8 / claude-sonnet-4-6 / claude-haiku-4-5 | ✅ (tool calling) | ✅ | LLM only — no embeddings API (pair with an OpenAI-compatible embedder). Needs `hyperextract[anthropic]` |
 | **DeepSeek** | deepseek-v4-flash / deepseek-v4-pro | ✅ | ✅ | OpenAI-compatible. V4 models default to "thinking" mode, which Hyper-Extract auto-disables (`extra_body`) so structured extraction works. LLM only — no embeddings API. Keys: `DEEPSEEK_API_KEY` |
 | **OrcaRouter** | `orcarouter/auto`, `openai/gpt-4o-mini`, `anthropic/claude-haiku-4-5`, `deepseek/...`, `gemini/...` | ✅ | ✅ | OpenAI-compatible gateway routing 150+ models from OpenAI, Anthropic, Google, DeepSeek, Qwen, MiniMax, xAI behind one endpoint and key. Keys: `ORCAROUTER_API_KEY` |
 | **Alibaba Bailian** | qwen-plus / qwen-turbo / qwen3.6-plus / deepseek-r1 | ✅ | ✅ | Works out of the box |
-| **Alibaba Bailian** | qwen-max / deepseek-v3 | ❌ | ❌ | Only `json_object`; `json_schema` not supported |
+| **Alibaba Bailian** | qwen-max / deepseek-v3 | ❌ | ❌ | Only `json_object`; not compatible with function-calling structured output |
 
-> **Bailian users**: Both qwen-max and deepseek-v3 do not support `json_schema`. If you hit `messages must contain the word 'json'` or get non-JSON output, switch to qwen-plus, qwen-turbo, or deepseek-r1. See [Issue #24](https://github.com/yifanfeng97/Hyper-Extract/issues/24).
+> **Bailian users**: qwen-max and deepseek-v3 only support `json_object` and are not compatible with Hyper-Extract's function-calling structured output. If you hit `messages must contain the word 'json'` or get non-JSON output, switch to qwen-plus, qwen-turbo, or deepseek-r1. See [Issue #24](https://github.com/yifanfeng97/Hyper-Extract/issues/24).
 
 ### Local Deployment
 

@@ -8,15 +8,15 @@ Hyper-Extract 支持以下接入方式：**OpenAI**、**Anthropic**、**阿里�
 
 ### 云端 API
 
-| 平台 | 模型 | `json_schema` 支持 | 兼容性 | 备注 |
-|------|------|:------------------:|:------:|------|
+| 平台 | 模型 | 函数调用 | 兼容性 | 备注 |
+|------|------|:--------:|:------:|------|
 | **OpenAI** | gpt-4o / gpt-4o-mini / gpt-5 | ✅ | ✅ | 官方原生支持，推荐 |
 | **Anthropic** | claude-opus-4-8 / claude-sonnet-4-6 / claude-haiku-4-5 | ✅（工具调用） | ✅ | 仅 LLM——无嵌入接口（请搭配 OpenAI 兼容嵌入器）。需 `hyperextract[anthropic]` |
 | **DeepSeek** | deepseek-v4-flash / deepseek-v4-pro | ✅ | ✅ | OpenAI 兼容。V4 模型默认开启"thinking"模式，Hyper-Extract 会自动关闭以保证结构化抽取可用。仅 LLM——无嵌入接口。密钥：`DEEPSEEK_API_KEY` |
 | **阿里云百炼** | qwen-plus / qwen-turbo / qwen3.6-plus / deepseek-r1 | ✅ | ✅ | 直接使用，无需修改 |
-| **阿里云百炼** | qwen-max / deepseek-v3 | ❌ | ❌ | 仅支持 `json_object`，不支持 `json_schema` |
+| **阿里云百炼** | qwen-max / deepseek-v3 | ❌ | ❌ | 仅支持 `json_object`，不兼容 function calling 结构化输出 |
 
-> **百炼用户注意**：qwen-max 和 deepseek-v3 均不支持 `json_schema`，若遇到 `messages must contain the word 'json'` 错误或不返回 JSON，请切换到 qwen-plus、qwen-turbo 或 deepseek-r1。详见 [Issue #24](https://github.com/yifanfeng97/Hyper-Extract/issues/24)。
+> **百炼用户注意**：qwen-max 和 deepseek-v3 仅支持 `json_object`，无法用于 Hyper-Extract 的 function calling 结构化输出。若遇到 `messages must contain the word 'json'` 错误或不返回 JSON，请切换到 qwen-plus、qwen-turbo 或 deepseek-r1。详见 [Issue #24](https://github.com/yifanfeng97/Hyper-Extract/issues/24)。
 
 ### 本地部署
 

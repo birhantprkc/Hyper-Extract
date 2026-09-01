@@ -10,10 +10,12 @@ Build knowledge extraction pipelines with the Hyper-Extract Python API.
 pip install hyperextract
 ```
 
-For development:
+For development, clone the repository and install the `dev` dependency group:
 
 ```bash
-pip install hyperextract[dev]
+git clone https://github.com/yifanfeng97/hyper-extract.git
+cd hyper-extract
+uv sync
 ```
 
 ---

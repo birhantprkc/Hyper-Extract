@@ -571,6 +571,10 @@ identifiers:
     target: target
 ```
 
+字典的值指向关系中存放两个端点的字段名，因此自定义字段名同样有效
+（例如 `source: subject` / `target: object`）。有向边的端点顺序保持为
+`(source, target)`。
+
 #### hypergraph（简单）
 
 ```yaml

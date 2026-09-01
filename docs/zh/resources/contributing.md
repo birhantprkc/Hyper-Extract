@@ -26,12 +26,13 @@ cd hyper-extract
 ### 2. 配置开发环境
 
 ```bash
-# 创建虚拟环境
+# 推荐：uv（默认安装 `dev` 依赖组）
+uv sync
+
+# 或使用 pip（pip 25.1+）
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 以可编辑模式安装
-pip install -e ".[dev]"
+pip install -e . --group dev
 ```
 
 ### 3. 运行测试
