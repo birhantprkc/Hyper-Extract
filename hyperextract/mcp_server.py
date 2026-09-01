@@ -231,10 +231,15 @@ def _model_to_dict(item: Any) -> Any:
 
 
 def build_server():
-    """Build the FastMCP server with all tools registered."""
-    from mcp.server.fastmcp import FastMCP
+    """Build the MCP server with all tools registered."""
+    try:  # mcp 1.x
+        from mcp.server.fastmcp import FastMCP
 
-    server = FastMCP(SERVER_NAME)
+        server = FastMCP(SERVER_NAME)
+    except ImportError:  # mcp 2.x: FastMCP was renamed to MCPServer
+        from mcp.server.mcpserver import MCPServer
+
+        server = MCPServer(SERVER_NAME)
     for fn in (list_templates, info, search, ask, export_obsidian):
         server.tool()(fn)
     return server
