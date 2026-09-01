@@ -127,11 +127,34 @@ class TestTemplateValidateCli:
         assert result.exit_code == 0, result.output
 
     def test_batch_presets_only_known_error(self):
-        result = runner.invoke(app, ["template", "validate", str(PRESETS_DIR), "--all"])
+        result = runner.invoke(
+            app, ["template", "validate", str(PRESETS_DIR), "--all", "--json"]
+        )
         # general/workflow_graph.yaml is temporal_graph without time_field.
+        # Education presets added in v0.5.0 must not fail.
         assert result.exit_code == 1
-        assert "workflow_graph.yaml" in result.output
-        assert "HE-T006" in result.output
+        payload = json.loads(result.output)
+        assert payload["ok"] is False
+        failed = [item for item in payload["results"] if not item["ok"]]
+        assert len(failed) == 1
+        assert failed[0]["file"].replace("\\", "/").endswith(
+            "general/workflow_graph.yaml"
+        )
+        error_codes = {
+            diagnostic["code"]
+            for diagnostic in failed[0]["diagnostics"]
+            if diagnostic["severity"] == "error"
+        }
+        assert error_codes == {"HE-T006"}
+        education = [
+            item
+            for item in payload["results"]
+            if item["file"].replace("\\", "/").endswith(
+                ("course_concept_graph.yaml", "curriculum_structure.yaml")
+            )
+        ]
+        assert len(education) == 2
+        assert all(item["ok"] for item in education)
 
     def test_batch_json_wraps_results(self, tmp_path):
         _write(tmp_path, VALID_GRAPH, name="a.yaml")
