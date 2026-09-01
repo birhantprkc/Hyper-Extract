@@ -126,7 +126,7 @@ llm, emb = create_client(
 
 ## 🚀 支持的平台与模型
 
-Hyper-Extract 依赖大语言模型的结构化输出能力（`json_schema` 或 Function Calling）。
+Hyper-Extract 通过 LangChain 结构化输出的 **function calling** 方法工作。模型需支持 tool/function calling。
 
 | 平台 | 已验证模型 |
 |----------|-----------------|
