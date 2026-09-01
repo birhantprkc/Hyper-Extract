@@ -58,7 +58,19 @@
 
 <!-- News snippets are derived from the latest merged PRs. Update as new releases land. -->
 
-- **🤖 DeepSeek Provider** — Use `deepseek-v4-flash` / `deepseek-v4-pro` directly via `create_client(llm="deepseek")`. V4 thinking mode is auto-disabled for structured extraction compatibility. *(#67)*
+### v0.5.0
+
+- **🛡️ Chunk-Level Fault Isolation** — One failed chunk (rate limit, timeout, unparseable output) no longer discards the rest of a multi-chunk extraction. Graph-family extraction degrades to a partial result + warning. *(#78)*
+- **⚡ MCP Python SDK 2.x Support** — `he-mcp` now works with both mcp 1.x and 2.x; `hyperextract[mcp]` resolves `mcp<3` (protocol 2026-07-28). *(#72, #82)*
+- **🔀 Directed-Edge Fix** — `relation_members` now preserves `(source, target)` direction instead of sorting endpoints, so A→B and B→A stay distinct edges. Custom endpoint field names are supported. *(#74)*
+- **🔑 DeepSeek API Key Fix** — `create_llm("deepseek")` now reads `DEEPSEEK_API_KEY` on the OpenAI-compatible path. *(#76)*
+- **🎓 Education Templates** — Two new presets: `education/course_concept_graph` and `education/curriculum_structure`. *(#80)*
+- **🌐 OrcaRouter Provider** — One key for 150+ models (OpenAI, Anthropic, Google, DeepSeek, Qwen…) via `create_client("orcarouter")`. *(#71)*
+- **🧭 Smaller Fixes** — `Graph_RAG.search` returns a consistent 3-tuple in default mode; `he talk -i` honors `--top-k`; clearer docs on onboarding, dev install, and structured output. *(#70, #73, #57)*
+
+### Earlier
+
+- **🤖 DeepSeek Provider** — Use `deepseek-v4-flash` / `deepseek-v4-pro` directly via `create_client(llm="deepseek")`. V4 thinking mode is auto-disabled for structured extraction compatibility. *(#67, v0.4.0)*
 - **🔌 MCP Server** — Query your knowledge abstracts from Claude Desktop and IDE agents with `he-mcp`. *(PR #40)*
 - **🧠 Anthropic Claude Support** — Use `claude-opus-4-8`, `claude-sonnet-4-6`, and `claude-haiku-4-5` directly as your LLM provider. *(PR #38)*
 - **📝 Obsidian Export** — Turn any graph into an Obsidian vault with Markdown notes linked by `[[wikilinks]]`. *(PR #37)*

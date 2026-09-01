@@ -58,7 +58,19 @@
 
 <!-- 以下摘要来自最近合并的 PR，随版本更新而更新。 -->
 
-- **🤖 DeepSeek 提供商** — 直接通过 `create_client(llm="deepseek")` 使用 `deepseek-v4-flash` / `deepseek-v4-pro`。V4 thinking 模式自动关闭，保证结构化抽取兼容。*(#67)*
+### v0.5.0
+
+- **🛡️ Chunk 级故障隔离** — 多 chunk 抽取中，单个 chunk 失败（限流、超时、解析错误）不再导致整个任务失败并丢弃其余数据，而是降级为部分结果 + 警告。*(#78)*
+- **⚡ 支持 MCP Python SDK 2.x** — `he-mcp` 同时兼容 mcp 1.x / 2.x；`hyperextract[mcp]` 放宽到 `mcp<3`（协议 2026-07-28）。*(#72, #82)*
+- **🔀 有向边修复** — `relation_members` 保留 `(source, target)` 方向，不再排序端点，A→B 与 B→A 不再被误合并；支持自定义端点字段名。*(#74)*
+- **🔑 DeepSeek API Key 修复** — `create_llm("deepseek")` 在 OpenAI 兼容路径上正确读取 `DEEPSEEK_API_KEY`。*(#76)*
+- **🎓 教育领域模板** — 新增 `education/course_concept_graph` 与 `education/curriculum_structure` 两个预设。*(#80)*
+- **🌐 OrcaRouter 提供商** — 一个 key 调用 150+ 模型（OpenAI、Anthropic、Google、DeepSeek、Qwen…）：`create_client("orcarouter")`。*(#71)*
+- **🧭 其他修复** — `Graph_RAG.search` 默认模式返回一致的 3-tuple；`he talk -i` 支持 `--top-k`；入门、开发安装与结构化输出文档更新。*(#70, #73, #57)*
+
+### 更早
+
+- **🤖 DeepSeek 提供商** — 直接通过 `create_client(llm="deepseek")` 使用 `deepseek-v4-flash` / `deepseek-v4-pro`。V4 thinking 模式自动关闭，保证结构化抽取兼容。*(#67, v0.4.0)*
 - **🔌 MCP 服务器** — 通过 `he-mcp` 在 Claude Desktop 和 IDE 智能体中查询你的知识摘要。*(PR #40)*
 - **🧠 Anthropic Claude 支持** — 直接调用 `claude-opus-4-8`、`claude-sonnet-4-6`、`claude-haiku-4-5` 作为 LLM 提供商。*(PR #38)*
 - **📝 Obsidian 导出** — 将任意图谱导出为 Obsidian 知识库，Markdown 笔记通过 `[[双向链接]]` 关联。*(PR #37)*
