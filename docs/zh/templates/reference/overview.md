@@ -7,7 +7,7 @@
 ## 统计
 
 - **模板总数**：80+
-- **类别**：6 个领域
+- **类别**：7 个领域
 - **自动类型**：8 种类型
 - **语言**：中文、英文
 
@@ -84,6 +84,13 @@
 | `industry/operation_flow` | graph | 操作工作流 |
 | `industry/safety_control` | graph | 安全控制系统 |
 
+### 教育模板
+
+| 模板 | 类型 | 描述 |
+|------|------|------|
+| `education/course_concept_graph` | graph | 课程知识点依赖 |
+| `education/curriculum_structure` | hypergraph | 课程—模块—考核结构 |
+
 ---
 
 ## 按自动类型
@@ -134,6 +141,7 @@
 | `industry/equipment_topology` | industry | 设备连接 |
 | `industry/operation_flow` | industry | 操作工作流 |
 | `industry/safety_control` | industry | 安全控制系统 |
+| `education/course_concept_graph` | education | 课程知识点 |
 
 ### Temporal Graph 模板
 
@@ -163,6 +171,7 @@
 | 模板 | 领域 | 描述 |
 |------|------|------|
 | `general/base_hypergraph` | general | 基础超图 |
+| `education/curriculum_structure` | education | 课程结构 |
 
 ---
 

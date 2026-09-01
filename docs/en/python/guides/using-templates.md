@@ -20,7 +20,7 @@ Templates are pre-configured extraction setups that combine:
 
 ## Built-in Templates
 
-Hyper-Extract includes 80+ templates across 6 domains:
+Hyper-Extract includes 80+ templates across 7 domains:
 
 | Domain | Templates | Use Cases |
 |--------|-----------|-----------|
@@ -30,6 +30,7 @@ Hyper-Extract includes 80+ templates across 6 domains:
 | `medicine` | Anatomy, drugs, treatments | Medical text analysis |
 | `tcm` | Herbs, formulas, syndromes | Traditional Chinese Medicine |
 | `industry` | Equipment, safety, operations | Industrial documentation |
+| `education` | Course concepts, curriculum structure | Textbooks, lecture notes, syllabi |
 
 ---
 

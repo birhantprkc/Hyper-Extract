@@ -20,6 +20,7 @@
   - [中医领域](#中医领域)
   - [工业领域](#工业领域)
   - [法律领域](#法律领域)
+  - [教育领域](#教育领域)
 - [基础模板参考](#基础模板参考)
 - [自定义模板](#自定义模板)
 
@@ -238,6 +239,8 @@ Hyper-Extract 提供 8 种抽取类型，分为两大类：
 | **技术文档** | doc_structure | graph |
 | **Skill 定义 (Agent)** | workflow_graph | temporal_graph |
 | **概念性文本** | concept_graph | graph |
+| **课程教材 / 讲义** | course_concept_graph | graph |
+| **教学大纲 / 培养方案** | curriculum_structure | hypergraph |
 
 ---
 
@@ -338,6 +341,17 @@ Hyper-Extract 提供 8 种抽取类型，分为两大类：
 | [case_citation](./presets/legal/case_citation.yaml) | graph | 提取判例引用关系 | 法律意见书、判例汇编 |
 | [compliance_list](./presets/legal/compliance_list.yaml) | list | 结构化合规要求清单 | 合规手册、审计报告 |
 | [defined_term_set](./presets/legal/defined_term_set.yaml) | set | 编目定义术语 | 合同、法律意见书 |
+
+---
+
+### 教育领域
+
+面向课程材料、教学大纲和培养方案的模板。
+
+| 模板 | 类型 | 用途 | 适用文档 |
+|------|------|------|----------|
+| [course_concept_graph](./presets/education/course_concept_graph.yaml) | graph | 提取知识点及其教学依赖关系 | 教材、讲义、课程读本 |
+| [curriculum_structure](./presets/education/curriculum_structure.yaml) | hypergraph | 提取课程—模块—知识点—考核结构 | 教学大纲、培养方案、课程简介 |
 
 ---
 
@@ -450,7 +464,8 @@ result = template.parse("您的文档文本...")
 | tcm | 5 | 0 | 5 |
 | industry | 5 | 0 | 5 |
 | legal | 5 | 0 | 5 |
-| **总计** | **38** | **8** | **30** |
+| education | 2 | 0 | 2 |
+| **总计** | **40** | **8** | **32** |
 
 ---
 

@@ -132,6 +132,7 @@ plugins:
                     - Medical: templates/reference/medicine.md
                     - TCM: templates/reference/tcm.md
                     - Industry: templates/reference/industry.md
+                    - Education: templates/reference/education.md
             - Tutorials:
                 - tutorials/index.md
                 - Research Assistant:
@@ -225,6 +226,7 @@ plugins:
                     - 医学: zh/templates/reference/medicine.md
                     - 中医: zh/templates/reference/tcm.md
                     - 工业: zh/templates/reference/industry.md
+                    - 教育: zh/templates/reference/education.md
             - 教程:
                 - zh/tutorials/index.md
                 - 研究助手:

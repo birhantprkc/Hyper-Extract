@@ -20,6 +20,7 @@ A curated library of YAML-based templates for structured knowledge extraction fr
   - [TCM Domain](#tcm-domain)
   - [Industry Domain](#industry-domain)
   - [Legal Domain](#legal-domain)
+  - [Education Domain](#education-domain)
 - [Base Templates Reference](#base-templates-reference)
 - [Custom Templates](#custom-templates)
 
@@ -238,6 +239,8 @@ Match your document type to the right template:
 | **Technical Documentation** | doc_structure | graph |
 | **Skill Definition (Agent)** | workflow_graph | temporal_graph |
 | **Conceptual Text** | concept_graph | graph |
+| **Course textbook / lecture notes** | course_concept_graph | graph |
+| **Syllabus / curriculum outline** | curriculum_structure | hypergraph |
 
 ---
 
@@ -338,6 +341,17 @@ Templates for legal documents and compliance.
 | [case_citation](./presets/legal/case_citation.yaml) | graph | Extract case citation relationships | Legal opinions, case law |
 | [compliance_list](./presets/legal/compliance_list.yaml) | list | Structured compliance requirements | Compliance manuals, audit reports |
 | [defined_term_set](./presets/legal/defined_term_set.yaml) | set | Catalog defined terms | Contracts, legal opinions |
+
+---
+
+### Education Domain
+
+Templates for course materials, syllabi, and curriculum documents.
+
+| Template | Type | Purpose | Documents |
+|---------|------|---------|-----------|
+| [course_concept_graph](./presets/education/course_concept_graph.yaml) | graph | Extract knowledge points and pedagogical dependencies | Textbooks, lecture notes, course readers |
+| [curriculum_structure](./presets/education/curriculum_structure.yaml) | hypergraph | Extract course–module–concept–assessment structure | Syllabi, program plans, course outlines |
 
 ---
 
@@ -450,7 +464,8 @@ result = template.parse("Your document text here...")
 | tcm | 5 | 0 | 5 |
 | industry | 5 | 0 | 5 |
 | legal | 5 | 0 | 5 |
-| **Total** | **38** | **8** | **30** |
+| education | 2 | 0 | 2 |
+| **Total** | **40** | **8** | **32** |
 
 ---
 

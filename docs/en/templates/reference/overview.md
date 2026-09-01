@@ -7,7 +7,7 @@ Complete overview of all available templates.
 ## Statistics
 
 - **Total Templates**: 80+
-- **Categories**: 6 domains
+- **Categories**: 7 domains
 - **Auto-Types**: 8 types
 - **Languages**: Chinese, English
 
@@ -84,6 +84,13 @@ Complete overview of all available templates.
 | `industry/operation_flow` | graph | Operational workflows |
 | `industry/safety_control` | graph | Safety control systems |
 
+### Education Templates
+
+| Template | Type | Description |
+|----------|------|-------------|
+| `education/course_concept_graph` | graph | Course knowledge-point dependencies |
+| `education/curriculum_structure` | hypergraph | Course–module–assessment structure |
+
 ---
 
 ## By Auto-Type
@@ -134,6 +141,7 @@ Complete overview of all available templates.
 | `industry/equipment_topology` | industry | Equipment connections |
 | `industry/operation_flow` | industry | Operational workflows |
 | `industry/safety_control` | industry | Safety control systems |
+| `education/course_concept_graph` | education | Course knowledge points |
 
 ### Temporal Graph Templates
 
@@ -163,6 +171,7 @@ Complete overview of all available templates.
 | Template | Domain | Description |
 |----------|--------|-------------|
 | `general/base_hypergraph` | general | Basic hypergraph |
+| `education/curriculum_structure` | education | Curriculum structure |
 
 ---
 
