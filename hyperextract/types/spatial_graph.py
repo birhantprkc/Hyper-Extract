@@ -271,9 +271,7 @@ class AutoSpatialGraph(AutoGraph[NodeSchema, EdgeSchema]):
                 }
             )
 
-        results = self.edge_extractor.batch(
-            inputs, config={"max_concurrency": self.max_workers}
-        )
+        results = self._batch_safe(self.edge_extractor, inputs, stage="two_stage_edges")
         return self._filter_none_results(
             results,
             default_factory=lambda: self.edge_list_schema(items=[]),
@@ -287,8 +285,11 @@ class AutoSpatialGraph(AutoGraph[NodeSchema, EdgeSchema]):
                 "source_text": text,
                 "observation_location": self.observation_location,
             }
-            graph = self.data_extractor.invoke(inp)
-            graph_list = [graph]
+            graph = self._invoke_safe(self.data_extractor, inp, stage="one_stage")
+            graph_list = self._filter_none_results(
+                [graph],
+                default_factory=lambda: self.graph_schema(nodes=[], edges=[]),
+            )
         else:
             chunks = self.text_splitter.split_text(text)
             inputs = [
@@ -298,8 +299,8 @@ class AutoSpatialGraph(AutoGraph[NodeSchema, EdgeSchema]):
                 }
                 for chunk in chunks
             ]
-            graph_list = self.data_extractor.batch(
-                inputs, config={"max_concurrency": self.max_workers}
+            graph_list = self._batch_safe(
+                self.data_extractor, inputs, stage="one_stage"
             )
             graph_list = self._filter_none_results(
                 graph_list,

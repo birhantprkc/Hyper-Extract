@@ -251,13 +251,9 @@ class BaseAutoType(ABC, Generic[T]):
 
         if len(text) <= self.chunk_size:
             logger.debug("stage=extract_single_chunk chunk_text_preview=%s", text[:200])
-            try:
-                extracted_data = self.data_extractor.invoke({"source_text": text})
-            except Exception as e:
-                # LLM returned unparseable output (e.g. prose instead of JSON).
-                # Log and treat as an empty result instead of crashing the run.
-                logger.warning("stage=extract_single_chunk_failed error=%s", e)
-                extracted_data = None
+            extracted_data = self._invoke_safe(
+                self.data_extractor, {"source_text": text}, stage="extract"
+            )
             logger.debug(
                 "stage=extract_single_chunk_result chunk=0 result_summary=%s",
                 self._summarize_extracted(extracted_data),
@@ -279,22 +275,9 @@ class BaseAutoType(ABC, Generic[T]):
                 self.max_workers,
                 len(inputs),
             )
-            # return_exceptions keeps one bad chunk from aborting the whole batch;
-            # failures are logged and nulled (then filtered) below.
-            extracted_data_list = self.data_extractor.batch(
-                inputs,
-                config={"max_concurrency": self.max_workers},
-                return_exceptions=True,
+            extracted_data_list = self._batch_safe(
+                self.data_extractor, inputs, stage="extract"
             )
-            cleaned = []
-            for i, r in enumerate(extracted_data_list):
-                if isinstance(r, Exception):
-                    logger.warning(
-                        "stage=chunk_extract_failed chunk_index=%d error=%s", i, r
-                    )
-                    r = None
-                cleaned.append(r)
-            extracted_data_list = cleaned
             logger.debug(
                 "stage=llm_batch_complete results=%d", len(extracted_data_list)
             )
@@ -344,6 +327,54 @@ class BaseAutoType(ABC, Generic[T]):
             if default_factory is not None:
                 return [r if r is not None else default_factory() for r in results]
             return [r for r in results if r is not None]
+        return results
+
+    def _invoke_safe(self, extractor, input: dict, *, stage: str):
+        """invoke() with provider failures logged and nulled instead of raised.
+
+        One bad chunk (rate limit, timeout, unparseable output) must not abort
+        the whole run — failures degrade to None, matching _extract_data's
+        contract. Logs the stage and exception only, never the source text.
+
+        Args:
+            extractor: Runnable with an ``invoke`` method.
+            input: Input dict for the extractor.
+            stage: Stage label used in log lines (e.g. ``"one_stage"``).
+
+        Returns:
+            The extractor result, or None if it raised.
+        """
+        try:
+            return extractor.invoke(input)
+        except Exception as e:
+            logger.warning("stage=%s_single_extract_failed error=%s", stage, e)
+            return None
+
+    def _batch_safe(self, extractor, inputs: list[dict], *, stage: str) -> list:
+        """batch() with return_exceptions=True; per-chunk failures logged and nulled.
+
+        Args:
+            extractor: Runnable with a ``batch`` method.
+            inputs: List of input dicts, one per chunk.
+            stage: Stage label used in log lines (e.g. ``"two_stage_nodes"``).
+
+        Returns:
+            List aligned with ``inputs``; failed chunks are None.
+        """
+        raw = extractor.batch(
+            inputs,
+            config={"max_concurrency": self.max_workers},
+            return_exceptions=True,
+        )
+        results: list = []
+        for i, r in enumerate(raw):
+            if isinstance(r, Exception):
+                logger.warning(
+                    "stage=%s_chunk_extract_failed chunk_index=%d error=%s", stage, i, r
+                )
+                results.append(None)
+            else:
+                results.append(r)
         return results
 
     def _summarize_extracted(self, data: T) -> str:

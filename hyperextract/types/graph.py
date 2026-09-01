@@ -483,8 +483,13 @@ class AutoGraph(
 
         if len(text) <= self.chunk_size:
             logger.debug("stage=one_stage_single_invoke")
-            graph = self.data_extractor.invoke({"source_text": text})
-            graph_list = [graph]
+            graph = self._invoke_safe(
+                self.data_extractor, {"source_text": text}, stage="one_stage"
+            )
+            graph_list = self._filter_none_results(
+                [graph],
+                default_factory=lambda: self.graph_schema(nodes=[], edges=[]),
+            )
         else:
             chunks = self.text_splitter.split_text(text)
             logger.debug("stage=one_stage_split num_chunks=%d", len(chunks))
@@ -492,8 +497,8 @@ class AutoGraph(
             logger.debug(
                 "stage=one_stage_batch_start max_concurrency=%d", self.max_workers
             )
-            graph_list = self.data_extractor.batch(
-                inputs, config={"max_concurrency": self.max_workers}
+            graph_list = self._batch_safe(
+                self.data_extractor, inputs, stage="one_stage"
             )
             graph_list = self._filter_none_results(
                 graph_list,
@@ -537,9 +542,9 @@ class AutoGraph(
             chunks = self.text_splitter.split_text(text)
         logger.debug("stage=two_stage_chunks num_chunks=%d", len(chunks))
 
-        # 2. Batch Extract Nodes (returns List[NodeListSchema])
+        # 2. Batch Extract Nodes (returns List[NodeListSchema] + per-chunk failure mask)
         logger.debug("stage=two_stage_node_extraction_start")
-        chunk_node_lists = self._extract_nodes_batch(chunks)
+        chunk_node_lists, node_failed = self._extract_nodes_batch(chunks)
         total_nodes = sum(len(nl.items) for nl in chunk_node_lists)
         logger.debug(
             "stage=two_stage_node_extraction_complete chunks=%d total_nodes=%d",
@@ -547,9 +552,25 @@ class AutoGraph(
             total_nodes,
         )
 
-        # 3. Batch Extract Edges (Context-aware, returns List[EdgeListSchema])
+        # 3. Batch Extract Edges (Context-aware, returns List[EdgeListSchema]).
+        # Chunks whose node extraction failed are skipped — do not prompt the
+        # LLM with an empty node list. Results are padded back to the full
+        # chunk length because merge_batch_data zips the node/edge lists.
         logger.debug("stage=two_stage_edge_extraction_start")
-        chunk_edge_lists = self._extract_edges_batch(chunks, chunk_node_lists)
+        edge_indices = [i for i, failed in enumerate(node_failed) if not failed]
+        edge_results = (
+            self._extract_edges_batch(
+                [chunks[i] for i in edge_indices],
+                [chunk_node_lists[i] for i in edge_indices],
+            )
+            if edge_indices
+            else []
+        )
+        pending_edges = iter(edge_results)
+        chunk_edge_lists = [
+            next(pending_edges) if not failed else self.edge_list_schema(items=[])
+            for failed in node_failed
+        ]
         total_edges = sum(len(el.items) for el in chunk_edge_lists)
         logger.debug(
             "stage=two_stage_edge_extraction_complete chunks=%d total_edges=%d",
@@ -575,23 +596,24 @@ class AutoGraph(
 
     def _extract_nodes_batch(
         self, chunks: list[str]
-    ) -> list[NodeListSchema[NodeSchema]]:
+    ) -> tuple[list[NodeListSchema[NodeSchema]], list[bool]]:
         """Batch extract nodes from multiple text chunks.
 
         Args:
             chunks: List of text chunks.
 
         Returns:
-            List of NodeListSchema objects with extracted nodes.
+            Tuple of (node list schemas aligned with chunks, per-chunk failure
+            mask where True marks a chunk whose node extraction failed).
         """
         inputs = [{"source_text": chunk} for chunk in chunks]
-        results = self.node_extractor.batch(
-            inputs, config={"max_concurrency": self.max_workers}
-        )
-        return self._filter_none_results(
+        results = self._batch_safe(self.node_extractor, inputs, stage="two_stage_nodes")
+        node_failed = [r is None for r in results]
+        node_lists = self._filter_none_results(
             results,
             default_factory=lambda: self.node_list_schema(items=[]),
         )
+        return node_lists, node_failed
 
     def _extract_edges_batch(
         self, chunks: list[str], node_lists: list[NodeListSchema[NodeSchema]]
@@ -616,9 +638,7 @@ class AutoGraph(
 
             inputs.append({"source_text": chunk, "known_nodes": known_nodes})
 
-        results = self.edge_extractor.batch(
-            inputs, config={"max_concurrency": self.max_workers}
-        )
+        results = self._batch_safe(self.edge_extractor, inputs, stage="two_stage_edges")
         return self._filter_none_results(
             results,
             default_factory=lambda: self.edge_list_schema(items=[]),

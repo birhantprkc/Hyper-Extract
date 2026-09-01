@@ -956,7 +956,7 @@ requires-dist = [
     { name = "langchain-community", specifier = ">=0.4.1" },
     { name = "langchain-google-genai", marker = "extra == 'google'", specifier = ">=2.1.0" },
     { name = "langchain-openai", specifier = ">=1.1.7" },
-    { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.2.0,<2" },
+    { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.2.0,<3" },
     { name = "ontomem", specifier = ">=0.2.3" },
     { name = "ontosight", specifier = ">=0.1.8" },
     { name = "python-dotenv", specifier = ">=1.2.1" },

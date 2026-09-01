@@ -455,13 +455,18 @@ class AutoHypergraph(
         """
         # Extract from single chunk or multiple chunks
         if len(text) <= self.chunk_size:
-            graph = self.data_extractor.invoke({"source_text": text})
-            graph_list = [graph]
+            graph = self._invoke_safe(
+                self.data_extractor, {"source_text": text}, stage="one_stage"
+            )
+            graph_list = self._filter_none_results(
+                [graph],
+                default_factory=lambda: self.graph_schema(nodes=[], edges=[]),
+            )
         else:
             chunks = self.text_splitter.split_text(text)
             inputs = [{"source_text": chunk} for chunk in chunks]
-            graph_list = self.data_extractor.batch(
-                inputs, config={"max_concurrency": self.max_workers}
+            graph_list = self._batch_safe(
+                self.data_extractor, inputs, stage="one_stage"
             )
             graph_list = self._filter_none_results(
                 graph_list,
@@ -489,11 +494,27 @@ class AutoHypergraph(
         if self.verbose:
             logger.info(f"Extracting from {len(chunks)} chunks...")
 
-        # 2. Batch Extract Nodes
-        chunk_node_lists = self._extract_nodes_batch(chunks)
+        # 2. Batch Extract Nodes (returns node lists + per-chunk failure mask)
+        chunk_node_lists, node_failed = self._extract_nodes_batch(chunks)
 
-        # 3. Batch Extract Hyperedges (Context-aware)
-        chunk_edge_lists = self._extract_edges_batch(chunks, chunk_node_lists)
+        # 3. Batch Extract Hyperedges (Context-aware). Chunks whose node
+        # extraction failed are skipped — do not prompt the LLM with an empty
+        # node list. Results are padded back to the full chunk length because
+        # merge_batch_data zips the node/edge lists.
+        edge_indices = [i for i, failed in enumerate(node_failed) if not failed]
+        edge_results = (
+            self._extract_edges_batch(
+                [chunks[i] for i in edge_indices],
+                [chunk_node_lists[i] for i in edge_indices],
+            )
+            if edge_indices
+            else []
+        )
+        pending_edges = iter(edge_results)
+        chunk_edge_lists = [
+            next(pending_edges) if not failed else self.edge_list_schema(items=[])
+            for failed in node_failed
+        ]
 
         # 4. Construct Partial Graphs (Tuple format for merge optimization)
         partial_hypergraphs = (
@@ -506,16 +527,21 @@ class AutoHypergraph(
 
     def _extract_nodes_batch(
         self, chunks: list[str]
-    ) -> list[NodeListSchema[NodeSchema]]:
-        """Batch extract nodes from multiple text chunks."""
+    ) -> tuple[list[NodeListSchema[NodeSchema]], list[bool]]:
+        """Batch extract nodes from multiple text chunks.
+
+        Returns:
+            Tuple of (node list schemas aligned with chunks, per-chunk failure
+            mask where True marks a chunk whose node extraction failed).
+        """
         inputs = [{"source_text": chunk} for chunk in chunks]
-        results = self.node_extractor.batch(
-            inputs, config={"max_concurrency": self.max_workers}
-        )
-        return self._filter_none_results(
+        results = self._batch_safe(self.node_extractor, inputs, stage="two_stage_nodes")
+        node_failed = [r is None for r in results]
+        node_lists = self._filter_none_results(
             results,
             default_factory=lambda: self.node_list_schema(items=[]),
         )
+        return node_lists, node_failed
 
     def _extract_edges_batch(
         self, chunks: list[str], node_lists: list[NodeListSchema[NodeSchema]]
@@ -532,9 +558,7 @@ class AutoHypergraph(
 
             inputs.append({"source_text": chunk, "known_nodes": known_nodes})
 
-        results = self.edge_extractor.batch(
-            inputs, config={"max_concurrency": self.max_workers}
-        )
+        results = self._batch_safe(self.edge_extractor, inputs, stage="two_stage_edges")
         return self._filter_none_results(
             results,
             default_factory=lambda: self.edge_list_schema(items=[]),
