@@ -14,7 +14,9 @@ he parse INPUT [OPTIONS]
 
 | Argument | Description |
 |----------|-------------|
-| `INPUT` | Input file path, directory, or `-` for stdin |
+| `INPUT` | Input file path (`.txt` or `.md`), directory, or `-` for stdin |
+
+Supported suffixes are `.txt` and `.md` (case-insensitive, including `.TXT` and `.MD`). This CLI does not parse PDF or Office files and does not perform OCR — convert those documents to `.txt` or `.md` first. Directory mode is non-recursive: only `.txt`/`.md` files in that folder are read; other regular files are skipped with a warning. Stdin (`-`) is not suffix-checked.
 
 ## Options
 
