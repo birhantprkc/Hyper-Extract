@@ -332,11 +332,9 @@ class TestJsonShape:
         assert set(item) == {"code", "severity", "path", "message"}
 
 
-# Bundled presets that currently fail error-level checks. Do not "fix" them in
-# this change — record and keep the allowlist tight so new errors still fail.
-KNOWN_PRESET_ERRORS = {
-    "general/workflow_graph.yaml": {HE_T006},
-}
+# Bundled presets that currently fail error-level checks. Keep the allowlist
+# tight so new errors still fail; empty means every preset passes clean.
+KNOWN_PRESET_ERRORS: dict = {}
 
 
 class TestPresetBootstrap:

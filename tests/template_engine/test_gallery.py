@@ -143,5 +143,5 @@ class TestGalleryMultiple:
         templates = Gallery.list(filter_by_type=template.type)
 
         assert len(templates) > 0
-        for key, t in templates.items():
+        for t in templates.values():
             assert t.type == template.type

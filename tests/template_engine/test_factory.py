@@ -1,9 +1,9 @@
 """Unit tests for TemplateFactory."""
 
-import pytest
-from pathlib import Path
 
-from hyperextract.utils.template_engine import TemplateFactory, Gallery
+import pytest
+
+from hyperextract.utils.template_engine import Gallery, TemplateFactory
 
 
 class TestTemplateFactoryCreate:

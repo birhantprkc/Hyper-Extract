@@ -4,11 +4,10 @@ import logging
 import os
 from unittest.mock import patch
 
-import pytest
 from typer.testing import CliRunner
 
 from hyperextract.cli.cli import app
-from hyperextract.utils.logging import configure_logging, ENV_LOG_LEVEL
+from hyperextract.utils.logging import ENV_LOG_LEVEL, configure_logging
 
 runner = CliRunner()
 

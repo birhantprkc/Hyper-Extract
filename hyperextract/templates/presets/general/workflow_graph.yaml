@@ -1,7 +1,7 @@
 language: [zh, en]
 
 name: workflow_graph
-type: temporal_graph
+type: graph
 tags: [general, workflow, process, agent, skill]
 
 description:

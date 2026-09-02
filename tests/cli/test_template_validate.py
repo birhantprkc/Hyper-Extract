@@ -126,26 +126,18 @@ class TestTemplateValidateCli:
         result = runner.invoke(app, ["template", "validate", str(tmp_path), "--all"])
         assert result.exit_code == 0, result.output
 
-    def test_batch_presets_only_known_error(self):
+    def test_batch_presets_are_clean(self):
         result = runner.invoke(
             app, ["template", "validate", str(PRESETS_DIR), "--all", "--json"]
         )
-        # general/workflow_graph.yaml is temporal_graph without time_field.
-        # Education presets added in v0.5.0 must not fail.
-        assert result.exit_code == 1
+        # All bundled presets pass error-level checks. workflow_graph was
+        # retagged from temporal_graph to graph (it has no time fields);
+        # education presets added in v0.5.0 must not fail either.
+        assert result.exit_code == 0, result.output
         payload = json.loads(result.output)
-        assert payload["ok"] is False
+        assert payload["ok"] is True
         failed = [item for item in payload["results"] if not item["ok"]]
-        assert len(failed) == 1
-        assert failed[0]["file"].replace("\\", "/").endswith(
-            "general/workflow_graph.yaml"
-        )
-        error_codes = {
-            diagnostic["code"]
-            for diagnostic in failed[0]["diagnostics"]
-            if diagnostic["severity"] == "error"
-        }
-        assert error_codes == {"HE-T006"}
+        assert failed == []
         education = [
             item
             for item in payload["results"]
