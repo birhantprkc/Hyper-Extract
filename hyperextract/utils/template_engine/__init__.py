@@ -10,6 +10,7 @@ Main Components:
 - SchemaParser: Parses output schemas based on template type
 - GuidelineParser: Parses prompts based on template type
 - parse_identifiers: Parses identifier extractors from config
+- validate_template: Semantic checks with machine-readable diagnostics
 """
 
 from .factory import TemplateFactory
@@ -20,12 +21,22 @@ from .parsers import (
     localize_template,
 )
 from .template import Template
+from .validator import (
+    Diagnostic,
+    ValidationResult,
+    validate_template,
+    validate_template_dir,
+)
 
 __all__ = [
+    "Diagnostic",
     "Gallery",
     "Template",
     "TemplateCfg",
     "TemplateFactory",
+    "ValidationResult",
     "load_template",
     "localize_template",
+    "validate_template",
+    "validate_template_dir",
 ]

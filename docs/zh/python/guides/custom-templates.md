@@ -105,6 +105,10 @@ display:
 
 ### 3. 验证并使用
 
+```bash
+he template validate ~/.hyperextract/templates/my_domain/my_template.yaml
+```
+
 ```python
 from hyperextract import Template
 
@@ -114,6 +118,8 @@ ka = Template.create("my_domain/my_template", "zh")
 # 使用
 result = ka.parse("您的文档文本")
 ```
+
+诊断编码与 JSON 输出见 [`he template validate`](../../cli/commands/template.md)。
 
 ---
 
