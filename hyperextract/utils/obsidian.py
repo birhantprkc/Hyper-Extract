@@ -32,6 +32,8 @@ logger = get_logger(__name__)
 # file names. ``[`` / ``]`` / ``#`` / ``^`` / ``|`` break wikilink parsing.
 _ILLEGAL_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|\[\]#^]')
 _WHITESPACE = re.compile(r"\s+")
+# Characters that break an Obsidian wikilink alias ("[[stem|alias]]").
+_WIKILINK_METACHARS = re.compile(r"[\[\]|#^]")
 
 # Conservative "safe to emit unquoted" YAML plain-scalar charset.
 _SAFE_PLAIN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9 _./()\-]*$")
@@ -165,6 +167,9 @@ def sanitize_filename(name: str, fallback: str = "untitled") -> str:
 
 def _wikilink(stem: str, display: str | None = None) -> str:
     """Build an Obsidian wikilink targeting ``stem`` with optional display text."""
+    if display:
+        # An alias can't contain wikilink metacharacters, or the link breaks.
+        display = _WHITESPACE.sub(" ", _WIKILINK_METACHARS.sub(" ", display)).strip()
     if display and display != stem:
         return f"[[{stem}|{display}]]"
     return f"[[{stem}]]"
