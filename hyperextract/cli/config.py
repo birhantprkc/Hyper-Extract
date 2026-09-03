@@ -1,6 +1,7 @@
 """Configuration management for Hyper-Extract CLI."""
 
 import json
+import logging
 import os
 import tomllib
 from dataclasses import dataclass
@@ -8,6 +9,12 @@ from pathlib import Path
 from typing import Any
 
 import tomli_w
+
+logger = logging.getLogger(__name__)
+
+# Owner read/write only. Group/other bits that make a file too open.
+_CONFIG_FILE_MODE = 0o600
+_GROUP_OTHER_BITS = 0o077
 
 DEFAULT_CONFIG_DIR = Path.home() / ".he"
 DEFAULT_CONFIG_FILE = DEFAULT_CONFIG_DIR / "config.toml"
@@ -66,6 +73,33 @@ def _env_api_key(provider: str) -> str:
         if value:
             return value
     return ""
+
+
+def _restrict_config_permissions(path: Path) -> None:
+    """Set *path* to owner read/write only (0600). Best-effort on Windows."""
+    try:
+        os.chmod(path, _CONFIG_FILE_MODE)
+    except OSError:
+        pass
+
+
+def _warn_if_insecure_permissions(path: Path) -> None:
+    """Warn when group or others can read the config file. Unix-only."""
+    if os.name == "nt":
+        return
+    try:
+        mode = path.stat().st_mode
+    except OSError:
+        return
+    if mode & _GROUP_OTHER_BITS:
+        logger.warning(
+            "Config file %s is readable by group or others (mode %04o). "
+            "The next `he config` save will tighten it to 0600, "
+            "or run: chmod 600 %s",
+            path,
+            mode & 0o777,
+            path,
+        )
 
 
 @dataclass
@@ -132,6 +166,8 @@ class ConfigManager:
         if not self.config_path.exists():
             return
 
+        _warn_if_insecure_permissions(self.config_path)
+
         with open(self.config_path, "rb") as f:
             data = tomllib.load(f)
 
@@ -153,6 +189,7 @@ class ConfigManager:
 
         with open(self.config_path, "wb") as f:
             tomli_w.dump(data, f)
+        _restrict_config_permissions(self.config_path)
 
     def _resolve_base_url(self, provider: str, explicit_base_url: str) -> str:
         """Resolve base_url from provider preset. Explicit value takes precedence."""

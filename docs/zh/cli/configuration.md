@@ -227,6 +227,8 @@ he config embedder --unset
 - **Linux/macOS**: `~/.he/config.toml`
 - **Windows**: `%USERPROFILE%\.he\config.toml`
 
+在 Linux / macOS 上，`he config` 会以 `0600`（仅文件所有者可读写）写入该文件。若已有文件对组或其他用户可读，加载时会给出 warning，下次保存会收紧权限。更推荐用环境变量，而不是把 API key 写入文件。
+
 ### 配置格式
 
 === "云 API — 百炼"
