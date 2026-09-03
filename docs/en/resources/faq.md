@@ -151,6 +151,19 @@ he parse ./docs/ -t general/graph -o ./ka/ -l en
 he parse doc.md -t general/biography_graph -l zh
 ```
 
+### How do I delete knowledge from an existing KA?
+
+```bash
+# Hard-delete a node (edges anchored by it are removed too)
+he remove ./ka/ --node Apple
+
+# Soft-remove one wrong/obsolete fact, keeping the rest of the node
+he remove ./ka/ --edit-node Apple --fact "founded by Steve Jobs" --dry-run
+he remove ./ka/ --edit-node Apple --fact "founded by Steve Jobs" -y
+```
+
+Soft delete uses the LLM to rewrite the item under the same schema, with a key-invariance check and an automatic `data.json` backup. To delete **everything a specific document contributed**, rebuild the KA without that document — per-document provenance tracking is not implemented yet. See [`he remove`](../cli/commands/remove.md).
+
 ---
 
 ## Performance

@@ -151,6 +151,19 @@ he parse ./docs/ -t general/graph -o ./ka/ -l zh
 he parse doc.md -t general/biography_graph -l zh
 ```
 
+### 如何从已有知识摘要中删除知识？
+
+```bash
+# 硬删除节点（以其为端点的边会一并删除）
+he remove ./ka/ --node Apple
+
+# 软删除节点中一条错误/过时的事实，其余内容保留
+he remove ./ka/ --edit-node Apple --fact "founded by Steve Jobs" --dry-run
+he remove ./ka/ --edit-node Apple --fact "founded by Steve Jobs" -y
+```
+
+软删除由大模型在相同 schema 下重写条目，带 key 不变性校验和自动 `data.json` 备份。若要删除**某份文档贡献的全部知识**，请去掉该文档后重建 KA——按文档溯源删除尚未实现。详见 [`he remove`](../cli/commands/remove.md)。
+
 ---
 
 ## 性能问题

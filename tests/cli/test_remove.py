@@ -201,3 +201,29 @@ class TestArgumentValidation:
         result = runner.invoke(app, ["remove", str(ka)])
         assert result.exit_code == 0
         assert "Nothing to do" in result.output
+
+
+class TestNonGraphKa:
+    def test_list_ka_gets_friendly_error(self, tmp_path, monkeypatch):
+        """List/set/model KAs don't support keyed deletion — say so clearly."""
+        from hyperextract.types import AutoList
+
+        class Item(BaseModel):
+            name: str
+
+        g = AutoList(
+            item_schema=Item,
+            llm_client=MockChatModel(),
+            embedder=MockEmbeddings(),
+        )
+        g.metadata["template"] = "general/list"
+        g.metadata["lang"] = "en"
+        ka = tmp_path / "ka"
+        g.dump(ka)
+        monkeypatch.setattr(climod.Template, "create", staticmethod(lambda *a, **k: g))
+
+        result = runner.invoke(app, ["remove", str(ka), "--node", "Apple", "-y"])
+
+        assert result.exit_code == 1
+        assert "graph-family" in result.output
+        assert "AutoList" in result.output

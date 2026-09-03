@@ -95,6 +95,10 @@ ka = Template.create(template_path, language="en")
 result = ka.parse(text)           # New extraction
 result.feed_text(text)            # Add to existing
 
+# Delete (graph-family KAs)
+result.remove_nodes("Apple")      # Hard-delete a node + its orphan edges
+report = result.edit_node("Apple", remove_fact="...", dry_run=True)  # Soft-remove one fact
+
 # Query
 result.build_index()              # Build search index
 results = result.search(query)    # Semantic search

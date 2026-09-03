@@ -1014,6 +1014,16 @@ def remove_items(
     ka = Template.create(template, lang)
     ka.load(path)
 
+    if not hasattr(ka, "remove_nodes"):
+        console.print(
+            f"[red]Error:[/red] `he remove` supports graph-family knowledge "
+            f"abstracts (graph / hypergraph / temporal / spatial). "
+            f"'{template}' produced a {type(ka).__name__}, which does not "
+            "support keyed deletion. For lists/sets, use the Python API "
+            "`ka.remove(item)`; or rebuild the KA with `he clean --all`."
+        )
+        raise typer.Exit(1)
+
     try:
         if hard_targets:
             report = {}

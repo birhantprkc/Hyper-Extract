@@ -95,6 +95,10 @@ ka = Template.create(template_path, language="zh")
 result = ka.parse(text)           # 新提取
 result.feed_text(text)            # 添加到现有
 
+# 删除（图谱类 KA）
+result.remove_nodes("Apple")      # 硬删除节点及其孤儿边
+report = result.edit_node("Apple", remove_fact="...", dry_run=True)  # 软删除单条事实
+
 # 查询
 result.build_index()              # 构建搜索索引
 results = result.search(query)    # 语义搜索
