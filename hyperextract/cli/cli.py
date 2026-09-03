@@ -140,6 +140,14 @@ def main(
                         "he export obsidian <ka_path> -o <vault>",
                         "Export to Obsidian vault",
                     ),
+                    (
+                        "he export graphml <ka_path> -o <file>",
+                        "Export pairwise graph to GraphML",
+                    ),
+                    (
+                        "he export csv <ka_path> -o <dir>",
+                        "Export nodes/edges as CSV tables",
+                    ),
                 ],
             ),
         ]
@@ -520,6 +528,154 @@ def export_obsidian_cmd(
     )
     console.print()
     console.print("[dim]Open the folder as a vault in Obsidian to explore it.[/dim]")
+
+
+def _load_graph_ka_for_export(ka_path: str):
+    """Load a graph-family KA for GraphML / CSV export."""
+    path = validate_ka_with_data(ka_path)
+    template, lang = get_template_from_ka(path)
+
+    validate_config()
+
+    with console.status("[bold blue]Loading Knowledge Abstract..."):
+        try:
+            ka = Template.create(template, lang)
+            ka.load(path)
+        except Exception as e:
+            console.print(f"[red]Error loading Knowledge Abstract:[/red] {e}")
+            raise typer.Exit(1)
+
+    if not hasattr(ka, "export_obsidian"):
+        console.print(
+            "[red]Error:[/red] GraphML/CSV export is only supported for graph-type "
+            "Knowledge Abstracts (graph, hypergraph, temporal/spatial graphs)."
+        )
+        raise typer.Exit(1)
+
+    return ka, path, template
+
+
+def _is_hypergraph_ka(ka) -> bool:
+    """True for AutoHypergraph; temporal/spatial graphs are pairwise."""
+    if type(ka).__name__ == "AutoHypergraph":
+        return True
+    meta = getattr(ka, "metadata", None)
+    return isinstance(meta, dict) and meta.get("type") == "hypergraph"
+
+
+@export_app.command(name="graphml")
+def export_graphml_cmd(
+    ka_path: str = typer.Argument(..., help="Knowledge Abstract directory"),
+    output: str = typer.Option(..., "--output", "-o", help="Output GraphML file"),
+):
+    """Export a pairwise graph Knowledge Abstract to GraphML.
+
+    Hypergraphs are not encoded as GraphML (no single N-ary standard).
+    Use `he export csv` for hypergraphs.
+    """
+    from hyperextract.utils.exporters import GraphMLHypergraphError, export_to_graphml
+
+    logger.info("command=export-graphml ka_path=%s output=%s", ka_path, output)
+
+    ka, _path, template = _load_graph_ka_for_export(ka_path)
+
+    if _is_hypergraph_ka(ka):
+        console.print(
+            "[red]Error:[/red] GraphML export supports pairwise graphs only. "
+            "Use [bold]he export csv[/bold] for hypergraphs."
+        )
+        raise typer.Exit(1)
+
+    output_path = Path(output)
+    console.print(f"[blue]Knowledge Abstract:[/blue] {ka_path}")
+    console.print(f"[blue]Template:[/blue] {template}")
+    console.print(f"[blue]Output file:[/blue] {output}")
+    console.print()
+
+    with console.status("[bold blue]Exporting to GraphML..."):
+        try:
+            export_to_graphml(
+                ka.nodes,
+                ka.edges,
+                node_id_extractor=ka.node_key_extractor,
+                incident_nodes_extractor=ka.nodes_in_edge_extractor,
+                file_path=output_path,
+                edge_id_extractor=getattr(ka, "edge_key_extractor", None),
+            )
+        except GraphMLHypergraphError as e:
+            console.print(f"[red]Error:[/red] {e}")
+            raise typer.Exit(1)
+        except Exception as e:
+            console.print(f"[red]Error during export:[/red] {e}")
+            raise typer.Exit(1)
+
+    console.print()
+    console.print(f"[bold green]Success![/bold green] Wrote GraphML to {output_path}")
+    console.print()
+    console.print("[dim]Open the file in Gephi, yEd, or another GraphML tool.[/dim]")
+
+
+@export_app.command(name="csv")
+def export_csv_cmd(
+    ka_path: str = typer.Argument(..., help="Knowledge Abstract directory"),
+    output: str = typer.Option(..., "--output", "-o", help="Output directory"),
+    force: bool = typer.Option(
+        False, "--force", "-f", help="Write into an existing, non-empty directory"
+    ),
+):
+    """Export a Knowledge Abstract to node and edge CSV tables."""
+    from hyperextract.utils.exporters import export_to_csv
+
+    logger.info("command=export-csv ka_path=%s output=%s", ka_path, output)
+
+    output_path = Path(output)
+    nonempty = (
+        output_path.exists() and output_path.is_dir() and any(output_path.iterdir())
+    )
+    if nonempty and not force:
+        console.print(
+            "[red]Error:[/red] Output directory already exists and is not empty. "
+            "Use --force to write into it."
+        )
+        raise typer.Exit(1)
+
+    ka, _path, template = _load_graph_ka_for_export(ka_path)
+    hypergraph = _is_hypergraph_ka(ka)
+
+    console.print(f"[blue]Knowledge Abstract:[/blue] {ka_path}")
+    console.print(f"[blue]Template:[/blue] {template}")
+    console.print(f"[blue]Output directory:[/blue] {output}")
+    console.print()
+
+    with console.status("[bold blue]Exporting to CSV..."):
+        try:
+            export_to_csv(
+                ka.nodes,
+                ka.edges,
+                node_id_extractor=ka.node_key_extractor,
+                incident_nodes_extractor=ka.nodes_in_edge_extractor,
+                folder_path=output_path,
+                edge_id_extractor=getattr(ka, "edge_key_extractor", None),
+                hypergraph=hypergraph,
+                overwrite=force,
+            )
+        except FileExistsError:
+            console.print(
+                "[red]Error:[/red] Output directory already exists and is not empty. "
+                "Use --force to write into it."
+            )
+            raise typer.Exit(1)
+        except Exception as e:
+            console.print(f"[red]Error during export:[/red] {e}")
+            raise typer.Exit(1)
+
+    if hypergraph:
+        written = "nodes.csv + hyperedges.csv"
+    else:
+        written = "nodes.csv + edges.csv"
+
+    console.print()
+    console.print(f"[bold green]Success![/bold green] Wrote {written} to {output_path}")
 
 
 app.add_typer(export_app, name="export")

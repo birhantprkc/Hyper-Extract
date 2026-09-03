@@ -2,7 +2,7 @@
 
 Export a knowledge abstract to an [Obsidian](https://obsidian.md) vault — a folder of Markdown notes linked by `[[wikilinks]]`.
 
-`export` is a command group; `obsidian` is the format. (More formats may be added later.)
+`export` is a command group. Formats: `obsidian`, `graphml`, `csv`.
 
 ---
 
@@ -123,12 +123,120 @@ Non-graph types (`AutoList`, `AutoSet`, `AutoModel`) are not supported; the comm
 
 ---
 
+## he export graphml
+
+Export a pairwise knowledge graph to [GraphML](http://graphml.graphdrawing.org/) — an XML graph format that Gephi, yEd, and other desktop tools can open.
+
+Hypergraphs have no single GraphML encoding for N-ary edges. `he export graphml` reports a clear error for hypergraph KAs and suggests [`he export csv`](#he-export-csv).
+
+### Synopsis
+
+```bash
+he export graphml KA_PATH -o FILE.graphml
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `KA_PATH` | Path to the knowledge abstract directory (created by `he parse`) |
+
+### Options
+
+| Option | Alias | Default | Description |
+|--------|-------|---------|-------------|
+| `--output` | `-o` | *(required)* | Output GraphML file |
+
+### Description
+
+- **Directed.** The document uses `graph edgedefault="directed"`. An edge `B → A` is written as `source="B"` `target="A"`; endpoints are never sorted.
+- **Attributes.** Scalar fields from each node's / edge's `model_dump()` (`str` / `int` / `float` / `bool`) become GraphML `<data>` keys. Nested values are stringified. XML special characters (`& < > " '`) are escaped.
+- **Dangling edges.** An edge whose source or target node is missing is skipped (with a warning), not treated as a crash.
+
+Supported Auto-Types: `AutoGraph` and its temporal/spatial subclasses. `AutoHypergraph` is rejected. Non-graph types (`AutoList`, `AutoSet`, `AutoModel`) are not supported.
+
+### Examples
+
+```bash
+he parse tesla.md -t general/biography_graph -o ./tesla_kb/ -l en
+he export graphml ./tesla_kb/ -o ./tesla.graphml
+```
+
+---
+
+## he export csv
+
+Export nodes and edges as CSV tables for spreadsheets and graph tools that ingest edge lists.
+
+### Synopsis
+
+```bash
+he export csv KA_PATH -o OUT_DIR [OPTIONS]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `KA_PATH` | Path to the knowledge abstract directory (created by `he parse`) |
+
+### Options
+
+| Option | Alias | Default | Description |
+|--------|-------|---------|-------------|
+| `--output` | `-o` | *(required)* | Output directory |
+| `--force` | `-f` | off | Write into an existing, non-empty directory |
+
+### Description
+
+**Pairwise graphs** write:
+
+```
+OUT_DIR/
+├── nodes.csv     # id + schema scalar fields
+└── edges.csv     # source, target + edge scalar fields
+```
+
+Endpoint order is preserved (`B → A` stays `B,A`). Fields that contain commas, quotes, or newlines are quoted by the stdlib `csv` module.
+
+**Hypergraphs** write `nodes.csv` plus `hyperedges.csv` instead of `edges.csv`. The `members` column joins participant ids with `|` and **sorts them lexicographically** so the file is deterministic. (Binary `edges.csv` does not sort endpoints.)
+
+A missing endpoint skips that edge (with a warning). Non-empty output directories require `--force`.
+
+### Examples
+
+```bash
+he export csv ./tesla_kb/ -o ./tesla_csv/
+he export csv ./tesla_kb/ -o ./tesla_csv/ --force
+```
+
+---
+
 ## Python API
 
-The same capability is available on graph Auto-Types:
+The same capability is available on graph Auto-Types for Obsidian, and as standalone functions for GraphML / CSV (they are not methods on AutoType):
 
 ```python
 ka.export_obsidian("./tesla_vault/", vault_name="Tesla KB", overwrite=True)
+
+from hyperextract.utils.exporters import export_to_graphml, export_to_csv
+
+export_to_graphml(
+    ka.nodes,
+    ka.edges,
+    node_id_extractor=ka.node_key_extractor,
+    incident_nodes_extractor=ka.nodes_in_edge_extractor,
+    file_path="./tesla.graphml",
+)
+
+export_to_csv(
+    ka.nodes,
+    ka.edges,
+    node_id_extractor=ka.node_key_extractor,
+    incident_nodes_extractor=ka.nodes_in_edge_extractor,
+    folder_path="./tesla_csv/",
+    overwrite=True,
+)
 ```
 
 ---
