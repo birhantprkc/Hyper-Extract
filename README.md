@@ -58,6 +58,14 @@
 
 <!-- News snippets are derived from the latest merged PRs. Update as new releases land. -->
 
+### v0.6.0
+
+- **🗑️ Knowledge Deletion (two-tier)** — `he remove` / `ka.remove_nodes()` hard-delete by key (orphan edges pruned); `ka.edit_node()` removes a single wrong fact via LLM rewrite, with dry-run, key-invariance checks, and automatic backups. Graph, hypergraph, and temporal/spatial KAs. *(#84)*
+- **🧪 `he template validate`** — catch semantic template errors (missing `time_field`, unknown identifier fields, bad placeholders…) before calling an LLM: 9 diagnostic rules, `--json` for CI, `--all` for directories. *(#77)*
+- **📊 GraphML & CSV Export** — `he export graphml` for desktop graph tools, `he export csv` for spreadsheets (hypergraphs get a hyperedges table). *(#85)*
+- **🔐 Config File Permissions** — `~/.he/config.toml` is now saved `0600` (owner-only) instead of world-readable. *(#86)*
+- **🔗 Obsidian Link Fix** — wikilink aliases no longer break on titles containing `[ ] | # ^`. *(#87)*
+
 ### v0.5.0
 
 - **🛡️ Chunk-Level Fault Isolation** — One failed chunk (rate limit, timeout, unparseable output) no longer discards the rest of a multi-chunk extraction. Graph-family extraction degrades to a partial result + warning. *(#78)*
