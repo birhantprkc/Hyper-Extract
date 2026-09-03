@@ -949,3 +949,158 @@ def clean(
     console.print(f"[bold green]Cleaned![/bold green] Removed {target}")
     if not all_:
         console.print(f"[dim]Rebuild it with: he build-index {ka_path}[/dim]")
+
+
+@app.command(name="remove")
+def remove_items(
+    ka_path: str = typer.Argument(..., help="Knowledge Abstract directory"),
+    node: list[str] = typer.Option(
+        None, "--node", help="Node key(s) to delete (hard delete, removes orphan edges)"
+    ),
+    edge: list[str] = typer.Option(
+        None, "--edge", help="Edge key(s) to delete (hard delete)"
+    ),
+    edit_node_key: str = typer.Option(
+        None, "--edit-node", help="Node key to soft-edit (LLM rewrites it minus --fact)"
+    ),
+    edit_edge_key: str = typer.Option(
+        None, "--edit-edge", help="Edge key to soft-edit (LLM rewrites it minus --fact)"
+    ),
+    fact: str = typer.Option(
+        None, "--fact", help="Fact to remove from the --edit-node/--edit-edge item"
+    ),
+    instruction: str = typer.Option(
+        None, "--instruction", help="Free-form edit instruction (instead of --fact)"
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Preview changes without persisting them"
+    ),
+    backup: bool = typer.Option(
+        True, "--backup/--no-backup", help="Back up data.json before writing"
+    ),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip the confirmation prompt"),
+):
+    """Delete nodes/edges by key, or soft-remove a single fact (LLM-assisted).
+
+    Hard delete:  he remove ./ka --node Apple --edge "Apple-partner-Google"
+    Soft delete:  he remove ./ka --edit-node Apple --fact "founded by Steve Jobs"
+    """
+    import shutil
+    from datetime import datetime
+
+    logger.info("command=remove ka_path=%s dry_run=%s", ka_path, dry_run)
+
+    hard_targets = list(node or []) + list(edge or [])
+    soft_target = edit_node_key or edit_edge_key
+    if hard_targets and soft_target:
+        console.print(
+            "[red]Error:[/red] Combine either --node/--edge (hard delete) "
+            "or --edit-node/--edit-edge (soft delete), not both."
+        )
+        raise typer.Exit(1)
+    if soft_target and not fact and not instruction:
+        console.print("[red]Error:[/red] Soft delete needs --fact or --instruction.")
+        raise typer.Exit(1)
+    if not hard_targets and not soft_target:
+        console.print(
+            "[yellow]Nothing to do.[/yellow] "
+            "Use --node/--edge to delete items, or --edit-node/--edit-edge "
+            "with --fact to remove a single fact."
+        )
+        raise typer.Exit(0)
+
+    path = validate_ka_with_data(ka_path)
+    template, lang = get_template_from_ka(path)
+    ka = Template.create(template, lang)
+    ka.load(path)
+
+    try:
+        if hard_targets:
+            report = {}
+            if node:
+                report.update(ka.remove_nodes(*node))
+            if edge:
+                report.update(ka.remove_edges(*edge))
+        else:
+            if not yes and not dry_run:
+                console.print(
+                    "[yellow]Soft delete rewrites the item with an LLM.[/yellow] "
+                    "Use --dry-run to preview, -y to skip this prompt."
+                )
+                if not typer.confirm("Apply the edit?"):
+                    console.print("[dim]Aborted. Nothing was changed.[/dim]")
+                    raise typer.Exit(0)
+            if edit_node_key:
+                report = ka.edit_node(
+                    edit_node_key,
+                    remove_fact=fact,
+                    instruction=instruction,
+                    dry_run=dry_run,
+                )
+            else:
+                report = ka.edit_edge(
+                    edit_edge_key,
+                    remove_fact=fact,
+                    instruction=instruction,
+                    dry_run=dry_run,
+                )
+    except KeyError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+    except ValueError as e:
+        console.print(f"[red]Rejected:[/red] {e}")
+        raise typer.Exit(1)
+
+    console.print()
+    if hard_targets:
+        table = Table(title="Removal Report")
+        table.add_column("Field")
+        table.add_column("Items")
+        for field, items in report.items():
+            table.add_row(field, "\n".join(items) if items else "—")
+        console.print(table)
+        removed_any = any(
+            report.get(key)
+            for key in ("removed_nodes", "removed_edges", "removed_orphan_edges")
+        )
+        if not removed_any:
+            console.print("[yellow]Nothing matched — no changes made.[/yellow]")
+            raise typer.Exit(0)
+    else:
+        changed = report["changed"]
+        if not changed:
+            console.print(
+                "[yellow]No change:[/yellow] the fact was not found in the item "
+                "(the LLM returned it unchanged). Nothing was written."
+            )
+            raise typer.Exit(0)
+        console.print(
+            f"[bold]Old item:[/bold]\n{report['old'].model_dump_json(indent=2)}"
+        )
+        console.print()
+        console.print(f"[bold]{'Proposed' if dry_run else 'New'} item:[/bold]")
+        console.print(report["new"].model_dump_json(indent=2))
+
+    if dry_run:
+        console.print(
+            "\n[dim]Dry run — nothing was persisted. "
+            "Re-run without --dry-run to apply.[/dim]"
+        )
+        raise typer.Exit(0)
+
+    if backup:
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        backup_path = path / f"data.json.bak.{stamp}"
+        shutil.copy2(path / "data.json", backup_path)
+        console.print(f"[dim]Backup written: {backup_path}[/dim]")
+
+    ka.dump(path)
+
+    # The in-memory index was invalidated by the mutation; drop the stale
+    # on-disk index so search never serves deleted knowledge.
+    index_dir = path / "index"
+    if index_dir.exists():
+        shutil.rmtree(index_dir)
+
+    console.print(f"[bold green]Done![/bold green] Knowledge Abstract updated: {path}")
+    console.print(f"[dim]Rebuild the search index with: he build-index {ka_path}[/dim]")

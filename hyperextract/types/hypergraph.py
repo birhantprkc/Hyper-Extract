@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field, create_model
 from hyperextract.utils.logging import get_logger
 
 from .base import BaseAutoType
+from .graph import DEFAULT_EDIT_PROMPT, GraphEditMixin
 
 logger = get_logger(__name__)
 
@@ -107,6 +108,7 @@ class EdgeListSchema(BaseModel, Generic[EdgeSchema]):
 
 class AutoHypergraph(
     BaseAutoType[AutoHypergraphSchema[NodeSchema, EdgeSchema]],
+    GraphEditMixin,
     Generic[NodeSchema, EdgeSchema],
 ):
     """AutoHypergraph - Node-First extraction: Extract entities first, then relationships.
@@ -331,6 +333,20 @@ class AutoHypergraph(
             | self.llm_client.with_structured_output(
                 self.edge_list_schema, method="function_calling"
             )
+        )
+
+        # LLM-assisted editing (soft delete); shares the prompt with AutoGraph.
+        edit_template = ChatPromptTemplate.from_messages(
+            [
+                ("system", DEFAULT_EDIT_PROMPT),
+                ("human", "Remove it from the item now."),
+            ]
+        )
+        self.node_editor = edit_template | self.llm_client.with_structured_output(
+            self.node_schema, method="function_calling"
+        )
+        self.edge_editor = edit_template | self.llm_client.with_structured_output(
+            self.edge_schema, method="function_calling"
         )
 
     # ==================== Prompts ====================

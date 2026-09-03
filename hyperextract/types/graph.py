@@ -73,6 +73,166 @@ DEFAULT_EDGE_PROMPT = (
     "{source_text}"
 )
 
+DEFAULT_EDIT_PROMPT = (
+    "You are a precise knowledge-base editor. You receive one stored item as JSON "
+    "and a removal target (a fact or an editing instruction).\n\n"
+    "RULES:\n"
+    "1. Rewrite the item so that the target fact (and only that fact) is removed.\n"
+    "2. Keep every other field, value, and wording EXACTLY unchanged.\n"
+    "3. NEVER change the item's identifier — its key must stay: {key}\n"
+    "4. If the fact does not appear in the item, return it unchanged.\n"
+    "5. Do not add new information.\n\n"
+    "# Current item\n"
+    "{item_json}\n\n"
+    "# Removal target\n"
+    "{target}"
+)
+
+
+class GraphEditMixin:
+    """Hard-delete and LLM-assisted soft-delete for graph-family AutoTypes.
+
+    Requires on `self`: `_node_memory` / `_edge_memory` (OMem), the
+    `node_key_extractor` / `edge_key_extractor` / `nodes_in_edge_extractor`
+    callables, and the `node_editor` / `edge_editor` runnables wired in
+    `__init__`.
+    """
+
+    # ==================== Removal ====================
+
+    def remove_nodes(self, *keys: str) -> dict:
+        """Hard-delete nodes by key, together with any edges they anchor.
+
+        Edges touching a removed node would dangle, so every such edge is
+        removed as well. The search index is invalidated; the next search or
+        `build_index` rebuilds it.
+
+        Args:
+            keys: Node keys (as produced by `node_key_extractor`).
+
+        Returns:
+            Report dict with `removed_nodes`, `not_found_nodes`, and
+            `removed_orphan_edges`.
+        """
+        removed: list[str] = []
+        not_found: list[str] = []
+        removed_node_keys = set()
+        for key in keys:
+            if self._node_memory.remove(key):
+                removed.append(key)
+                removed_node_keys.add(key)
+            else:
+                not_found.append(key)
+
+        orphaned: list = []
+        if removed_node_keys:
+            for edge in list(self._edge_memory.items):
+                endpoints = set(self.nodes_in_edge_extractor(edge))
+                if endpoints & removed_node_keys:
+                    edge_key = self.edge_key_extractor(edge)
+                    if self._edge_memory.remove(edge_key):
+                        orphaned.append(edge_key)
+
+        logger.info(
+            "stage=remove_nodes removed=%d not_found=%d orphan_edges=%d",
+            len(removed),
+            len(not_found),
+            len(orphaned),
+        )
+        return {
+            "removed_nodes": removed,
+            "not_found_nodes": not_found,
+            "removed_orphan_edges": orphaned,
+        }
+
+    def remove_edges(self, *keys: str) -> dict:
+        """Hard-delete edges by key.
+
+        Args:
+            keys: Edge keys (as produced by `edge_key_extractor`).
+
+        Returns:
+            Report dict with `removed_edges` and `not_found_edges`.
+        """
+        removed: list[str] = []
+        not_found: list[str] = []
+        for key in keys:
+            if self._edge_memory.remove(key):
+                removed.append(key)
+            else:
+                not_found.append(key)
+
+        logger.info(
+            "stage=remove_edges removed=%d not_found=%d", len(removed), len(not_found)
+        )
+        return {"removed_edges": removed, "not_found_edges": not_found}
+
+    # ==================== Soft Delete (LLM-assisted) ====================
+
+    def edit_node(
+        self,
+        key: str,
+        *,
+        remove_fact: str | None = None,
+        instruction: str | None = None,
+        dry_run: bool = False,
+    ) -> dict:
+        """Soft-delete a fact from a node via LLM-assisted rewrite.
+
+        Args:
+            key: Node key to edit.
+            remove_fact: Fact to remove from the node (exclusive with
+                `instruction`).
+            instruction: Free-form edit instruction (exclusive with
+                `remove_fact`).
+            dry_run: Return the proposed rewrite without applying it.
+
+        Returns:
+            Report dict with `changed`, `applied`, `old`, and `new`.
+        """
+        return self._edit_item(
+            self._node_memory,
+            self.node_editor,
+            self.node_key_extractor,
+            "node",
+            key,
+            remove_fact,
+            instruction,
+            dry_run,
+        )
+
+    def edit_edge(
+        self,
+        key: str,
+        *,
+        remove_fact: str | None = None,
+        instruction: str | None = None,
+        dry_run: bool = False,
+    ) -> dict:
+        """Soft-delete a fact from an edge via LLM-assisted rewrite.
+
+        Args:
+            key: Edge key to edit.
+            remove_fact: Fact to remove from the edge (exclusive with
+                `instruction`).
+            instruction: Free-form edit instruction (exclusive with
+                `remove_fact`).
+            dry_run: Return the proposed rewrite without applying it.
+
+        Returns:
+            Report dict with `changed`, `applied`, `old`, and `new`.
+        """
+        return self._edit_item(
+            self._edge_memory,
+            self.edge_editor,
+            self.edge_key_extractor,
+            "edge",
+            key,
+            remove_fact,
+            instruction,
+            dry_run,
+        )
+
 
 class AutoGraphSchema(BaseModel, Generic[NodeSchema, EdgeSchema]):
     """Generic schema container for graph-based knowledge patterns."""
@@ -105,6 +265,7 @@ class EdgeListSchema(BaseModel, Generic[EdgeSchema]):
 
 class AutoGraph(
     BaseAutoType[AutoGraphSchema[NodeSchema, EdgeSchema]],
+    GraphEditMixin,
     Generic[NodeSchema, EdgeSchema],
 ):
     """AutoGraph - extracts knowledge graphs with nodes and edges from text.
@@ -326,6 +487,21 @@ class AutoGraph(
             | self.llm_client.with_structured_output(
                 self.edge_list_schema, method="function_calling"
             )
+        )
+
+        # LLM-assisted editing (soft delete): rewrite one stored item minus a
+        # given fact, under the same schema. Tests may stub these runnables.
+        edit_template = ChatPromptTemplate.from_messages(
+            [
+                ("system", DEFAULT_EDIT_PROMPT),
+                ("human", "Remove it from the item now."),
+            ]
+        )
+        self.node_editor = edit_template | self.llm_client.with_structured_output(
+            self.node_schema, method="function_calling"
+        )
+        self.edge_editor = edit_template | self.llm_client.with_structured_output(
+            self.edge_schema, method="function_calling"
         )
 
     def _default_prompt(self) -> str:
@@ -686,6 +862,28 @@ class AutoGraph(
             )
 
         return self.graph_schema(nodes=valid_nodes, edges=refined_edges)
+
+    def remove_edges(self, *keys: str) -> dict:
+        """Hard-delete edges by key.
+
+        Args:
+            keys: Edge keys (as produced by `edge_key_extractor`).
+
+        Returns:
+            Report dict with `removed_edges` and `not_found_edges`.
+        """
+        removed: list[str] = []
+        not_found: list[str] = []
+        for key in keys:
+            if self._edge_memory.remove(key):
+                removed.append(key)
+            else:
+                not_found.append(key)
+
+        logger.info(
+            "stage=remove_edges removed=%d not_found=%d", len(removed), len(not_found)
+        )
+        return {"removed_edges": removed, "not_found_edges": not_found}
 
     # ==================== Merge Logic ====================
 

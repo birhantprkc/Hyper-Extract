@@ -39,6 +39,7 @@ he --version
 | `he info` | 显示知识库统计信息 | — |
 | `he build-index` | 构建/重建搜索索引 | `-f` 强制重建 |
 | `he clean` | 删除 KA 的索引（或整个 KA） | `-a` all, `-y` yes |
+| `he remove` | 按键删除节点/边，或软删除单条事实 | `--node`、`--edge`、`--edit-node`、`--fact`、`--dry-run` |
 | `he list` | 列出模板和方法 | `template` 或 `method` |
 | `he template validate` | 校验模板 YAML | `--json`、`--all` |
 | `he config` | 管理配置 | `init`, `show`, `llm`, `embedder` |
@@ -173,6 +174,7 @@ he show ./output/
 
 - **[`he build-index`](commands/build-index.md)** — 构建搜索索引
 - **[`he clean`](commands/clean.md)** — 删除 KA 的索引，或整个 KA
+- **[`he remove`](commands/remove.md)** — 按键删除节点/边，或软删除单条事实
 - **[`he list`](commands/list.md)** — 列出可用模板/方法
 - **[`he template validate`](commands/template.md)** — 校验模板 YAML 文件
 - **[`he config`](commands/config.md)** — 配置管理

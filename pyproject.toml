@@ -104,3 +104,6 @@ ignore = [
     "S110",   # try/except/pass — intentional in some places
     "TC010",  # String forward-ref in X | Y union — needed for recursive types
 ]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["typer.Option", "typer.Argument"]
