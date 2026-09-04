@@ -2,9 +2,14 @@
 graph-family AutoTypes (issue #84)."""
 
 import pytest
+from ontomem.merger import MergeStrategy
 from pydantic import BaseModel, Field
 
-from hyperextract.types import AutoGraph, AutoHypergraph
+from hyperextract.types import (
+    AutoGraph,
+    AutoHypergraph,
+    AutoTemporalGraph,
+)
 from tests.mocks import MockChatModel, MockEmbeddings
 
 
@@ -35,6 +40,8 @@ def _graph():
         nodes_in_edge_extractor=lambda x: (x.source, x.target),
         llm_client=MockChatModel(),
         embedder=MockEmbeddings(),
+        node_strategy_or_merger=MergeStrategy.MERGE_FIELD,
+        edge_strategy_or_merger=MergeStrategy.MERGE_FIELD,
     )
 
 
@@ -171,6 +178,115 @@ class FakeChatModel:
                 return model.canned
 
         return _Runnable()
+
+
+class _FakeGraphExtractor:
+    """One-stage extractor stub returning a canned graph."""
+
+    def __init__(self, result):
+        self.result = result
+
+    def invoke(self, input, config=None):
+        return self.result
+
+    def batch(self, inputs, config=None, return_exceptions=False, **kwargs):
+        return [self.result for _ in inputs]
+
+
+class TestAutoUpsert:
+    """Re-feeding the same source_id replaces that document's version
+    (facts removed from the new version do not linger)."""
+
+    def test_second_feed_rolls_back_v1_contributions(self):
+        g = _graph()
+        v1 = g.graph_schema(
+            nodes=[
+                Entity(name="A", description="fact v1"),
+                Entity(name="B", description="only in v1"),
+            ],
+            edges=[],
+        )
+        g.data_extractor = _FakeGraphExtractor(v1)
+        g.feed_text("v1 text", source_id="doc-1")
+        assert {n.name for n in g.nodes} == {"A", "B"}
+
+        v2 = g.graph_schema(nodes=[Entity(name="A", description="fact v2")], edges=[])
+        g.data_extractor = _FakeGraphExtractor(v2)
+        g.feed_text("v2 text", source_id="doc-1")
+
+        # B existed only in v1 → rolled back; A carries the v2 fact.
+        assert {n.name for n in g.nodes} == {"A"}
+        a = next(n for n in g.nodes if n.name == "A")
+        assert a.description == "fact v2"
+
+    def test_ledger_keeps_only_current_version(self):
+        g = _graph()
+        v1 = g.graph_schema(nodes=[Entity(name="A", description="v1")], edges=[])
+        g.data_extractor = _FakeGraphExtractor(v1)
+        g.feed_text("v1 text", source_id="doc-1")
+        assert len(g._node_memory._sources["doc-1"].raw_items) == 1
+
+        v2 = g.graph_schema(nodes=[Entity(name="A", description="v2")], edges=[])
+        g.data_extractor = _FakeGraphExtractor(v2)
+        g.feed_text("v2 text", source_id="doc-1")
+
+        raws = g._node_memory._sources["doc-1"].raw_items
+        assert len(raws) == 1
+        assert raws[0]["description"] == "v2"
+
+    def test_feed_without_source_does_not_rollback(self):
+        g = _graph()
+        v1 = g.graph_schema(
+            nodes=[
+                Entity(name="A", description="v1"),
+                Entity(name="B", description="B"),
+            ],
+            edges=[],
+        )
+        g.data_extractor = _FakeGraphExtractor(v1)
+        g.feed_text("v1 text", source_id="doc-1")
+
+        # v2 fed WITHOUT a source: no rollback — B stays.
+        v2 = g.graph_schema(nodes=[Entity(name="A", description="v2")], edges=[])
+        g.data_extractor = _FakeGraphExtractor(v2)
+        g.feed_text("v2 text")
+
+        assert {n.name for n in g.nodes} == {"A", "B"}
+
+
+class TestSpatiotemporalProvenance:
+    """Temporal/spatial subclasses participate in source provenance."""
+
+    def _temporal(self):
+        return AutoTemporalGraph(
+            node_schema=Entity,
+            edge_schema=Relation,
+            node_key_extractor=lambda x: x.name,
+            edge_key_extractor=lambda x: f"{x.source}-{x.relation_type}-{x.target}",
+            time_in_edge_extractor=lambda x: "",
+            nodes_in_edge_extractor=lambda x: (x.source, x.target),
+            llm_client=MockChatModel(),
+            embedder=MockEmbeddings(),
+            observation_time="2026-09-05",
+            extraction_mode="one_stage",
+            chunk_size=100_000,
+        )
+
+    def test_temporal_feed_records_and_rolls_back(self):
+        g = self._temporal()
+        g.data_extractor = _FakeGraphExtractor(
+            g.graph_schema(
+                nodes=[Entity(name="T1")],
+                edges=[Relation(source="T1", target="T1", relation_type="self")],
+            )
+        )
+        g.feed_text("temporal doc", source_id="doc-1")
+        assert "doc-1" in g._node_memory._sources
+        assert "doc-1" in g._edge_memory._sources
+
+        report = g.remove_source("doc-1")
+        assert set(report["removed_nodes"]) == {"T1"}
+        assert g.empty()
 
 
 class TestIndexPatching:

@@ -333,19 +333,24 @@ def parse(
             progress.update(task, description="Processing directory...")
             text_files = collect_directory_text_inputs(input_path)
 
+            # Per-file provenance: each file is attributed by its stem
+            # unless a single --source id was given explicitly.
+            file_sources = [source or file_path.stem for file_path in text_files]
+
             all_text = []
-            for file_path in text_files:
+            for file_path, file_source in zip(text_files, file_sources):
                 text = read_input(str(file_path))
                 all_text.append(text)
-                console.print(f"[dim]Loaded {file_path.name}: {len(text)} chars[/dim]")
-
-            combined_text = "\n\n".join(all_text)
-            console.print(f"[dim]Total input: {len(combined_text)} characters[/dim]")
+                console.print(
+                    f"[dim]Loaded {file_path.name}: {len(text)} chars "
+                    f"(source: {file_source})[/dim]"
+                )
 
             progress.update(task, description="Extracting knowledge...")
             logger.debug("stage=feed_text_invoked")
-            ka.feed_text(combined_text, source_id=source)
-            logger.info("stage=knowledge_extracted chars=%d", len(combined_text))
+            for file_path, file_source, text in zip(text_files, file_sources, all_text):
+                ka.feed_text(text, source_id=file_source)
+            logger.info("stage=knowledge_extracted files=%d", len(text_files))
         else:
             progress.update(task, description="Reading input...")
             require_supported_text_input(input)

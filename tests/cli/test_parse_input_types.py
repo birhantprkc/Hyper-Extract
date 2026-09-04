@@ -140,7 +140,8 @@ class TestParseInputTypes:
             result2 = _invoke_parse(folder, out2)
 
         assert result2.exit_code == 0
-        ka2.feed_text.assert_called_once_with("upper md", source_id=None)
+        # Per-file provenance: auto-attributed by file stem.
+        ka2.feed_text.assert_called_once_with("upper md", source_id="README")
 
     def test_stdin_is_not_suffix_checked(self, tmp_path):
         out = tmp_path / "out"

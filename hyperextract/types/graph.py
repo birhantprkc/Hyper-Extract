@@ -194,6 +194,34 @@ class GraphEditMixin:
         ) or self._edge_memory._sources.get(source_id)
         return record.content_hash if record else None
 
+    # ==================== Document Upsert ====================
+
+    def feed_text(
+        self,
+        text: str,
+        *,
+        source_id: str | None = None,
+        content_hash: str | None = None,
+    ) -> "AutoGraph":
+        """Feed text with document-level upsert semantics.
+
+        When ``source_id`` was attributed before, the previous version's
+        contributions are rolled back first (exact re-merge from surviving
+        sources), so facts removed from the updated document do not linger.
+        First-time attribution behaves like a normal feed.
+        """
+        if (
+            source_id
+            and self._node_memory.track_sources
+            and source_id in self.sources()
+        ):
+            logger.info("stage=source_upsert rollback source=%s", source_id)
+            if source_id in self._node_memory.sources():
+                self._node_memory.remove_source(source_id)
+            if source_id in self._edge_memory.sources():
+                self._edge_memory.remove_source(source_id)
+        return super().feed_text(text, source_id=source_id, content_hash=content_hash)
+
     # ==================== Removal ====================
 
     def remove_nodes(self, *keys: str) -> dict:
