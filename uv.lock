@@ -957,7 +957,7 @@ requires-dist = [
     { name = "langchain-google-genai", marker = "extra == 'google'", specifier = ">=2.1.0" },
     { name = "langchain-openai", specifier = ">=1.1.7" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.2.0,<3" },
-    { name = "ontomem", specifier = ">=0.2.3" },
+    { name = "ontomem", specifier = ">=0.3.0" },
     { name = "ontosight", specifier = ">=0.1.8" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "rich", specifier = ">=13.7.0" },
@@ -1879,7 +1879,7 @@ wheels = [
 
 [[package]]
 name = "ontomem"
-version = "0.2.3"
+version = "0.3.0"
 source = { registry = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/" }
 dependencies = [
     { name = "faiss-cpu" },
@@ -1891,9 +1891,9 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "structlog" },
 ]
-sdist = { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/99/b9/a689b4192121810a6e709d021042996097418efcb88535c00ad85e0a5d73/ontomem-0.2.3.tar.gz", hash = "sha256:7f5de6f9165781fdc4b58fe622335564b04ee672f449ad0d99958cdf0cb54ae2", size = 2535280, upload-time = "2026-03-18T02:50:09.318Z" }
+sdist = { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/99/b4/a76747d5dda4bcd0e107ee59aae4b89a952a35761a82408318eebf029b5b/ontomem-0.3.0.tar.gz", hash = "sha256:725405a54ea03380c7fa6a8c9a1badb561a23f971efbad5914f2e934bd9f511e", size = 2540504, upload-time = "2026-09-04T02:13:44.824Z" }
 wheels = [
-    { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/bb/55/6d892a20802f2e6ba1b4d35f18417a5fee4ec598a229ea613b5bcaf61983/ontomem-0.2.3-py3-none-any.whl", hash = "sha256:78d7704264bec34de08e80aa8403c9e10b81bb182b07c86f006dac68bf8721be", size = 39170, upload-time = "2026-03-18T02:50:07.692Z" },
+    { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/7a/5e/0930f49541d5fa61f6420b08fd2f3d10af98811a7630e815508af59be8a0/ontomem-0.3.0-py3-none-any.whl", hash = "sha256:a03520bca3db0ff87db992c4aeff5c1df121ac3a25f1111519538e7148d8b1e5", size = 41883, upload-time = "2026-09-04T02:13:42.991Z" },
 ]
 
 [[package]]

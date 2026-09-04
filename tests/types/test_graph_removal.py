@@ -148,16 +148,29 @@ class TestHardDelete:
         assert report["not_found_nodes"] == ["C"]
 
 
-class FakeEditor:
-    """Stub for the node_editor/edge_editor runnables."""
+class FakeChatModel:
+    """Chat-model stub: with_structured_output returns the canned item.
 
-    def __init__(self, rewritten):
-        self.rewritten = rewritten
-        self.calls = []
+    Instances are assigned to ``memory.llm_client`` so OMem.edit renders the
+    edit prompt and the stub records the rendered text for assertions.
+    """
 
-    def invoke(self, inp):
-        self.calls.append(inp)
-        return self.rewritten
+    def __init__(self, canned):
+        self.canned = canned  # item returned from the structured rewrite
+        self.seen_text: list[str] = []
+
+    def with_structured_output(self, schema):
+        model = self
+
+        from langchain_core.runnables import Runnable
+
+        class _Runnable(Runnable):
+            def invoke(self, prompt_value, config=None, **kwargs):
+                text = str(prompt_value)
+                model.seen_text.append(text)
+                return model.canned
+
+        return _Runnable()
 
 
 class TestIndexPatching:
@@ -212,7 +225,7 @@ class TestIndexPatching:
             [Entity(name="A", description="A was founded by X. A is in Y.")]
         )
         g.build_index()
-        g.node_editor = FakeEditor(Entity(name="A", description="A is in Y."))
+        g._node_memory.llm_client = FakeChatModel(Entity(name="A", description="A is in Y."))
 
         report = g.edit_node("A", remove_fact="founded by X")
 
@@ -288,7 +301,7 @@ class TestSoftDelete:
         g._node_memory.add(
             [Entity(name="A", description="A was founded by X. A is in Y.")]
         )
-        g.node_editor = FakeEditor(Entity(name="A", description="A is in Y."))
+        g._node_memory.llm_client = FakeChatModel(Entity(name="A", description="A is in Y."))
 
         report = g.edit_node("A", remove_fact="founded by X", dry_run=True)
 
@@ -302,7 +315,7 @@ class TestSoftDelete:
         g._node_memory.add(
             [Entity(name="A", description="A was founded by X. A is in Y.")]
         )
-        g.node_editor = FakeEditor(Entity(name="A", description="A is in Y."))
+        g._node_memory.llm_client = FakeChatModel(Entity(name="A", description="A is in Y."))
 
         report = g.edit_node("A", remove_fact="founded by X")
 
@@ -313,19 +326,22 @@ class TestSoftDelete:
     def test_editor_receives_item_json_key_and_target(self):
         g = _graph()
         g._node_memory.add([Entity(name="A", description="hello")])
-        editor = FakeEditor(Entity(name="A", description="hello"))
-        g.node_editor = editor
+        editor = FakeChatModel(Entity(name="A", description="hello"))
+        g._node_memory.llm_client = editor
 
         g.edit_node("A", instruction="drop everything about X")
 
-        assert editor.calls[0]["key"] == "A"
-        assert "hello" in editor.calls[0]["item_json"]
-        assert editor.calls[0]["target"] == "drop everything about X"
+        # The rendered edit prompt carries the item JSON, key, and target.
+        assert len(editor.seen_text) == 1
+        prompt_text = editor.seen_text[0]
+        assert '"A"' in prompt_text
+        assert "hello" in prompt_text
+        assert "drop everything about X" in prompt_text
 
     def test_key_change_is_rejected(self):
         g = _graph()
         g._node_memory.add([Entity(name="A")])
-        g.node_editor = FakeEditor(Entity(name="Renamed"))  # identity break
+        g._node_memory.llm_client = FakeChatModel(Entity(name="Renamed"))  # identity break
 
         with pytest.raises(ValueError, match="key changed"):
             g.edit_node("A", remove_fact="whatever")
@@ -335,7 +351,7 @@ class TestSoftDelete:
     def test_unchanged_rewrite_reports_no_change(self):
         g = _graph()
         g._node_memory.add([Entity(name="A", description="same")])
-        g.node_editor = FakeEditor(Entity(name="A", description="same"))
+        g._node_memory.llm_client = FakeChatModel(Entity(name="A", description="same"))
 
         report = g.edit_node("A", remove_fact="not present anyway")
 
@@ -369,7 +385,7 @@ class TestSoftDelete:
         )
         # relation_type is part of the edge key, so the rewrite keeps it and
         # only changes the description — a key-changing rewrite is rejected.
-        g.edge_editor = FakeEditor(
+        g._edge_memory.llm_client = FakeChatModel(
             Relation(
                 source="A",
                 target="B",
@@ -387,7 +403,7 @@ class TestSoftDelete:
         g = _graph()
         g._node_memory.add([Entity(name="A"), Entity(name="B")])
         g._edge_memory.add([Relation(source="A", target="B", relation_type="r")])
-        g.edge_editor = FakeEditor(
+        g._edge_memory.llm_client = FakeChatModel(
             Relation(source="A", target="B", relation_type="partner")
         )
 

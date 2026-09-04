@@ -27,16 +27,22 @@ class R(BaseModel):
     description: str = ""
 
 
-class FakeEditor:
-    """Stub for node_editor/edge_editor runnables."""
+class FakeChatModel:
+    """Chat-model stub: with_structured_output returns the canned item."""
 
-    def __init__(self, rewritten):
-        self.rewritten = rewritten
-        self.calls = []
+    def __init__(self, canned):
+        self.canned = canned
 
-    def invoke(self, inp):
-        self.calls.append(inp)
-        return self.rewritten
+    def with_structured_output(self, schema):
+        model = self
+
+        from langchain_core.runnables import Runnable
+
+        class _Runnable(Runnable):
+            def invoke(self, prompt_value, config=None, **kwargs):
+                return model.canned
+
+        return _Runnable()
 
 
 def _real_ka():
@@ -143,7 +149,7 @@ class TestHardDeleteCli:
 class TestSoftDeleteCli:
     def test_soft_delete_applies_with_backup(self, ka_env):
         ka, g = ka_env
-        g.node_editor = FakeEditor(
+        g._node_memory.llm_client = FakeChatModel(
             E(name="Apple", description="Apple makes iPhones.")
         )
 
@@ -167,7 +173,7 @@ class TestSoftDeleteCli:
 
     def test_soft_delete_dry_run_shows_proposal_only(self, ka_env):
         ka, g = ka_env
-        g.node_editor = FakeEditor(
+        g._node_memory.llm_client = FakeChatModel(
             E(name="Apple", description="Apple makes iPhones.")
         )
 
@@ -192,7 +198,7 @@ class TestSoftDeleteCli:
 
     def test_soft_delete_key_change_rejected(self, ka_env):
         ka, g = ka_env
-        g.node_editor = FakeEditor(E(name="Renamed"))
+        g._node_memory.llm_client = FakeChatModel(E(name="Renamed"))
 
         result = runner.invoke(
             app,

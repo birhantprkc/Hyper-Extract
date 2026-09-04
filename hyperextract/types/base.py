@@ -1,6 +1,5 @@
 import json
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Generic, TypeVar
@@ -377,70 +376,6 @@ class BaseAutoType(ABC, Generic[T]):
             else:
                 results.append(r)
         return results
-
-    def _edit_item(
-        self,
-        memory,
-        editor,
-        key_extractor: Callable,
-        schema_name: str,
-        key: str,
-        remove_fact: str | None,
-        instruction: str | None,
-        dry_run: bool,
-    ) -> dict:
-        """Shared soft-delete engine: LLM-rewrite one stored item minus a fact.
-
-        The rewrite is validated before it is applied: the item key must be
-        unchanged (a changed key is a rename, i.e. delete + create, not an
-        edit) and the item must actually differ from the stored one.
-
-        Args:
-            memory: The OMem instance holding the item.
-            editor: Runnable producing a rewritten item (prompt | structured LLM).
-            key_extractor: Key function used to validate the rewrite.
-            schema_name: "node" or "edge" (for reports/logs).
-            key: Key of the item to edit.
-            remove_fact: Fact to remove (exclusive with `instruction`).
-            instruction: Free-form edit instruction (exclusive with `remove_fact`).
-            dry_run: Return the proposed rewrite without applying it.
-
-        Returns:
-            Report dict with `changed`, `applied`, `old`, and `new`.
-
-        Raises:
-            KeyError: If `key` is not present.
-            ValueError: If the target arguments are invalid or the rewrite
-                changed the item's key.
-        """
-        if (remove_fact is None) == (instruction is None):
-            raise ValueError("Provide exactly one of remove_fact= or instruction=.")
-        target = remove_fact if remove_fact is not None else instruction
-
-        old = memory.get(key)
-        if old is None:
-            raise KeyError(f"No {schema_name} with key: {key!r}")
-
-        new = editor.invoke(
-            {"item_json": old.model_dump_json(), "key": key, "target": target}
-        )
-        new_key = key_extractor(new)
-        if new_key != key:
-            raise ValueError(
-                f"Rejected rewrite: the {schema_name} key changed "
-                f"({key!r} -> {new_key!r}). Renaming is not an edit; "
-                "delete the old item and add the new one explicitly."
-            )
-        if new == old:
-            return {"changed": False, "applied": False, "old": old, "new": new}
-
-        if dry_run:
-            return {"changed": True, "applied": False, "old": old, "new": new}
-
-        memory.remove(key)
-        memory.add(new)
-        logger.info("stage=edit_item schema=%s key=%s applied=True", schema_name, key)
-        return {"changed": True, "applied": True, "old": old, "new": new}
 
     def _summarize_extracted(self, data: T) -> str:
         """Return a concise summary of extracted data for debug logging."""
