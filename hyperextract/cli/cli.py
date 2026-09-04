@@ -807,6 +807,12 @@ def search(
     ka_path: str = typer.Argument(..., help="Knowledge Abstract directory"),
     query: str = typer.Argument(..., help="Search query"),
     top_k: int = typer.Option(3, "--top-k", "-n", help="Number of results"),
+    source: list[str] | None = typer.Option(
+        None, "--source", help="Scope: only knowledge from these source documents"
+    ),
+    tag: list[str] | None = typer.Option(
+        None, "--tag", help="Scope: only knowledge from sources carrying these tags"
+    ),
 ):
     """Semantic search in Knowledge Abstract."""
     logger.info("command=search ka_path=%s query=%s top_k=%d", ka_path, query, top_k)
@@ -836,7 +842,12 @@ def search(
             ka.load(path)
 
             progress.update(task, description="Searching...")
-            results = ka.search(query, top_k=top_k)
+            scope_kwargs = {}
+            if source:
+                scope_kwargs["source_ids"] = list(source)
+            if tag:
+                scope_kwargs["tags"] = list(tag)
+            results = ka.search(query, top_k=top_k, **scope_kwargs)
             logger.info("stage=search_complete results=%d", len(results))
 
         except Exception as e:
@@ -912,6 +923,61 @@ def chat_loop(ka, ka_path: str, top_k: int = 3):
             break
         except Exception as e:
             console.print(f"[red]Error:[/red] {e}")
+
+
+@app.command(name="tag")
+def tag(
+    ka_path: str = typer.Argument(..., help="Knowledge Abstract directory"),
+    source: str = typer.Option(..., "--source", help="Source document id to tag"),
+    add: list[str] | None = typer.Option(
+        None, "--add", help="Tag(s) to add (repeatable)"
+    ),
+    remove: list[str] | None = typer.Option(
+        None, "--remove", help="Tag(s) to remove (repeatable)"
+    ),
+    list_sources: bool = typer.Option(
+        False, "--list", "-l", help="List all sources with their tags"
+    ),
+):
+    """Manage tags on source documents (for scoped search and rollback)."""
+    logger.info("command=tag ka_path=%s source=%s", ka_path, source)
+
+    path = validate_ka_with_data(ka_path)
+    template, lang = get_template_from_ka(path)
+    ka = Template.create(template, lang)
+    ka.load(path)
+
+    if list_sources:
+        table = Table(title="Source Ledger")
+        table.add_column("Source ID", style="cyan")
+        table.add_column("Raw Items", justify="right")
+        table.add_column("Tags", style="green")
+        combined = ka.sources()
+        for sid, info_row in sorted(combined.items()):
+            tags = ka.source_tags(sid)
+            table.add_row(
+                sid, str(info_row.get("raw_items", "—")), ", ".join(tags) or "—"
+            )
+        console.print(table)
+        return
+
+    if not add and not remove:
+        current = ka.source_tags(source)
+        console.print(
+            f"[cyan]{source}[/cyan] tags: "
+            + (", ".join(current) if current else "[yellow]none[/yellow]")
+        )
+        console.print("[dim]Use --add/--remove to modify, --list to show all.[/dim]")
+        return
+
+    tags = ka.tag_source(source, add=list(add or []), remove=list(remove or []))
+    console.print(
+        f"[bold green]Tagged![/bold green] {source}: {', '.join(tags) if tags else '(no tags)'}"
+    )
+
+    # Persist the ledger change (tags live in the source ledger files).
+    ka.dump(path)
+    console.print(f"[dim]Saved to {path}[/dim]")
 
 
 @app.command(name="talk")
