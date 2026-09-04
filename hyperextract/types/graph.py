@@ -1146,6 +1146,9 @@ class AutoGraph(
         top_k_nodes: int = 3,
         top_k_edges: int = 3,
         top_k: int | None = None,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> tuple[list[NodeSchema], list[EdgeSchema]]:
         """Unified graph search interface.
 
@@ -1157,6 +1160,8 @@ class AutoGraph(
             top_k_nodes: Number of node results to return (default: 3). Set to 0 to disable node search.
             top_k_edges: Number of edge results to return (default: 3). Set to 0 to disable edge search.
             top_k: If provided, sets both top_k_nodes and top_k_edges to this value.
+            source_ids: Optional scope — only return knowledge contributed by these source documents (requires track_sources ledgers).
+            tags: Optional scope — only return knowledge contributed by sources carrying any of these tags.
 
         Returns:
             Tuple[List[NodeSchema], List[EdgeSchema]]: A tuple containing:
@@ -1182,38 +1187,64 @@ class AutoGraph(
         if top_k_nodes > 0:
             if not self._node_memory.has_index():
                 raise ValueError("Node index not built. Call build_index() first.")
-            nodes = self.search_nodes(query, top_k=top_k_nodes)
+            nodes = self.search_nodes(
+                query, top_k=top_k_nodes, source_ids=source_ids, tags=tags
+            )
 
         if top_k_edges > 0:
             if not self._edge_memory.has_index():
                 raise ValueError("Edge index not built. Call build_index() first.")
-            edges = self.search_edges(query, top_k=top_k_edges)
+            edges = self.search_edges(
+                query, top_k=top_k_edges, source_ids=source_ids, tags=tags
+            )
 
         return nodes, edges
 
-    def search_nodes(self, query: str, top_k: int = 3) -> list[NodeSchema]:
+    def search_nodes(
+        self,
+        query: str,
+        top_k: int = 3,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
+    ) -> list[NodeSchema]:
         """Semantic search for nodes/entities only.
 
         Args:
             query: Search query string.
             top_k: Number of results to return (default: 3).
+            source_ids: Optional scope — only knowledge contributed by these source documents.
+            tags: Optional scope — only knowledge from sources carrying any of these tags.
 
         Returns:
             List of matching nodes using semantic similarity.
         """
-        return self._node_memory.search(query=query, top_k=top_k)
+        return self._node_memory.search(
+            query=query, top_k=top_k, source_ids=source_ids, tags=tags
+        )
 
-    def search_edges(self, query: str, top_k: int = 3) -> list[EdgeSchema]:
+    def search_edges(
+        self,
+        query: str,
+        top_k: int = 3,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
+    ) -> list[EdgeSchema]:
         """Semantic search for edges/relationships only.
 
         Args:
             query: Search query string.
             top_k: Number of results to return (default: 3).
+            source_ids: Optional scope — only knowledge contributed by these source documents.
+            tags: Optional scope — only knowledge from sources carrying any of these tags.
 
         Returns:
             List of matching edges using semantic similarity.
         """
-        return self._edge_memory.search(query=query, top_k=top_k)
+        return self._edge_memory.search(
+            query=query, top_k=top_k, source_ids=source_ids, tags=tags
+        )
 
     def chat(
         self,
