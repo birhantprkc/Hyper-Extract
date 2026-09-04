@@ -39,6 +39,10 @@ class SourceDocumentStore:
     ) -> Path:
         """Archive text content (used for stdin feeds)."""
         self.root.mkdir(parents=True, exist_ok=True)
+        # Keep one current copy per source: drop prior archives whose filename
+        # differs (the original basename is part of the name), so re-feeding the
+        # same source_id overwrites rather than accumulating stale copies.
+        self.purge(source_id)
         path = self.path_for(source_id, original_name)
         path.write_text(text, encoding="utf-8")
         return path
@@ -47,6 +51,7 @@ class SourceDocumentStore:
         """Archive an original file (raw bytes preserved)."""
         src = Path(input_path)
         self.root.mkdir(parents=True, exist_ok=True)
+        self.purge(source_id)
         dst = self.path_for(source_id, src.name)
         shutil.copy2(src, dst)
         return dst
