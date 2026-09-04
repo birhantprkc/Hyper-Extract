@@ -176,5 +176,5 @@ class TestFeedInputTypes:
             )
 
         assert result.exit_code == 0
-        ka.feed_text.assert_called_once_with("feed stdin text", source_id=None)
+        ka.feed_text.assert_called_once_with("feed stdin text", source_id=None, content_hash=None)
         ka.dump.assert_called()
