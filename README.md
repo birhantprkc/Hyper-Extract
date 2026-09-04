@@ -58,6 +58,12 @@
 
 <!-- News snippets are derived from the latest merged PRs. Update as new releases land. -->
 
+### v0.8.0
+
+- **🔄 Document Upsert** — re-feed an attributed document and its previous version is rolled back automatically: removed facts disappear, shared keys re-merge from surviving sources. *(#84)*
+- **📁 Per-File Source Attribution** — `he parse ./docs/` attributes each file by its name automatically; roll back or audit any single file later. An explicit `--source` still overrides.
+- **⏱️ Spatiotemporal Provenance** — temporal/spatial/spatio-temporal graphs fully support source attribution and rollback, with deterministic (MERGE_FIELD) replay tests.
+
 ### v0.7.0
 
 - **🗑️ Two-Tier Knowledge Deletion** — `he remove --node/--edge` hard-deletes by key; `he remove --edit-node --fact` removes a single wrong fact via LLM rewrite (key-invariance check, dry-run, automatic backups). *(#84)*
