@@ -130,7 +130,7 @@ class TestParseInputTypes:
             result = _invoke_parse(notes, out)
 
         assert result.exit_code == 0
-        ka.feed_text.assert_called_once_with("upper txt")
+        ka.feed_text.assert_called_once_with("upper txt", source_id=None)
 
         folder = tmp_path / "mixed"
         folder.mkdir()
@@ -140,7 +140,7 @@ class TestParseInputTypes:
             result2 = _invoke_parse(folder, out2)
 
         assert result2.exit_code == 0
-        ka2.feed_text.assert_called_once_with("upper md")
+        ka2.feed_text.assert_called_once_with("upper md", source_id=None)
 
     def test_stdin_is_not_suffix_checked(self, tmp_path):
         out = tmp_path / "out"
@@ -148,7 +148,7 @@ class TestParseInputTypes:
             result = _invoke_parse("-", out, input_text="hello from stdin")
 
         assert result.exit_code == 0
-        ka.feed_text.assert_called_once_with("hello from stdin")
+        ka.feed_text.assert_called_once_with("hello from stdin", source_id=None)
 
 
 class TestFeedInputTypes:
@@ -176,5 +176,5 @@ class TestFeedInputTypes:
             )
 
         assert result.exit_code == 0
-        ka.feed_text.assert_called_once_with("feed stdin text")
+        ka.feed_text.assert_called_once_with("feed stdin text", source_id=None)
         ka.dump.assert_called()
