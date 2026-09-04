@@ -35,13 +35,14 @@ he --version
 | `he export obsidian` | Export to an Obsidian vault | `-o` output, `--name`, `-f` force |
 | `he export graphml` | Export a pairwise graph to GraphML | `-o` output file |
 | `he export csv` | Export nodes/edges as CSV tables | `-o` directory, `-f` force |
-| `he search` | Semantic search in knowledge abstract | `-n` top-k results |
+| `he search` | Semantic search in knowledge abstract | `-n` top-k results, `--source`, `--tag` |
 | `he talk` | Chat with knowledge abstract | `-i` interactive, `-q` query |
 | `he feed` | Add documents incrementally | `--source` attribution |
 | `he info` | Show knowledge abstract statistics | — |
 | `he build-index` | Build/rebuild search index | `-f` force rebuild |
 | `he clean` | Remove a KA's index (or the whole KA) | `-a` all, `-y` yes |
 | `he remove` | Delete nodes/edges by key, or soft-remove a single fact | `--node`, `--edge`, `--edit-node`, `--fact`, `--dry-run`, `--document`, `--strategy` |
+| `he tag` | Manage source tags | `--source`, `--add`, `--remove`, `--list` |
 | `he list` | List templates and methods | `template` or `method` |
 | `he template validate` | Validate a template YAML file | `--json`, `--all` |
 | `he config` | Manage configuration | `init`, `show`, `llm`, `embedder` |

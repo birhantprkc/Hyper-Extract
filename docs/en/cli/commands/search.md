@@ -22,6 +22,8 @@ he search KA_PATH QUERY [OPTIONS]
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
 | `--top-k` | `-n` | Number of results to return | 3 |
+| `--source` | — | Scope: only knowledge contributed by these source documents (repeatable) | — |
+| `--tag` | — | Scope: only knowledge from sources carrying these tags (repeatable) | — |
 
 ---
 
@@ -111,6 +113,24 @@ Result 3:
 2. **Be specific** — "Tesla's work on AC power" vs "Tesla work"
 3. **Try synonyms** — If "inventions" doesn't work, try "discoveries"
 4. **Increase top-k** — Use `-n 10` for broader results
+
+---
+
+## Scoped Search
+
+Restrict search to a subset of sources with `--source` (specific source documents) or `--tag` (any source carrying the tag — set tags with [`he tag`](tag.md)):
+
+```bash
+# Only knowledge contributed by sources tagged `legal`
+he search ./ka/ "termination" --tag legal
+
+# Only knowledge contributed by two specific documents
+he search ./ka/ "termination" --source contract-2024 --source annex-b
+```
+
+`--source` and `--tag` combine as a union: a key matches when **any** of its contributing sources fits either filter.
+
+> Scoping requires the KA to have been fed with `--source`, so the source ledger exists — see [Source Attribution & Provenance](../../python/guides/provenance.md).
 
 ---
 
