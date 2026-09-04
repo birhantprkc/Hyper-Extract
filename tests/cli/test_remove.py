@@ -64,9 +64,7 @@ def _real_ka():
             E(name="Google"),
         ]
     )
-    g._edge_memory.add(
-        [R(source="Apple", target="Google", relation_type="partner")]
-    )
+    g._edge_memory.add([R(source="Apple", target="Google", relation_type="partner")])
     return g
 
 
@@ -106,9 +104,7 @@ class TestHardDeleteCli:
 
     def test_dry_run_persists_nothing(self, ka_env):
         ka, _ = ka_env
-        result = runner.invoke(
-            app, ["remove", str(ka), "--node", "Apple", "--dry-run"]
-        )
+        result = runner.invoke(app, ["remove", str(ka), "--node", "Apple", "--dry-run"])
 
         assert result.exit_code == 0, result.output
         assert [n["name"] for n in _data(ka)["nodes"]] == ["Apple", "Google"]
@@ -210,12 +206,61 @@ class TestSoftDeleteCli:
         assert [n["name"] for n in _data(ka)["nodes"]] == ["Apple", "Google"]
 
 
+class TestDocumentRollbackCli:
+    def test_document_rollback_removes_only_that_document(self, tmp_path, monkeypatch):
+        g = _real_ka()
+        g.metadata["template"] = "general/graph"
+        g.metadata["lang"] = "en"
+        g._node_memory.add([E(name="Apple"), E(name="Google")])
+        g.feed_text("Apple partners with DeepMind on AI research.", source_id="doc-1")
+        ka = tmp_path / "ka"
+        g.dump(ka)
+        monkeypatch.setattr(climod.Template, "create", staticmethod(lambda *a, **k: g))
+
+        result = runner.invoke(app, ["remove", str(ka), "--document", "doc-1", "-y"])
+
+        assert result.exit_code == 0, result.output
+        names = [n["name"] for n in _data(ka)["nodes"]]
+        # Direct-added nodes stay; everything doc-1 contributed is rolled back.
+        assert "Apple" in names and "Google" in names
+        assert "mock_name" not in names
+        # Provenance ledger persisted alongside the KA.
+        assert (ka / "sources_nodes.json").exists()
+
+    def test_document_without_contributions_reports_nothing(
+        self, tmp_path, monkeypatch
+    ):
+        g = _real_ka()
+        g.metadata["template"] = "general/graph"
+        g.metadata["lang"] = "en"
+        g._node_memory.add([E(name="Apple")])
+        ka = tmp_path / "ka"
+        g.dump(ka)
+        monkeypatch.setattr(climod.Template, "create", staticmethod(lambda *a, **k: g))
+
+        result = runner.invoke(
+            app, ["remove", str(ka), "--document", "ghost-doc", "-y"]
+        )
+
+        assert result.exit_code == 0
+        assert "Nothing matched" in result.output
+
+
 class TestArgumentValidation:
     def test_hard_and_soft_delete_are_mutually_exclusive(self, ka_env):
         ka, _ = ka_env
         result = runner.invoke(
             app,
-            ["remove", str(ka), "--node", "Apple", "--edit-node", "Apple", "--fact", "x"],
+            [
+                "remove",
+                str(ka),
+                "--node",
+                "Apple",
+                "--edit-node",
+                "Apple",
+                "--fact",
+                "x",
+            ],
         )
         assert result.exit_code == 1
 

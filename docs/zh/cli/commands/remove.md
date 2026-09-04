@@ -18,6 +18,7 @@ he remove KA_PATH [选项]
 | `--edge TEXT` | — | **硬删除**指定边 |
 | `--edit-node TEXT` | — | **软编辑**指定节点（大模型重写，移除 `--fact`） |
 | `--edit-edge TEXT` | — | **软编辑**指定边 |
+| `--document TEXT` | — | **回滚**某个来源文档贡献的全部知识（要求 KA 在摄取时使用了 `--source`） |
 | `--fact TEXT` | — | 要从 `--edit-node` / `--edit-edge` 条目中移除的事实 |
 | `--instruction TEXT` | — | 自由格式的编辑指令（替代 `--fact`） |
 | `--dry-run` | 关闭 | 仅预览变更，不落盘 |
@@ -86,6 +87,23 @@ he remove ./ka/ --edit-edge "Apple-acquired-Beats" \
 ```bash
 he build-index ./ka/
 ```
+
+---
+
+## 文档级回滚：删除整个来源文档的贡献
+
+当文档以来源标注方式摄取后，可以整体回滚其贡献——包括与其他文档共享的 key（这些 key 会从幸存来源的原始结果重新合并）。
+
+```bash
+# 带来源标注摄取
+he feed ./ka/ doc1.md --source doc-1
+he feed ./ka/ doc2.md --source doc-2
+
+# 之后：回滚 doc-1 贡献的全部知识
+he remove ./ka/ --document doc-1
+```
+
+要求 KA 的记忆开启来源追踪（图谱类 KA 默认开启）。回滚会从幸存来源的原始结果重新合并受影响的 key——经典合并策略下完全确定；LLM 策略保留语义、措辞近似。若该文档没有已记录的贡献，命令会报告 `Nothing matched` 并正常退出。
 
 ---
 

@@ -23,6 +23,7 @@ he feed KA_PATH INPUT [OPTIONS]
 |--------|-------|-------------|
 | `--template` | `-t` | Override template (uses metadata if omitted) |
 | `--lang` | `-l` | Override language (uses metadata if omitted) |
+| `--source` | — | Source attribution (document id) — enables per-document rollback via `he remove --document` |
 
 ---
 

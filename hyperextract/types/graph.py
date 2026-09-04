@@ -83,6 +83,86 @@ class GraphEditMixin:
     OMem's `sync_index` / `edit` (ontomem >= 0.3.0).
     """
 
+    # ==================== Source Provenance (v0.4.0+) ====================
+
+    def _record_extraction_source(
+        self,
+        source_id: str | None,
+        nodes: list[NodeSchema],
+        edges: list[EdgeSchema],
+    ) -> None:
+        """Record raw (pre-merge) extraction results in the source ledgers.
+
+        Reads ``self._pending_source_id`` (set by parse/feed_text); no-op when
+        no source was attributed or the memories don't track sources.
+        """
+        if not source_id or not self._node_memory.track_sources:
+            return
+        self._node_memory.record_source(
+            source_id, [node.model_dump() for node in nodes]
+        )
+        self._edge_memory.record_source(
+            source_id, [edge.model_dump() for edge in edges]
+        )
+
+    def _adopt_source_ledger(self, other, source_id: str) -> None:
+        """Transfer ledger entries for ``source_id`` from ``other`` to ``self``
+        after parse() (the extraction ran on ``other``'s memories)."""
+        for src_memory, dst_memory in (
+            (other._node_memory, self._node_memory),
+            (other._edge_memory, self._edge_memory),
+        ):
+            if source_id in src_memory._sources:
+                dst_memory._sources[source_id] = src_memory._sources[source_id]
+
+    def _dump_provenance(self, root: Path) -> None:
+        """Persist the node/edge source ledgers alongside the KA."""
+        try:
+            self._node_memory.dump_sources(Path(root) / "sources_nodes.json")
+            self._edge_memory.dump_sources(Path(root) / "sources_edges.json")
+        except Exception as e:
+            logger.warning("provenance_dump_failed", error=str(e))
+
+    def _load_provenance(self, root: Path) -> None:
+        """Restore the node/edge source ledgers alongside the KA."""
+        try:
+            node_path = Path(root) / "sources_nodes.json"
+            edge_path = Path(root) / "sources_edges.json"
+            if node_path.exists():
+                self._node_memory.load_sources(node_path)
+            if edge_path.exists():
+                self._edge_memory.load_sources(edge_path)
+        except Exception as e:
+            logger.warning("provenance_load_failed", error=str(e))
+
+    def remove_source(self, source_id: str, *, strategy: str = "exact") -> dict:
+        """Remove every contribution of one source document (exact rollback).
+
+        Keys contributed solely by the removed document are deleted; keys
+        shared with other documents are re-merged from the surviving sources'
+        raw results. The search index is patched in place when built.
+
+        Args:
+            source_id: Identifier used when the document was fed
+                (``feed_text(text, source_id=...)`` / ``he feed --source``).
+            strategy: "exact" (re-merge survivors) or "touched" (delete all
+                affected keys).
+
+        Returns:
+            Combined node/edge report dict.
+        """
+        node_report = self._node_memory.remove_source(source_id, strategy=strategy)
+        edge_report = self._edge_memory.remove_source(source_id, strategy=strategy)
+        return {
+            "source_id": source_id,
+            "removed_nodes": node_report["removed_keys"],
+            "remerged_nodes": node_report["remerged_keys"],
+            "removed_edges": edge_report["removed_keys"],
+            "remerged_edges": edge_report["remerged_keys"],
+            "index_patched": node_report["index_patched"]
+            and edge_report["index_patched"],
+        }
+
     # ==================== Removal ====================
 
     def remove_nodes(self, *keys: str) -> dict:
@@ -270,8 +350,8 @@ class EdgeListSchema(BaseModel, Generic[EdgeSchema]):
 
 
 class AutoGraph(
-    BaseAutoType[AutoGraphSchema[NodeSchema, EdgeSchema]],
     GraphEditMixin,
+    BaseAutoType[AutoGraphSchema[NodeSchema, EdgeSchema]],
     Generic[NodeSchema, EdgeSchema],
 ):
     """AutoGraph - extracts knowledge graphs with nodes and edges from text.
@@ -446,6 +526,7 @@ class AutoGraph(
             strategy_or_merger=self.node_merger,
             verbose=verbose,
             fields_for_index=node_fields_for_index,  # Pass node field selection to OMem
+            track_sources=True,  # source ledger for per-document rollback (#84)
         )
 
         self._edge_memory = OMem(
@@ -456,6 +537,7 @@ class AutoGraph(
             strategy_or_merger=self.edge_merger,
             verbose=verbose,
             fields_for_index=edge_fields_for_index,  # Pass edge field selection to OMem
+            track_sources=True,  # source ledger for per-document rollback (#84)
         )
 
         # Store label extractors for visualization
@@ -602,17 +684,30 @@ class AutoGraph(
     ) -> None:
         """Merge incoming graph data into current state.
 
+        The vector index is patched in place: only the incoming nodes/edges
+        are re-embedded, instead of dropping the whole index.
+
         Args:
             incoming_data: Incremental graph data to merge.
         """
         if self.empty():
             self._set_data_state(incoming_data)
-        else:
+            return
+
+        # Suspend index invalidation while merging; re-embed only the
+        # affected keys afterwards.
+        with self._node_memory.suspended_index(), self._edge_memory.suspended_index():
             if incoming_data.nodes:
                 self._node_memory.add(incoming_data.nodes)
             if incoming_data.edges:
                 self._edge_memory.add(incoming_data.edges)
-            self.clear_index()
+
+        if incoming_data.nodes:
+            node_keys = {self.node_key_extractor(n) for n in incoming_data.nodes}
+            self._node_memory.sync_index(upserted_keys=node_keys)
+        if incoming_data.edges:
+            edge_keys = {self.edge_key_extractor(e) for e in incoming_data.edges}
+            self._edge_memory.sync_index(upserted_keys=edge_keys)
 
     # ==================== Extraction Pipeline ====================
 
@@ -674,6 +769,13 @@ class AutoGraph(
             logger.debug("stage=one_stage_batch_complete graphs=%d", len(graph_list))
 
         logger.debug("stage=one_stage_merge_start")
+        # Provenance: record the raw (pre-merge) chunk results under the
+        # pending source id (no-op when parse/feed_text had no source_id).
+        self._record_extraction_source(
+            self._pending_source_id,
+            [node for graph in graph_list for node in graph.nodes],
+            [edge for graph in graph_list for edge in graph.edges],
+        )
         result = self.merge_batch_data(graph_list)
         logger.debug(
             "stage=one_stage_merge_complete nodes=%d edges=%d",
@@ -749,6 +851,14 @@ class AutoGraph(
         partial_graphs = (
             [node_list.items for node_list in chunk_node_lists],
             [edge_list.items for edge_list in chunk_edge_lists],
+        )
+
+        # Provenance: record the raw (pre-merge) node/edge results under the
+        # pending source id (no-op when parse/feed_text had no source_id).
+        self._record_extraction_source(
+            self._pending_source_id,
+            [node for node_list in chunk_node_lists for node in node_list.items],
+            [edge for edge_list in chunk_edge_lists for edge in edge_list.items],
         )
 
         # 5. Global Merge (passes tuples to merge_batch_data)

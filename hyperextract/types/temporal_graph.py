@@ -318,6 +318,14 @@ class AutoTemporalGraph(AutoGraph[NodeSchema, EdgeSchema]):
                 default_factory=lambda: self.graph_schema(nodes=[], edges=[]),
             )
 
+        # Provenance: record the raw (pre-merge) chunk results under the
+        # pending source id (no-op when parse/feed_text had no source_id).
+        self._record_extraction_source(
+            self._pending_source_id,
+            [node for graph in graph_list for node in graph.nodes],
+            [edge for graph in graph_list for edge in graph.edges],
+        )
+
         return self.merge_batch_data(graph_list)
 
     def _create_empty_instance(self) -> "AutoTemporalGraph[NodeSchema, EdgeSchema]":

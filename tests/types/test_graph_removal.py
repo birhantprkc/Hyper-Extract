@@ -225,7 +225,9 @@ class TestIndexPatching:
             [Entity(name="A", description="A was founded by X. A is in Y.")]
         )
         g.build_index()
-        g._node_memory.llm_client = FakeChatModel(Entity(name="A", description="A is in Y."))
+        g._node_memory.llm_client = FakeChatModel(
+            Entity(name="A", description="A is in Y.")
+        )
 
         report = g.edit_node("A", remove_fact="founded by X")
 
@@ -301,7 +303,9 @@ class TestSoftDelete:
         g._node_memory.add(
             [Entity(name="A", description="A was founded by X. A is in Y.")]
         )
-        g._node_memory.llm_client = FakeChatModel(Entity(name="A", description="A is in Y."))
+        g._node_memory.llm_client = FakeChatModel(
+            Entity(name="A", description="A is in Y.")
+        )
 
         report = g.edit_node("A", remove_fact="founded by X", dry_run=True)
 
@@ -315,7 +319,9 @@ class TestSoftDelete:
         g._node_memory.add(
             [Entity(name="A", description="A was founded by X. A is in Y.")]
         )
-        g._node_memory.llm_client = FakeChatModel(Entity(name="A", description="A is in Y."))
+        g._node_memory.llm_client = FakeChatModel(
+            Entity(name="A", description="A is in Y.")
+        )
 
         report = g.edit_node("A", remove_fact="founded by X")
 
@@ -341,7 +347,9 @@ class TestSoftDelete:
     def test_key_change_is_rejected(self):
         g = _graph()
         g._node_memory.add([Entity(name="A")])
-        g._node_memory.llm_client = FakeChatModel(Entity(name="Renamed"))  # identity break
+        g._node_memory.llm_client = FakeChatModel(
+            Entity(name="Renamed")
+        )  # identity break
 
         with pytest.raises(ValueError, match="key changed"):
             g.edit_node("A", remove_fact="whatever")

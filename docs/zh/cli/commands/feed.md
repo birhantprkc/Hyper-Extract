@@ -23,6 +23,7 @@ he feed KA_PATH INPUT [OPTIONS]
 |--------|-------|-------------|
 | `--template` | `-t` | 覆盖模板（如果省略则使用元数据） |
 | `--lang` | `-l` | 覆盖语言（如果省略则使用元数据） |
+| `--source` | — | 来源标注（文档 id）——之后可通过 `he remove --document` 按文档回滚 |
 
 ---
 

@@ -469,9 +469,11 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         Args:
             item: The item to add.
         """
-        # OMem handles deduplication and merging automatically
-        self._data_memory.add([item])
-        self.clear_index()
+        # OMem handles deduplication and merging automatically; the vector
+        # index is patched in place (only the added key is re-embedded).
+        with self._data_memory.suspended_index():
+            self._data_memory.add([item])
+        self._data_memory.sync_index(upserted_keys=[self.key_extractor(item)])
         self.metadata["updated_at"] = datetime.now()
 
     def remove(self, key: Any) -> ItemSchema | None:
@@ -488,10 +490,11 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         if item is None:
             return None
 
-        # Remove from OMem
-        removed = self._data_memory.remove(key)
-        if removed:
-            self.clear_index()
+        # Remove from OMem; sync_index patches the vector index in place
+        # (only the removed key's vector is dropped — no full rebuild).
+        removed_keys, _ = self._data_memory.remove_many([key])
+        if removed_keys:
+            self._data_memory.sync_index(removed_keys=removed_keys)
             self.metadata["updated_at"] = datetime.now()
             logger.debug(f"Removed item with key '{key}'")
         return item
@@ -528,8 +531,11 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         """
         # add() takes a single item and would wrap the whole list as one entry;
         # pass the list straight to the backing store so each item is added.
-        self._data_memory.add(items)
-        self.clear_index()
+        # The vector index is patched in place afterwards (no full rebuild).
+        with self._data_memory.suspended_index():
+            self._data_memory.add(items)
+        added_keys = {self.key_extractor(item) for item in items}
+        self._data_memory.sync_index(upserted_keys=added_keys)
         self.metadata["updated_at"] = datetime.now()
 
     def discard(self, key: Any) -> None:
@@ -544,13 +550,14 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
             >>> skills.discard("Python")  # No error if not found
 
         Side Effects:
-            - Clears the vector index (needs rebuild)
+            - Patches the vector index in place (no rebuild needed)
             - Updates metadata timestamp
         """
         try:
             if self._data_memory.get(key) is not None:
-                self._data_memory.remove(key)
-                self.clear_index()
+                removed_keys, _ = self._data_memory.remove_many([key])
+                if removed_keys:
+                    self._data_memory.sync_index(removed_keys=removed_keys)
                 self.metadata["updated_at"] = datetime.now()
         except (KeyError, Exception):
             pass
@@ -569,7 +576,7 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
             >>> print(f"Removed: {skill.name}")
 
         Side Effects:
-            - Clears the vector index (needs rebuild)
+            - Patches the vector index in place (no rebuild needed)
             - Updates metadata timestamp
         """
         if not self._data_memory.items:
@@ -577,9 +584,10 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
 
         item = self._data_memory.items[0]
         key = self.key_extractor(item)
-        self._data_memory.remove(key)
+        removed_keys, _ = self._data_memory.remove_many([key])
+        if removed_keys:
+            self._data_memory.sync_index(removed_keys=removed_keys)
 
-        self.clear_index()
         self.metadata["updated_at"] = datetime.now()
 
         return item

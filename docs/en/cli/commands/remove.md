@@ -18,6 +18,7 @@ he remove KA_PATH [OPTIONS]
 | `--edge TEXT` | — | Edge key(s) to **hard-delete** |
 | `--edit-node TEXT` | — | Node key to **soft-edit** (LLM rewrites it minus `--fact`) |
 | `--edit-edge TEXT` | — | Edge key to **soft-edit** |
+| `--document TEXT` | — | **Roll back** all knowledge contributed by a source document (requires the KA to have been fed with `--source`) |
 | `--fact TEXT` | — | The fact to remove from the `--edit-node` / `--edit-edge` item |
 | `--instruction TEXT` | — | Free-form edit instruction (alternative to `--fact`) |
 | `--dry-run` | off | Preview the change without persisting it |
@@ -86,6 +87,23 @@ If no index had been built (or in-place patching was not possible), any stale on
 ```bash
 he build-index ./ka/
 ```
+
+---
+
+## Document Rollback: remove a whole source document
+
+When documents were ingested with a source attribution, their entire contribution can be rolled back — including keys that other documents also contributed to (those are re-merged from the surviving sources).
+
+```bash
+# Ingest with attribution
+he feed ./ka/ doc1.md --source doc-1
+he feed ./ka/ doc2.md --source doc-2
+
+# Later: roll back everything doc-1 contributed ("b" remains via doc-2 if shared)
+he remove ./ka/ --document doc-1
+```
+
+Requires the KA's memories to track sources (graph-family KAs do by default). The rollback re-merges affected keys from the surviving sources' raw results — deterministic with classic merge strategies; LLM strategies preserve semantics with approximate wording. If the document has no recorded contributions, the command reports `Nothing matched` and exits successfully.
 
 ---
 

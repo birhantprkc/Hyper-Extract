@@ -24,6 +24,7 @@ he parse INPUT [OPTIONS]
 | `--template` | `-t` | 要使用的模板（省略以进行交互式选择） |
 | `--method` | `-m` | 方法模板（例如 `light_rag`、`graph_rag`） |
 | `--lang` | `-l` | 语言：`zh` 或 `en`（知识模板必填） |
+| `--source` | — | 来源标注（文档 id）——之后可通过 `he remove --document` 按文档回滚 |
 | `--force` | `-f` | 强制覆盖现有输出 |
 | `--no-index` | — | 跳过构建搜索索引 |
 

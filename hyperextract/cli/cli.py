@@ -247,6 +247,11 @@ def parse(
     no_index: bool = typer.Option(
         False, "--no-index", help="Skip building search index"
     ),
+    source: str | None = typer.Option(
+        None,
+        "--source",
+        help="Source attribution (document id) for per-document rollback later (he remove --document)",
+    ),
 ):
     """Extract knowledge from text to a new directory."""
     logger.info(
@@ -341,7 +346,7 @@ def parse(
 
             progress.update(task, description="Extracting knowledge...")
             logger.debug("stage=feed_text_invoked")
-            ka.feed_text(combined_text)
+            ka.feed_text(combined_text, source_id=source)
             logger.info("stage=knowledge_extracted chars=%d", len(combined_text))
         else:
             progress.update(task, description="Reading input...")
@@ -350,7 +355,7 @@ def parse(
 
             progress.update(task, description="Extracting knowledge...")
             logger.debug("stage=feed_text_invoked")
-            ka.feed_text(text)
+            ka.feed_text(text, source_id=source)
             logger.info("stage=knowledge_extracted chars=%d", len(text))
 
         progress.update(task, description="Saving data...")
@@ -930,6 +935,11 @@ def feed(
     input: str = typer.Argument(..., help="Input file path or '-' for stdin"),
     template: str | None = typer.Option(None, "--template", "-t", help="Template"),
     lang: str | None = typer.Option(None, "--lang", "-l", help="Language"),
+    source: str | None = typer.Option(
+        None,
+        "--source",
+        help="Source attribution (document id) for per-document rollback later (he remove --document)",
+    ),
 ):
     """Append knowledge to an existing Knowledge Abstract."""
     logger.info("command=feed ka_path=%s input=%s", ka_path, input)
@@ -977,7 +987,7 @@ def feed(
 
         progress.update(task, description="Appending knowledge...")
         logger.debug("stage=feed_text_invoked")
-        ka.feed_text(text)
+        ka.feed_text(text, source_id=source)
         logger.info("stage=knowledge_appended chars=%d", len(text))
 
         progress.update(task, description="Saving data...")
@@ -1135,33 +1145,51 @@ def remove_items(
         True, "--backup/--no-backup", help="Back up data.json before writing"
     ),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip the confirmation prompt"),
+    document: str | None = typer.Option(
+        None,
+        "--document",
+        help="Remove all knowledge contributed by this source document "
+        "(requires the KA to have been fed with --source)",
+    ),
 ):
-    """Delete nodes/edges by key, or soft-remove a single fact (LLM-assisted).
+    """Delete nodes/edges by key, remove a fact (LLM-assisted), or roll back a whole document.
 
-    Hard delete:  he remove ./ka --node Apple --edge "Apple-partner-Google"
-    Soft delete:  he remove ./ka --edit-node Apple --fact "founded by Steve Jobs"
+    Hard delete:     he remove ./ka --node Apple --edge "Apple-partner-Google"
+    Soft delete:     he remove ./ka --edit-node Apple --fact "founded by Steve Jobs"
+    Document rollback: he remove ./ka --document ./docs/old-paper.md
     """
     import shutil
     from datetime import datetime
 
-    logger.info("command=remove ka_path=%s dry_run=%s", ka_path, dry_run)
+    logger.info(
+        "command=remove ka_path=%s dry_run=%s document=%s",
+        ka_path,
+        dry_run,
+        document,
+    )
 
     hard_targets = list(node or []) + list(edge or [])
     soft_target = edit_node_key or edit_edge_key
-    if hard_targets and soft_target:
+    if (hard_targets or soft_target or document) and sum(
+        bool(x) for x in (hard_targets, soft_target, document)
+    ) > 1:
         console.print(
-            "[red]Error:[/red] Combine either --node/--edge (hard delete) "
-            "or --edit-node/--edit-edge (soft delete), not both."
+            "[red]Error:[/red] Choose ONE of: --node/--edge (hard delete), "
+            "--edit-node/--edit-edge (soft delete), or --document "
+            "(whole-document rollback)."
         )
         raise typer.Exit(1)
     if soft_target and not fact and not instruction:
         console.print("[red]Error:[/red] Soft delete needs --fact or --instruction.")
         raise typer.Exit(1)
-    if not hard_targets and not soft_target:
+    if document and not (Path(document).name or document):
+        pass  # unreachable; keeps option semantics explicit
+    if not hard_targets and not soft_target and not document:
         console.print(
             "[yellow]Nothing to do.[/yellow] "
-            "Use --node/--edge to delete items, or --edit-node/--edit-edge "
-            "with --fact to remove a single fact."
+            "Use --node/--edge to delete items, --edit-node/--edit-edge "
+            "with --fact to remove a single fact, or --document to roll back "
+            "a whole source document."
         )
         raise typer.Exit(0)
 
@@ -1181,7 +1209,17 @@ def remove_items(
         raise typer.Exit(1)
 
     try:
-        if hard_targets:
+        if document:
+            try:
+                report = ka.remove_source(document, strategy="exact")
+            except KeyError:
+                console.print(
+                    f"[yellow]Nothing matched — no recorded contributions "
+                    f"for source '{document}'. Was the KA fed with "
+                    f"--source?[/yellow]"
+                )
+                raise typer.Exit(0)
+        elif hard_targets:
             report = {}
             if node:
                 report.update(ka.remove_nodes(*node))
@@ -1218,7 +1256,31 @@ def remove_items(
         raise typer.Exit(1)
 
     console.print()
-    if hard_targets:
+    if document:
+        table = Table(title=f"Document Rollback Report — {document}")
+        table.add_column("Field")
+        table.add_column("Items")
+        for field, items in report.items():
+            if field in ("index_patched", "source_id", "strategy"):
+                continue
+            table.add_row(field, "\n".join(items) if items else "—")
+        console.print(table)
+        changed_any = any(
+            report.get(key)
+            for key in (
+                "removed_nodes",
+                "remerged_nodes",
+                "removed_edges",
+                "remerged_edges",
+            )
+        )
+        if not changed_any:
+            console.print(
+                "[yellow]Nothing matched — this document has no recorded "
+                "contributions. Was the KA fed with --source?[/yellow]"
+            )
+            raise typer.Exit(0)
+    elif hard_targets:
         table = Table(title="Removal Report")
         table.add_column("Field")
         table.add_column("Items")

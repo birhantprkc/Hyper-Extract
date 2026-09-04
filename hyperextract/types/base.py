@@ -97,6 +97,9 @@ class BaseAutoType(ABC, Generic[T]):
             "created_at": datetime.now(),
             "updated_at": datetime.now(),
         }
+        # Set by parse()/feed_text() while extraction runs; graph-family
+        # subclasses record raw extraction results under it (provenance).
+        self._pending_source_id: str | None = None
 
     def _create_empty_instance(self) -> "BaseAutoType[T]":
         """Creates a new empty instance with the same configuration as this one.
@@ -242,7 +245,12 @@ class BaseAutoType(ABC, Generic[T]):
     # ==================== Extraction & Merge ====================
 
     def _extract_data(self, text: str) -> T:
-        """Internal: Unified extraction logic (Chunking -> LLM -> Merge)."""
+        """Internal: Unified extraction logic (Chunking -> LLM -> Merge).
+
+        Subclasses that support source attribution read
+        ``self._pending_source_id`` (set by parse/feed_text) and record
+        their raw, pre-merge results via ``_record_extraction_source``.
+        """
         logger.debug(
             "stage=extract_start input_chars=%d chunk_size=%d",
             len(text),
@@ -377,6 +385,20 @@ class BaseAutoType(ABC, Generic[T]):
                 results.append(r)
         return results
 
+    def _adopt_source_ledger(self, other: "BaseAutoType[T]", source_id: str) -> None:
+        """Hook: transfer ledger entries for ``source_id`` from ``other`` to
+        ``self`` after parse(). No-op by default; graph-family memories with
+        ``track_sources`` override this."""
+        return
+
+    def _dump_provenance(self, root: Path) -> None:
+        """Hook: persist the source ledger alongside the KA. No-op by default."""
+        return
+
+    def _load_provenance(self, root: Path) -> None:
+        """Hook: restore the source ledger alongside the KA. No-op by default."""
+        return
+
     def _summarize_extracted(self, data: T) -> str:
         """Return a concise summary of extracted data for debug logging."""
         try:
@@ -397,7 +419,7 @@ class BaseAutoType(ABC, Generic[T]):
         except Exception:
             return repr(data)[:100]
 
-    def parse(self, text: str) -> "BaseAutoType[T]":
+    def parse(self, text: str, *, source_id: str | None = None) -> "BaseAutoType[T]":
         """
         Parses knowledge into a NEW instance without modifying the current one.
 
@@ -405,21 +427,33 @@ class BaseAutoType(ABC, Generic[T]):
 
         Args:
             text: Input text.
+            source_id: Optional source attribution (graph-family memories with
+                ``track_sources``): the raw extraction results are recorded
+                under this id so the document's contributions can later be
+                rolled back via ``remove_source``.
 
         Returns:
             A new knowledge instance containing only the parsed data.
         """
-        parsed_data = self._extract_data(text)
+        self._pending_source_id = source_id
+        try:
+            parsed_data = self._extract_data(text)
+        finally:
+            self._pending_source_id = None
 
         new_instance = self._create_empty_instance()
         new_instance._set_data_state(parsed_data)
+        if source_id:
+            new_instance._adopt_source_ledger(self, source_id)
 
         new_instance.metadata["created_at"] = datetime.now()
         new_instance.metadata["updated_at"] = datetime.now()
 
         return new_instance
 
-    def feed_text(self, text: str) -> "BaseAutoType[T]":
+    def feed_text(
+        self, text: str, *, source_id: str | None = None
+    ) -> "BaseAutoType[T]":
         """
         Ingests text into the CURRENT knowledge abstract instance.
 
@@ -428,17 +462,25 @@ class BaseAutoType(ABC, Generic[T]):
 
         Args:
             text: Input text.
+            source_id: Optional source attribution (graph-family memories with
+                ``track_sources``): the raw extraction results are recorded
+                under this id so the document's contributions can later be
+                rolled back via ``remove_source``.
 
         Returns:
             Self (the current instance).
         """
         logger.debug("stage=feed_text_start input_chars=%d", len(text))
-        extracted_data = self._extract_data(text)
-        logger.debug("stage=extract_done")
+        self._pending_source_id = source_id
+        try:
+            extracted_data = self._extract_data(text)
+            logger.debug("stage=extract_done")
 
-        # Use UPDATE hook instead of manual merge+set
-        self._update_data_state(extracted_data)
-        logger.debug("stage=data_merged")
+            # Use UPDATE hook instead of manual merge+set
+            self._update_data_state(extracted_data)
+            logger.debug("stage=data_merged")
+        finally:
+            self._pending_source_id = None
 
         self.metadata["updated_at"] = datetime.now()
 
@@ -587,6 +629,9 @@ class BaseAutoType(ABC, Generic[T]):
             # user can always rebuild_index()
             print(f"Warning: Failed to save vector index: {e}")
 
+        # 4. Provenance (Optional — graph-family with track_sources)
+        self._dump_provenance(root)
+
     def load(self, folder_path: str | Path) -> None:
         """Loads the entire knowledge abstract from a directory.
 
@@ -614,6 +659,9 @@ class BaseAutoType(ABC, Generic[T]):
                 print(
                     f"Warning: Failed to load vector index: {e}. You may need to rebuild_index()."
                 )
+
+        # 4. Provenance (Optional — graph-family with track_sources)
+        self._load_provenance(root)
 
     # ==================== Serialization: Components ====================
 

@@ -107,8 +107,8 @@ class EdgeListSchema(BaseModel, Generic[EdgeSchema]):
 
 
 class AutoHypergraph(
-    BaseAutoType[AutoHypergraphSchema[NodeSchema, EdgeSchema]],
     GraphEditMixin,
+    BaseAutoType[AutoHypergraphSchema[NodeSchema, EdgeSchema]],
     Generic[NodeSchema, EdgeSchema],
 ):
     """AutoHypergraph - Node-First extraction: Extract entities first, then relationships.
@@ -286,6 +286,7 @@ class AutoHypergraph(
             strategy_or_merger=self.node_merger,
             verbose=verbose,
             fields_for_index=node_fields_for_index,  # Pass node field selection to OMem
+            track_sources=True,  # source ledger for per-document rollback (#84)
         )
 
         self._edge_memory = OMem(
@@ -296,6 +297,7 @@ class AutoHypergraph(
             strategy_or_merger=self.edge_merger,
             verbose=verbose,
             fields_for_index=edge_fields_for_index,  # Pass edge field selection to OMem
+            track_sources=True,  # source ledger for per-document rollback (#84)
         )
 
         # Store label extractors for visualization
@@ -475,6 +477,14 @@ class AutoHypergraph(
                 default_factory=lambda: self.graph_schema(nodes=[], edges=[]),
             )
 
+        # Provenance: record the raw (pre-merge) chunk results under the
+        # pending source id (no-op when parse/feed_text had no source_id).
+        self._record_extraction_source(
+            self._pending_source_id,
+            [node for graph in graph_list for node in graph.nodes],
+            [edge for graph in graph_list for edge in graph.edges],
+        )
+
         # Merge multiple hypergraphs
         return self.merge_batch_data(graph_list)
 
@@ -519,6 +529,13 @@ class AutoHypergraph(
         ]
 
         # 4. Construct Partial Graphs (Tuple format for merge optimization)
+        # Provenance: record the raw (pre-merge) node/hyperedge results under
+        # the pending source id (no-op when parse/feed_text had no source_id).
+        self._record_extraction_source(
+            self._pending_source_id,
+            [node for node_list in chunk_node_lists for node in node_list.items],
+            [edge for edge_list in chunk_edge_lists for edge in edge_list.items],
+        )
         partial_hypergraphs = (
             [node_list.items for node_list in chunk_node_lists],
             [edge_list.items for edge_list in chunk_edge_lists],

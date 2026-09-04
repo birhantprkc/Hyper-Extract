@@ -24,6 +24,7 @@ he parse INPUT [OPTIONS]
 | `--template` | `-t` | Template to use (omit for interactive selection) |
 | `--method` | `-m` | Method template (e.g., `light_rag`, `graph_rag`) |
 | `--lang` | `-l` | Language: `zh` or `en` (required for knowledge templates) |
+| `--source` | — | Source attribution (document id) — enables per-document rollback via `he remove --document` |
 | `--force` | `-f` | Force overwrite existing output |
 | `--no-index` | — | Skip building search index |
 
