@@ -452,7 +452,11 @@ class BaseAutoType(ABC, Generic[T]):
         return new_instance
 
     def feed_text(
-        self, text: str, *, source_id: str | None = None
+        self,
+        text: str,
+        *,
+        source_id: str | None = None,
+        content_hash: str | None = None,
     ) -> "BaseAutoType[T]":
         """
         Ingests text into the CURRENT knowledge abstract instance.
@@ -466,12 +470,15 @@ class BaseAutoType(ABC, Generic[T]):
                 ``track_sources``): the raw extraction results are recorded
                 under this id so the document's contributions can later be
                 rolled back via ``remove_source``.
+            content_hash: Optional hash of the source content (recorded in
+                the source ledger for change detection).
 
         Returns:
             Self (the current instance).
         """
         logger.debug("stage=feed_text_start input_chars=%d", len(text))
         self._pending_source_id = source_id
+        self._pending_content_hash = content_hash
         try:
             extracted_data = self._extract_data(text)
             logger.debug("stage=extract_done")
@@ -481,6 +488,7 @@ class BaseAutoType(ABC, Generic[T]):
             logger.debug("stage=data_merged")
         finally:
             self._pending_source_id = None
+            self._pending_content_hash = None
 
         self.metadata["updated_at"] = datetime.now()
 

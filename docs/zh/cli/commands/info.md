@@ -28,6 +28,7 @@ he info KA_PATH
 - **时间戳** — 创建和最后更新时间
 - **统计信息** — 节点数、边数
 - **索引状态** — 搜索索引是否已构建
+- **来源台账** — 使用 `--sources` 显示贡献过知识的文档
 
 ---
 
@@ -82,6 +83,39 @@ he info ./ka/
 | `Nodes` | 实体/项目数量 |
 | `Edges` | 关系数量 |
 | `Index` | 搜索索引状态（`Built` 或 `Not Built`） |
+
+---
+
+## 来源台账
+
+传入 `--sources` 可以同时显示哪些文档为知识库做出过贡献：
+
+```bash
+he info ./ka/ --sources
+```
+
+**输出：**
+```
+Knowledge Abstract Info
+
+Path          ./ka/
+Template      general/biography_graph
+Language      en
+Created       2024-01-15 10:30:00
+Updated       2024-01-15 10:35:22
+Nodes         25
+Edges         32
+Index         Built
+
+                        Source Ledger
+┏━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Source ID  ┃ Raw Items ┃ Content Hash                       ┃
+┡━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ doc-1      │        12 │ 9f86d081884c7d659a2febb0c0413a6e…  │
+└────────────┴───────────┴────────────────────────────────────┘
+```
+
+台账读取自知识库目录中的 `sources_nodes.json` / `sources_edges.json`，在使用 `--source` 摄取文档时写入（参见 [`he feed`](feed.md)）。如果没有台账文件，命令会输出 `No source ledger found`（未找到来源台账）提示，而不是表格。
 
 ---
 

@@ -246,6 +246,76 @@ class TestDocumentRollbackCli:
         assert "Nothing matched" in result.output
 
 
+class TestDocumentRollbackStrategies:
+    @staticmethod
+    def _strategy_ka(tmp_path, monkeypatch):
+        """A KA with two recorded sources sharing the node "Shared", plus
+        s1's own node "FromS1" — all seeded deterministically (no extraction
+        LLM): ledger entries via record_source, storage via direct add()."""
+        g = _real_ka()
+        g.metadata["template"] = "general/graph"
+        g.metadata["lang"] = "en"
+        g._node_memory.add(
+            [E(name="FromS1", type="X"), E(name="Shared", description="shared")]
+        )
+        g._node_memory.record_source(
+            "s1",
+            [E(name="FromS1", type="X").model_dump(), E(name="Shared").model_dump()],
+        )
+        g._node_memory.record_source("s2", [E(name="Shared").model_dump()])
+        # The edge ledger needs the source too, or remove_source bails out
+        # with KeyError before any node is touched.
+        g._edge_memory.record_source("s1", [])
+        g._edge_memory.record_source("s2", [])
+        ka = tmp_path / "ka"
+        g.dump(ka)
+        monkeypatch.setattr(climod.Template, "create", staticmethod(lambda *a, **k: g))
+        return ka, g
+
+    def test_remove_document_strategy_touched(self, tmp_path, monkeypatch):
+        ka, _ = self._strategy_ka(tmp_path, monkeypatch)
+
+        result = runner.invoke(
+            app,
+            ["remove", str(ka), "--document", "s1", "--strategy", "touched", "-y"],
+        )
+
+        assert result.exit_code == 0, result.output
+        names = [n["name"] for n in _data(ka)["nodes"]]
+        # Touched deletes every key s1 touched outright — "Shared" is gone
+        # even though s2 also contributed it (no re-merge step).
+        assert "FromS1" not in names
+        assert "Shared" not in names
+        assert "Apple" in names and "Google" in names
+        assert "Document Rollback Report" in result.output
+        assert "FromS1" in result.output
+        assert "Shared" in result.output
+
+    def test_remove_document_strategy_exact_remerges(self, tmp_path, monkeypatch):
+        from ontomem.merger import MergeStrategy, create_merger
+
+        ka, g = self._strategy_ka(tmp_path, monkeypatch)
+        # Deterministic re-merge: the default LLM.BALANCED merger would need
+        # a real LLM; MERGE_FIELD keeps this offline.
+        g._node_memory._merger = create_merger(
+            MergeStrategy.MERGE_FIELD, key_extractor=lambda x: x.name
+        )
+
+        result = runner.invoke(
+            app,
+            ["remove", str(ka), "--document", "s1", "--strategy", "exact", "-y"],
+        )
+
+        assert result.exit_code == 0, result.output
+        names = [n["name"] for n in _data(ka)["nodes"]]
+        # "Shared" survives: re-merged from s2's raw contribution. "FromS1"
+        # (s1's sole contribution) is gone.
+        assert "Shared" in names
+        assert "FromS1" not in names
+        assert "Document Rollback Report" in result.output
+        assert "Shared" in result.output
+
+
 class TestArgumentValidation:
     def test_hard_and_soft_delete_are_mutually_exclusive(self, ka_env):
         ka, _ = ka_env

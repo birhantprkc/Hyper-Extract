@@ -40,6 +40,8 @@ he parse INPUT [OPTIONS]
 he parse document.md -t general/biography_graph -o ./output/ -l zh
 ```
 
+使用 `--source` 标注来源，之后可用 [`he remove --document`](remove.md) 按文档回滚。
+
 ### 交互式模板选择
 
 省略 `-t` 以从可用模板中选择：

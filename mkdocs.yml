@@ -95,6 +95,7 @@ plugins:
                     - python/guides/using-methods.md
                     - python/guides/working-with-autotypes.md
                     - python/guides/provider-configuration.md
+                    - python/guides/provenance.md
                     - python/guides/custom-templates.md
                     - python/guides/search-and-chat.md
                     - python/guides/incremental-updates.md
@@ -191,6 +192,7 @@ plugins:
                     - zh/python/guides/using-methods.md
                     - zh/python/guides/working-with-autotypes.md
                     - zh/python/guides/provider-configuration.md
+                    - zh/python/guides/provenance.md
                     - zh/python/guides/custom-templates.md
                     - zh/python/guides/search-and-chat.md
                     - zh/python/guides/incremental-updates.md

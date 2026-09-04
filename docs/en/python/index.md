@@ -94,6 +94,9 @@ ka = Template.create(template_path, language="en")
 # Extract
 result = ka.parse(text)           # New extraction
 result.feed_text(text)            # Add to existing
+result.feed_text(text, source_id="doc-1")  # attribute the source
+...
+result.remove_source("doc-1")              # roll back this document's facts
 
 # Delete (graph-family KAs)
 result.remove_nodes("Apple")      # Hard-delete a node + its orphan edges

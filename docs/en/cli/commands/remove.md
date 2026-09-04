@@ -19,6 +19,7 @@ he remove KA_PATH [OPTIONS]
 | `--edit-node TEXT` | — | Node key to **soft-edit** (LLM rewrites it minus `--fact`) |
 | `--edit-edge TEXT` | — | Edge key to **soft-edit** |
 | `--document TEXT` | — | **Roll back** all knowledge contributed by a source document (requires the KA to have been fed with `--source`) |
+| `--strategy` | `exact` | Rollback strategy for `--document`: `exact` or `touched` |
 | `--fact TEXT` | — | The fact to remove from the `--edit-node` / `--edit-edge` item |
 | `--instruction TEXT` | — | Free-form edit instruction (alternative to `--fact`) |
 | `--dry-run` | off | Preview the change without persisting it |
@@ -92,7 +93,7 @@ he build-index ./ka/
 
 ## Document Rollback: remove a whole source document
 
-When documents were ingested with a source attribution, their entire contribution can be rolled back — including keys that other documents also contributed to (those are re-merged from the surviving sources).
+When documents were ingested with a source attribution, their entire contribution can be rolled back:
 
 ```bash
 # Ingest with attribution
@@ -101,9 +102,19 @@ he feed ./ka/ doc2.md --source doc-2
 
 # Later: roll back everything doc-1 contributed ("b" remains via doc-2 if shared)
 he remove ./ka/ --document doc-1
+
+# Or delete every key the document touched, even when other documents share it
+he remove ./ka/ --document doc-1 --strategy touched
 ```
 
-Requires the KA's memories to track sources (graph-family KAs do by default). The rollback re-merges affected keys from the surviving sources' raw results — deterministic with classic merge strategies; LLM strategies preserve semantics with approximate wording. If the document has no recorded contributions, the command reports `Nothing matched` and exits successfully.
+### Rollback Strategies (`--strategy`)
+
+| Strategy | Behavior |
+|----------|----------|
+| `exact` (default) | Keys contributed solely by the removed document are deleted; keys **shared** with other documents are re-merged from the surviving sources' raw results — deterministic with classic merge strategies (LLM strategies preserve semantics with approximate wording) |
+| `touched` | Every key the document touched is deleted outright, including keys other documents also contributed to |
+
+Requires the KA's memories to track sources (graph-family KAs do by default). If the document has no recorded contributions, the command reports `Nothing matched` and exits successfully.
 
 ---
 

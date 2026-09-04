@@ -98,11 +98,16 @@ class GraphEditMixin:
         """
         if not source_id or not self._node_memory.track_sources:
             return
+        content_hash = self._pending_content_hash
         self._node_memory.record_source(
-            source_id, [node.model_dump() for node in nodes]
+            source_id,
+            [node.model_dump() for node in nodes],
+            content_hash=content_hash,
         )
         self._edge_memory.record_source(
-            source_id, [edge.model_dump() for edge in edges]
+            source_id,
+            [edge.model_dump() for edge in edges],
+            content_hash=content_hash,
         )
 
     def _adopt_source_ledger(self, other, source_id: str) -> None:
@@ -162,6 +167,32 @@ class GraphEditMixin:
             "index_patched": node_report["index_patched"]
             and edge_report["index_patched"],
         }
+
+    # ==================== Source Ledger (read) ====================
+
+    def sources(self) -> dict[str, dict[str, Any]]:
+        """Summarize the source ledger (node and edge memories combined).
+
+        Returns:
+            Dict mapping source_id to {raw_items, content_hash}. Raw-item
+            counts are from the node ledger; edges share the same sources.
+        """
+        summary: dict[str, dict[str, Any]] = {}
+        for source_id, info in self._node_memory.sources().items():
+            summary[source_id] = dict(info)
+        # Edge memories may know sources the node ledger lacks (empty-node
+        # extractions); surface them too.
+        for source_id, info in self._edge_memory.sources().items():
+            if source_id not in summary:
+                summary[source_id] = dict(info)
+        return summary
+
+    def source_content_hash(self, source_id: str) -> str | None:
+        """Return the recorded content hash of a source (None if unknown)."""
+        record = self._node_memory._sources.get(
+            source_id
+        ) or self._edge_memory._sources.get(source_id)
+        return record.content_hash if record else None
 
     # ==================== Removal ====================
 

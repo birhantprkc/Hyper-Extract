@@ -40,6 +40,8 @@ Extract from a single file:
 he parse document.md -t general/biography_graph -o ./output/ -l en
 ```
 
+Adding `--source` records the document's source attribution, which enables per-document rollback later via [`he remove --document`](remove.md).
+
 ### Interactive Template Selection
 
 Omit `-t` to select from available templates:

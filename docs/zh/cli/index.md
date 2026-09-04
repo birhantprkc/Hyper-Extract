@@ -30,18 +30,18 @@ he --version
 
 | 命令 | 用途 | 常用参数 |
 |---------|---------|--------------|
-| `he parse` | 从文档提取知识 | `-t` 模板, `-o` 输出, `-l` 语言 |
+| `he parse` | 从文档提取知识 | `-t` 模板, `-o` 输出, `-l` 语言, `--source` 来源标注 |
 | `he show` | 可视化知识图谱 | — |
 | `he export obsidian` | 导出为 Obsidian 知识库 | `-o` 输出, `--name`, `-f` 强制 |
 | `he export graphml` | 将二元图导出为 GraphML | `-o` 输出文件 |
 | `he export csv` | 将节点/边导出为 CSV 表 | `-o` 目录, `-f` 强制 |
 | `he search` | 知识库语义搜索 | `-n` top-k 结果数 |
 | `he talk` | 与知识库对话 | `-i` 交互模式, `-q` 查询 |
-| `he feed` | 增量添加文档 | — |
+| `he feed` | 增量添加文档 | `--source` 来源标注 |
 | `he info` | 显示知识库统计信息 | — |
 | `he build-index` | 构建/重建搜索索引 | `-f` 强制重建 |
 | `he clean` | 删除 KA 的索引（或整个 KA） | `-a` all, `-y` yes |
-| `he remove` | 按键删除节点/边，或软删除单条事实 | `--node`、`--edge`、`--edit-node`、`--fact`、`--dry-run` |
+| `he remove` | 按键删除节点/边，或软删除单条事实 | `--node`、`--edge`、`--edit-node`、`--fact`、`--dry-run`、`--document`、`--strategy` |
 | `he list` | 列出模板和方法 | `template` 或 `method` |
 | `he template validate` | 校验模板 YAML | `--json`、`--all` |
 | `he config` | 管理配置 | `init`, `show`, `llm`, `embedder` |

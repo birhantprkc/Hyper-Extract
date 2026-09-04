@@ -92,6 +92,28 @@ The merge process handles:
 
 ---
 
+## Source Attribution
+
+Pass `--source` with a document id to attribute the document you are feeding:
+
+```bash
+he feed ./ka/ doc1.md --source doc-1
+```
+
+Attribution records the document in the KA's **source ledger** together with a content hash of the input, which enables:
+
+- **Change detection** — feeding the same source again with unchanged content prints `unchanged (content hash matches) — nothing to do` and skips entirely: **zero LLM calls**. Use `--refeed` to force re-ingestion:
+
+    ```bash
+    he feed ./ka/ doc1.md --source doc-1 --refeed
+    ```
+
+- **Per-document rollback** — everything this document contributed can later be rolled back with [`he remove --document doc-1`](remove.md)
+
+Inspect the ledger with [`he info --sources`](info.md#source-ledger) or `ka.sources()` in Python. See the [Source Attribution & Provenance](../../python/guides/provenance.md) guide for the full picture.
+
+---
+
 ## Workflow Example
 
 ### Building a Research Knowledge Abstract

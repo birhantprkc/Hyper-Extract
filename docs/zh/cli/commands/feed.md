@@ -92,6 +92,28 @@ cat new_content.md | he feed ./ka/ -
 
 ---
 
+## 来源标注
+
+传入 `--source` 指定文档 id，为正在喂养的文档标注来源：
+
+```bash
+he feed ./ka/ doc1.md --source doc-1
+```
+
+标注会将该文档连同输入内容的哈希值一起记入知识库的**来源台账**，从而支持：
+
+- **变更检测** — 同一来源再次喂养且内容未变化时，命令会输出 `unchanged (content hash matches) — nothing to do` 并直接跳过：**零 LLM 调用**。使用 `--refeed` 强制重新摄取：
+
+    ```bash
+    he feed ./ka/ doc1.md --source doc-1 --refeed
+    ```
+
+- **按文档回滚** — 该文档贡献的全部知识之后可用 [`he remove --document doc-1`](remove.md) 回滚
+
+使用 [`he info --sources`](info.md) 或 Python 的 `ka.sources()` 查看台账。完整介绍见[来源标注与溯源](../../python/guides/provenance.md)指南。
+
+---
+
 ## 工作流程示例
 
 ### 构建研究知识库

@@ -403,15 +403,29 @@ class AutoHypergraph(
         self.clear_index()
 
     def _update_data_state(self, incoming_data: AutoHypergraphSchema) -> None:
-        """Merge incoming hypergraph data into current state."""
+        """Merge incoming hypergraph data into current state.
+
+        The vector index is patched in place: only the incoming nodes/edges
+        are re-embedded, instead of dropping the whole index.
+        """
         if self.empty():
             self._set_data_state(incoming_data)
-        else:
+            return
+
+        # Suspend index invalidation while merging; re-embed only the
+        # affected keys afterwards.
+        with self._node_memory.suspended_index(), self._edge_memory.suspended_index():
             if incoming_data.nodes:
                 self._node_memory.add(incoming_data.nodes)
             if incoming_data.edges:
                 self._edge_memory.add(incoming_data.edges)
-            self.clear_index()
+
+        if incoming_data.nodes:
+            node_keys = {self.key_extractor(n) for n in incoming_data.nodes}
+            self._node_memory.sync_index(upserted_keys=node_keys)
+        if incoming_data.edges:
+            edge_keys = {self.key_extractor(e) for e in incoming_data.edges}
+            self._edge_memory.sync_index(upserted_keys=edge_keys)
 
     @property
     def data(self) -> AutoHypergraphSchema:

@@ -28,6 +28,7 @@ Shows metadata and statistics for a knowledge abstract:
 - **Timestamps** — Creation and last update times
 - **Statistics** — Node count, edge count
 - **Index status** — Whether search index is built
+- **Source ledger** — Contributing documents, shown with `--sources`
 
 ---
 
@@ -82,6 +83,39 @@ he info ./ka/
 | `Nodes` | Number of entities/items |
 | `Edges` | Number of relationships |
 | `Index` | Search index status (`Built` or `Not Built`) |
+
+---
+
+## Source Ledger
+
+Pass `--sources` to also show which documents contributed to the knowledge abstract:
+
+```bash
+he info ./ka/ --sources
+```
+
+**Output:**
+```
+Knowledge Abstract Info
+
+Path          ./ka/
+Template      general/biography_graph
+Language      en
+Created       2024-01-15 10:30:00
+Updated       2024-01-15 10:35:22
+Nodes         25
+Edges         32
+Index         Built
+
+                        Source Ledger
+┏━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Source ID  ┃ Raw Items ┃ Content Hash                       ┃
+┡━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ doc-1      │        12 │ 9f86d081884c7d659a2febb0c0413a6e…  │
+└────────────┴───────────┴────────────────────────────────────┘
+```
+
+The ledger is read from `sources_nodes.json` / `sources_edges.json` in the KA directory and is written when documents are ingested with `--source` (see [`he feed`](feed.md)). If no ledger exists, the command prints a `No source ledger found` hint instead of the table.
 
 ---
 

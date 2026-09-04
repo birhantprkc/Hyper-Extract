@@ -94,6 +94,9 @@ ka = Template.create(template_path, language="zh")
 # 提取
 result = ka.parse(text)           # 新提取
 result.feed_text(text)            # 添加到现有
+result.feed_text(text, source_id="doc-1")  # 标注来源
+...
+result.remove_source("doc-1")              # 回滚该文档贡献的事实
 
 # 删除（图谱类 KA）
 result.remove_nodes("Apple")      # 硬删除节点及其孤儿边

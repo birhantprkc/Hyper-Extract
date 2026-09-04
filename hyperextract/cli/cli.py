@@ -1,5 +1,6 @@
 """CLI entry point for Hyper-Extract."""
 
+import hashlib
 from pathlib import Path
 
 import typer
@@ -687,9 +688,16 @@ app.add_typer(export_app, name="export")
 
 
 @app.command(name="info")
-def info(ka_path: str = typer.Argument(..., help="Knowledge Abstract directory")):
+def info(
+    ka_path: str = typer.Argument(..., help="Knowledge Abstract directory"),
+    sources: bool = typer.Option(
+        False,
+        "--sources",
+        help="Show the source ledger (documents that contributed to this KA)",
+    ),
+):
     """View Knowledge Abstract information and statistics."""
-    logger.info("command=info ka_path=%s", ka_path)
+    logger.info("command=info ka_path=%s sources=%s", ka_path, sources)
     import json
 
     path = validate_ka_with_data(ka_path)
@@ -734,6 +742,48 @@ def info(ka_path: str = typer.Argument(..., help="Knowledge Abstract directory")
     )
 
     console.print(table)
+
+    if sources:
+        sources_table = Table(title="Source Ledger", show_header=True)
+        sources_table.add_column("Source ID", style="cyan")
+        sources_table.add_column("Raw Items", justify="right")
+        sources_table.add_column("Content Hash")
+
+        ledger_files = [
+            (path / "sources_nodes.json", "nodes"),
+            (path / "sources_edges.json", "edges"),
+        ]
+        combined: dict = {}
+        for ledger_path, _kind in ledger_files:
+            if not ledger_path.exists():
+                continue
+            try:
+                entries = json.loads(ledger_path.read_text(encoding="utf-8"))
+            except Exception as e:
+                logger.warning(
+                    "sources_ledger_read_failed path=%s error=%s", ledger_path, e
+                )
+                continue
+            for entry in entries:
+                sid = entry.get("source_id")
+                if sid is None:
+                    continue
+                record = combined.setdefault(
+                    sid, {"raw_items": 0, "content_hash": entry.get("content_hash")}
+                )
+                record["raw_items"] += len(entry.get("raw_items", []))
+
+        if combined:
+            for sid, info_row in sorted(combined.items()):
+                sources_table.add_row(
+                    sid, str(info_row["raw_items"]), info_row["content_hash"] or "—"
+                )
+            console.print(sources_table)
+        else:
+            console.print(
+                "[yellow]No source ledger found.[/yellow] "
+                "Feed documents with --source to enable per-document rollback."
+            )
 
 
 @app.command(name="search")
@@ -940,6 +990,11 @@ def feed(
         "--source",
         help="Source attribution (document id) for per-document rollback later (he remove --document)",
     ),
+    refeed: bool = typer.Option(
+        False,
+        "--refeed",
+        help="Re-ingest even if this source's content hash is unchanged",
+    ),
 ):
     """Append knowledge to an existing Knowledge Abstract."""
     logger.info("command=feed ka_path=%s input=%s", ka_path, input)
@@ -985,9 +1040,24 @@ def feed(
         text = read_input(input)
         console.print(f"[dim]Input text: {len(text)} characters[/dim]")
 
+        # Change detection: skip unchanged sources without any LLM calls.
+        text_hash_to_record = None
+        if source:
+            text_hash_to_record = hashlib.sha256(text.encode("utf-8")).hexdigest()
+            if not refeed:
+                recorded = ka.source_content_hash(source)
+                if recorded == text_hash_to_record:
+                    logger.info("stage=source_unchanged source=%s", source)
+                    console.print(
+                        f"[yellow]Source '{source}' is unchanged (content hash "
+                        "matches) — nothing to do.[/yellow] "
+                        "Use --refeed to re-ingest anyway."
+                    )
+                    raise typer.Exit(0)
+
         progress.update(task, description="Appending knowledge...")
         logger.debug("stage=feed_text_invoked")
-        ka.feed_text(text, source_id=source)
+        ka.feed_text(text, source_id=source, content_hash=text_hash_to_record)
         logger.info("stage=knowledge_appended chars=%d", len(text))
 
         progress.update(task, description="Saving data...")
@@ -1151,6 +1221,12 @@ def remove_items(
         help="Remove all knowledge contributed by this source document "
         "(requires the KA to have been fed with --source)",
     ),
+    strategy: str = typer.Option(
+        "exact",
+        "--strategy",
+        help="Rollback strategy for --document: exact (re-merge surviving "
+        "sources) or touched (delete all affected keys)",
+    ),
 ):
     """Delete nodes/edges by key, remove a fact (LLM-assisted), or roll back a whole document.
 
@@ -1210,8 +1286,14 @@ def remove_items(
 
     try:
         if document:
+            if strategy not in ("exact", "touched"):
+                console.print(
+                    f"[red]Error:[/red] Unknown strategy: {strategy!r} "
+                    "(use exact or touched)."
+                )
+                raise typer.Exit(1)
             try:
-                report = ka.remove_source(document, strategy="exact")
+                report = ka.remove_source(document, strategy=strategy)
             except KeyError:
                 console.print(
                     f"[yellow]Nothing matched — no recorded contributions "
