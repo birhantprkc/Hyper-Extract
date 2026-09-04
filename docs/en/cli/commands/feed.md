@@ -203,3 +203,9 @@ he feed ./ka/ doc.md -t general/biography_graph
 - [`he parse`](parse.md) — Create new knowledge abstract
 - [`he info`](info.md) — View knowledge abstract statistics
 - [`he build-index`](build-index.md) — Rebuild search index after feeding
+
+## See Also
+
+- [`he remove --document`](remove.md) — roll back a whole source document
+- [`he tag`](tag.md) — tag sources for scoped search
+- [Managing Documents Over Time](managing-documents.md) — the complete lifecycle guide

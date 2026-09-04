@@ -198,6 +198,17 @@ he show ./output/
 
 ---
 
+## What's Next?
+
+Your knowledge abstract is a living artifact — as your source documents change:
+
+- **Update** a document: `he feed ./ka/ updated-doc.md --source doc-1` (re-feed under the same source to upsert)
+- **Roll back** a document: `he remove ./ka/ --document doc-1`
+- **Tag and scope** your searches: `he tag ./ka/ --source doc-1 --add legal`
+- **Audit** the ledger: `he info ./ka/ --sources`
+
+→ [Managing Documents Over Time](../cli/commands/managing-documents.md) — the complete guide
+
 ## Complete Workflow
 
 Here's the typical workflow:

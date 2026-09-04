@@ -140,3 +140,9 @@ Works for graph, hypergraph, and temporal/spatial graph knowledge abstracts.
 - [`he clean`](clean.md) — remove the search index or the whole KA
 - [`he show`](show.md) — inspect keys before deleting
 - [`he build-index`](build-index.md) — rebuild the search index after removal
+
+## See Also
+
+- [`he feed --source`](feed.md) — attributed ingestion (the other half of the lifecycle)
+- [`he tag`](tag.md) — tag sources for scoped search
+- [Managing Documents Over Time](managing-documents.md) — the complete lifecycle guide

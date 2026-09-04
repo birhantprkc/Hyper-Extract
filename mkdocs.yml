@@ -78,6 +78,7 @@ plugins:
                     - cli/commands/build-index.md
                     - cli/commands/clean.md
                     - cli/commands/remove.md
+                    - cli/commands/managing-documents.md
                     - cli/commands/search.md
                     - cli/commands/tag.md
                     - cli/commands/talk.md
@@ -176,6 +177,7 @@ plugins:
                     - zh/cli/commands/build-index.md
                     - zh/cli/commands/clean.md
                     - zh/cli/commands/remove.md
+                    - zh/cli/commands/managing-documents.md
                     - zh/cli/commands/search.md
                     - zh/cli/commands/tag.md
                     - zh/cli/commands/talk.md

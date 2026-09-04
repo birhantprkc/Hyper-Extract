@@ -140,3 +140,9 @@ ka.dump("./ka/")  # 持久化
 - [`he clean`](clean.md) — 删除搜索索引或整个 KA
 - [`he show`](show.md) — 删除前查看 key
 - [`he build-index`](build-index.md) — 删除后重建搜索索引
+
+## 另请参阅
+
+- [`he feed --source`](feed.md) — 来源标注摄取（生命周期的另一半）
+- [`he tag`](tag.md) — 为来源打标签以启用范围检索
+- [管理文档的生命周期](managing-documents.md) — 完整生命周期指南

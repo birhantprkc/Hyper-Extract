@@ -203,3 +203,9 @@ he feed ./ka/ doc.md -t general/biography_graph
 - [`he parse`](parse.md) — 创建新知识库
 - [`he info`](info.md) — 查看知识库统计信息
 - [`he build-index`](build-index.md) — Feed 后重建搜索索引
+
+## 另请参阅
+
+- [`he remove --document`](remove.md) — 回滚整份来源文档
+- [`he tag`](tag.md) — 为来源打标签以启用范围检索
+- [管理文档的生命周期](managing-documents.md) — 完整生命周期指南

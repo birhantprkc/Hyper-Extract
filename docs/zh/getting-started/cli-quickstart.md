@@ -193,6 +193,17 @@ he show ./output/
 
 ---
 
+## 下一步？
+
+你的知识摘要是活的——随来源文档的变化持续演化：
+
+- **更新**文档：`he feed ./ka/ updated-doc.md --source doc-1`（同 source 重喂即 upsert）
+- **回滚**文档：`he remove ./ka/ --document doc-1`
+- **打标签并范围检索**：`he tag ./ka/ --source doc-1 --add legal`
+- **审计**来源账本：`he info ./ka/ --sources`
+
+→ [管理文档的生命周期](../cli/commands/managing-documents.md) — 完整指南
+
 ## 完整工作流程
 
 以下是典型的工作流程：
