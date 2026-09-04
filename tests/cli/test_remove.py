@@ -108,6 +108,28 @@ class TestHardDeleteCli:
         assert [n["name"] for n in _data(ka)["nodes"]] == ["Apple", "Google"]
         assert not list(ka.glob("data.json.bak.*"))
 
+    def test_built_index_is_patched_not_discarded(self, tmp_path, monkeypatch):
+        """With a real built index, he remove patches it in place."""
+        g = _real_ka()
+        g.metadata["template"] = "general/graph"
+        g.metadata["lang"] = "en"
+        g.build_index()
+        ka = tmp_path / "ka"
+        g.dump(ka)
+        assert (ka / "index" / "node_index" / "index.faiss").exists()
+        monkeypatch.setattr(climod.Template, "create", staticmethod(lambda *a, **k: g))
+
+        result = runner.invoke(app, ["remove", str(ka), "--node", "Apple", "-y"])
+
+        assert result.exit_code == 0, result.output
+        assert "patched in place" in result.output
+        # The index survives, and its docstore no longer holds the removed node.
+        assert (ka / "index" / "node_index" / "index.faiss").exists()
+        docstore = (ka / "index" / "node_index" / "index.pkl").read_bytes()
+        assert b"Apple" not in docstore
+        assert b"Google" in docstore
+        assert [n["name"] for n in _data(ka)["nodes"]] == ["Google"]
+
     def test_no_match_reports_and_writes_nothing(self, ka_env):
         ka, _ = ka_env
         result = runner.invoke(app, ["remove", str(ka), "--node", "Ghost", "-y"])

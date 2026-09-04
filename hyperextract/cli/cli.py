@@ -1223,6 +1223,8 @@ def remove_items(
         table.add_column("Field")
         table.add_column("Items")
         for field, items in report.items():
+            if field == "index_patched":
+                continue
             table.add_row(field, "\n".join(items) if items else "—")
         console.print(table)
         removed_any = any(
@@ -1262,11 +1264,18 @@ def remove_items(
 
     ka.dump(path)
 
-    # The in-memory index was invalidated by the mutation; drop the stale
-    # on-disk index so search never serves deleted knowledge.
-    index_dir = path / "index"
-    if index_dir.exists():
-        shutil.rmtree(index_dir)
+    if report.get("index_patched", False):
+        # The vector index was patched in place and persisted by dump() —
+        # search stays usable without a rebuild.
+        console.print("[dim]Search index patched in place — no rebuild needed.[/dim]")
+    else:
+        # No index was built (or patching fell back): drop any stale on-disk
+        # index so search never serves deleted knowledge.
+        index_dir = path / "index"
+        if index_dir.exists():
+            shutil.rmtree(index_dir)
+        console.print(
+            f"[dim]Rebuild the search index with: he build-index {ka_path}[/dim]"
+        )
 
     console.print(f"[bold green]Done![/bold green] Knowledge Abstract updated: {path}")
-    console.print(f"[dim]Rebuild the search index with: he build-index {ka_path}[/dim]")

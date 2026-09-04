@@ -13,6 +13,7 @@ from typing import (
     TypeVar,
 )
 
+from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage
@@ -89,6 +90,72 @@ DEFAULT_EDIT_PROMPT = (
 )
 
 
+def _patch_vector_index(
+    memory: OMem,
+    vs,
+    removed_keys: set,
+    upserted_keys: set,
+) -> bool:
+    """Partially update a built FAISS index for the affected keys.
+
+    Deletes the vectors of ``removed_keys``/``upserted_keys`` and re-embeds
+    only the upserted items — instead of OMem's default behavior of dropping
+    the whole index (which forces a full re-embed on next use).
+
+    The ``key → vector_id`` map is derived by scanning the docstore, which
+    already stores the key per vector, so no storage-format change is needed.
+
+    Args:
+        memory: The OMem instance (used for key-extraction serialization).
+        vs: The langchain FAISS vectorstore held by ``memory._index``.
+        removed_keys: Keys whose vectors must be deleted.
+        upserted_keys: Keys present in ``memory`` whose vectors must be
+            re-embedded (delete old + insert new).
+
+    Returns:
+        True if the index was patched in place; False on any failure, in
+        which case the caller must drop the index and let OMem rebuild it
+        fully (the pre-partial-patch behavior).
+
+    Note:
+        Uses ``OMem._index`` / ``_serialize_for_embedding`` — protected
+        surface of the same-author ontomem package until a public
+        partial-update API exists there.
+    """
+    try:
+        id_by_key = {}
+        for doc_id, doc in vs.docstore._dict.items():
+            doc_key = doc.metadata.get("key")
+            if doc_key is not None:
+                id_by_key[doc_key] = doc_id
+
+        stale_ids = [
+            id_by_key[k] for k in removed_keys | upserted_keys if k in id_by_key
+        ]
+        if stale_ids:
+            vs.delete(stale_ids)
+
+        documents = []
+        for key in upserted_keys:
+            item = memory.get(key)
+            if item is None:
+                continue
+            documents.append(
+                Document(
+                    page_content=memory._serialize_for_embedding(item),
+                    metadata={"key": key, "raw": item.model_dump()},
+                )
+            )
+        if documents:
+            vs.add_documents(documents)
+        return True
+    except Exception as e:
+        logger.warning(
+            "stage=index_patch_failed error=%s falling_back_to_full_rebuild", e
+        )
+        return False
+
+
 class GraphEditMixin:
     """Hard-delete and LLM-assisted soft-delete for graph-family AutoTypes.
 
@@ -104,16 +171,23 @@ class GraphEditMixin:
         """Hard-delete nodes by key, together with any edges they anchor.
 
         Edges touching a removed node would dangle, so every such edge is
-        removed as well. The search index is invalidated; the next search or
-        `build_index` rebuilds it.
+        removed as well. When the search index is built, it is patched in
+        place (only the affected vectors are deleted) instead of discarded.
 
         Args:
             keys: Node keys (as produced by `node_key_extractor`).
 
         Returns:
-            Report dict with `removed_nodes`, `not_found_nodes`, and
-            `removed_orphan_edges`.
+            Report dict with `removed_nodes`, `not_found_nodes`,
+            `removed_orphan_edges`, and `index_patched`.
         """
+        node_vs = self._node_memory._index
+        edge_vs = self._edge_memory._index
+        # Detach the vectorstores so OMem's remove() can't discard them; they
+        # are patched and reattached after the storage mutations below.
+        self._node_memory._index = None
+        self._edge_memory._index = None
+
         removed: list[str] = []
         not_found: list[str] = []
         removed_node_keys = set()
@@ -133,39 +207,77 @@ class GraphEditMixin:
                     if self._edge_memory.remove(edge_key):
                         orphaned.append(edge_key)
 
+        node_ok = True
+        if node_vs is not None:
+            node_ok = _patch_vector_index(
+                self._node_memory, node_vs, removed_node_keys, set()
+            )
+            self._node_memory._index = node_vs if node_ok else None
+        edge_ok = True
+        if edge_vs is not None:
+            edge_ok = _patch_vector_index(
+                self._edge_memory, edge_vs, set(orphaned), set()
+            )
+            self._edge_memory._index = edge_vs if edge_ok else None
+        index_patched = (node_vs is None or node_ok) and (edge_vs is None or edge_ok)
+
         logger.info(
-            "stage=remove_nodes removed=%d not_found=%d orphan_edges=%d",
+            "stage=remove_nodes removed=%d not_found=%d orphan_edges=%d index_patched=%s",
             len(removed),
             len(not_found),
             len(orphaned),
+            index_patched and (node_vs is not None or edge_vs is not None),
         )
         return {
             "removed_nodes": removed,
             "not_found_nodes": not_found,
             "removed_orphan_edges": orphaned,
+            "index_patched": index_patched
+            and (node_vs is not None or edge_vs is not None),
         }
 
     def remove_edges(self, *keys: str) -> dict:
         """Hard-delete edges by key.
 
+        When the search index is built, it is patched in place (only the
+        affected vectors are deleted) instead of discarded.
+
         Args:
             keys: Edge keys (as produced by `edge_key_extractor`).
 
         Returns:
-            Report dict with `removed_edges` and `not_found_edges`.
+            Report dict with `removed_edges`, `not_found_edges`, and
+            `index_patched`.
         """
+        edge_vs = self._edge_memory._index
+        self._edge_memory._index = None
+
         removed: list[str] = []
         not_found: list[str] = []
+        removed_edge_keys = set()
         for key in keys:
             if self._edge_memory.remove(key):
                 removed.append(key)
+                removed_edge_keys.add(key)
             else:
                 not_found.append(key)
+
+        edge_ok = True
+        if edge_vs is not None:
+            edge_ok = _patch_vector_index(
+                self._edge_memory, edge_vs, removed_edge_keys, set()
+            )
+            self._edge_memory._index = edge_vs if edge_ok else None
+        index_patched = edge_vs is None or edge_ok
 
         logger.info(
             "stage=remove_edges removed=%d not_found=%d", len(removed), len(not_found)
         )
-        return {"removed_edges": removed, "not_found_edges": not_found}
+        return {
+            "removed_edges": removed,
+            "not_found_edges": not_found,
+            "index_patched": index_patched,
+        }
 
     # ==================== Soft Delete (LLM-assisted) ====================
 
@@ -179,6 +291,9 @@ class GraphEditMixin:
     ) -> dict:
         """Soft-delete a fact from a node via LLM-assisted rewrite.
 
+        When the search index is built, its vector for this node is updated
+        in place (re-embedded once) instead of discarding the index.
+
         Args:
             key: Node key to edit.
             remove_fact: Fact to remove from the node (exclusive with
@@ -188,18 +303,37 @@ class GraphEditMixin:
             dry_run: Return the proposed rewrite without applying it.
 
         Returns:
-            Report dict with `changed`, `applied`, `old`, and `new`.
+            Report dict with `changed`, `applied`, `old`, `new`, and
+            `index_patched`.
         """
-        return self._edit_item(
-            self._node_memory,
-            self.node_editor,
-            self.node_key_extractor,
-            "node",
-            key,
-            remove_fact,
-            instruction,
-            dry_run,
-        )
+        node_vs = self._node_memory._index
+        self._node_memory._index = None
+        try:
+            report = self._edit_item(
+                self._node_memory,
+                self.node_editor,
+                self.node_key_extractor,
+                "node",
+                key,
+                remove_fact,
+                instruction,
+                dry_run,
+            )
+        except Exception:
+            self._node_memory._index = node_vs
+            raise
+
+        if node_vs is not None:
+            if report["changed"]:
+                index_patched = _patch_vector_index(
+                    self._node_memory, node_vs, set(), {key}
+                )
+                self._node_memory._index = node_vs if index_patched else None
+            else:
+                self._node_memory._index = node_vs
+                index_patched = True
+            report["index_patched"] = index_patched
+        return report
 
     def edit_edge(
         self,
@@ -211,6 +345,9 @@ class GraphEditMixin:
     ) -> dict:
         """Soft-delete a fact from an edge via LLM-assisted rewrite.
 
+        When the search index is built, its vector for this edge is updated
+        in place (re-embedded once) instead of discarding the index.
+
         Args:
             key: Edge key to edit.
             remove_fact: Fact to remove from the edge (exclusive with
@@ -220,18 +357,37 @@ class GraphEditMixin:
             dry_run: Return the proposed rewrite without applying it.
 
         Returns:
-            Report dict with `changed`, `applied`, `old`, and `new`.
+            Report dict with `changed`, `applied`, `old`, `new`, and
+            `index_patched`.
         """
-        return self._edit_item(
-            self._edge_memory,
-            self.edge_editor,
-            self.edge_key_extractor,
-            "edge",
-            key,
-            remove_fact,
-            instruction,
-            dry_run,
-        )
+        edge_vs = self._edge_memory._index
+        self._edge_memory._index = None
+        try:
+            report = self._edit_item(
+                self._edge_memory,
+                self.edge_editor,
+                self.edge_key_extractor,
+                "edge",
+                key,
+                remove_fact,
+                instruction,
+                dry_run,
+            )
+        except Exception:
+            self._edge_memory._index = edge_vs
+            raise
+
+        if edge_vs is not None:
+            if report["changed"]:
+                index_patched = _patch_vector_index(
+                    self._edge_memory, edge_vs, set(), {key}
+                )
+                self._edge_memory._index = edge_vs if index_patched else None
+            else:
+                self._edge_memory._index = edge_vs
+                index_patched = True
+            report["index_patched"] = index_patched
+        return report
 
 
 class AutoGraphSchema(BaseModel, Generic[NodeSchema, EdgeSchema]):

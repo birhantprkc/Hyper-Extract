@@ -79,7 +79,9 @@ he remove ./ka/ --edit-edge "Apple-acquired-Beats" \
 
 ## After removal
 
-Removal invalidates the search index (the stale `index/` directory is deleted). Rebuild it before searching or chatting again:
+When the knowledge abstract already has a search index, `he remove` **patches it in place** — only the affected vectors are deleted/re-embedded, and `he build-index` is *not* required afterwards. Search stays usable immediately.
+
+If no index had been built (or in-place patching was not possible), any stale on-disk index is removed instead; rebuild it before searching or chatting again:
 
 ```bash
 he build-index ./ka/

@@ -1,7 +1,6 @@
 """Hard delete (remove_nodes / remove_edges) and soft delete (edit_*) for
 graph-family AutoTypes (issue #84)."""
 
-
 import pytest
 from pydantic import BaseModel, Field
 
@@ -161,6 +160,126 @@ class FakeEditor:
         return self.rewritten
 
 
+class TestIndexPatching:
+    """Phase A (#84): removals/edits patch the FAISS index in place.
+
+    Assertions inspect the FAISS docstore directly (keys + re-embedded
+    page_content) — MockEmbeddings is hash-based, so semantic-search
+    result ordering is not meaningful here.
+    """
+
+    @staticmethod
+    def _docstore(memory):
+        return memory._index.docstore._dict
+
+    def test_remove_node_keeps_index_without_stale_vectors(self):
+        g = _graph()
+        g._node_memory.add(
+            [Entity(name="Apple"), Entity(name="Google"), Entity(name="Meta")]
+        )
+        g._edge_memory.add(
+            [Relation(source="Apple", target="Google", relation_type="partner")]
+        )
+        g.build_index()
+        assert g._node_memory.has_index()
+
+        report = g.remove_nodes("Apple")
+
+        assert report["index_patched"] is True
+        # Index must survive the removal (no full-rebuild fallback).
+        assert g._node_memory.has_index()
+        assert g._edge_memory.has_index()
+        # The removed node's vector and its edge's vector are gone.
+        node_keys = {d.metadata["key"] for d in self._docstore(g._node_memory).values()}
+        edge_keys = {d.metadata["key"] for d in self._docstore(g._edge_memory).values()}
+        assert node_keys == {"Google", "Meta"}
+        assert edge_keys == set()
+
+    def test_remove_node_docstore_shrinks(self):
+        g = _graph()
+        g._node_memory.add([Entity(name="A"), Entity(name="B")])
+        g.build_index()
+        size_before = len(g._node_memory._index.docstore._dict)
+
+        g.remove_nodes("A")
+
+        size_after = len(g._node_memory._index.docstore._dict)
+        assert size_after == size_before - 1
+
+    def test_edit_node_refreshes_vector(self):
+        g = _graph()
+        g._node_memory.add(
+            [Entity(name="A", description="A was founded by X. A is in Y.")]
+        )
+        g.build_index()
+        g.node_editor = FakeEditor(Entity(name="A", description="A is in Y."))
+
+        report = g.edit_node("A", remove_fact="founded by X")
+
+        assert report["index_patched"] is True
+        assert g._node_memory.has_index()
+        # Exactly one vector for the key, re-embedded with the new text.
+        docs = [
+            d
+            for d in self._docstore(g._node_memory).values()
+            if d.metadata["key"] == "A"
+        ]
+        assert len(docs) == 1
+        assert "founded by X" not in docs[0].page_content
+        assert "A is in Y" in docs[0].page_content
+
+    def test_no_index_built_falls_back_to_lazy_rebuild(self):
+        g = _graph()
+        g._node_memory.add([Entity(name="A"), Entity(name="B")])
+        # No build_index() call — nothing to patch.
+
+        report = g.remove_nodes("A")
+
+        assert report["index_patched"] is False
+        assert not g._node_memory.has_index()
+        # OMem's lazy rebuild still reflects the removal.
+        assert "A" not in {n.name for n in g.nodes}
+
+    def test_patched_index_survives_dump_load(self, tmp_path):
+        g = _graph()
+        g._node_memory.add([Entity(name="A"), Entity(name="B")])
+        g._edge_memory.add([Relation(source="A", target="B", relation_type="r")])
+        g.build_index()
+        g.remove_nodes("A")
+        g.dump(tmp_path)
+
+        reloaded = _graph()
+        reloaded.load(tmp_path)
+        assert reloaded._node_memory.has_index()
+
+        node_keys = {
+            d.metadata["key"] for d in self._docstore(reloaded._node_memory).values()
+        }
+        assert node_keys == {"B"}
+        edge_keys = {
+            d.metadata["key"] for d in self._docstore(reloaded._edge_memory).values()
+        }
+        assert edge_keys == set()
+
+    def test_hypergraph_removal_patches_index(self):
+        h = _hypergraph()
+        h._node_memory.add([Entity(name="A"), Entity(name="B"), Entity(name="C")])
+        h._edge_memory.add(
+            [HyperRelation(participants=["A", "B"], relation_type="group")]
+        )
+        h.build_index()
+
+        report = h.remove_nodes("A")
+
+        assert report["index_patched"] is True
+        assert h._node_memory.has_index()
+        node_keys = {d.metadata["key"] for d in self._docstore(h._node_memory).values()}
+        assert node_keys == {"B", "C"}
+        # The hyperedge containing the removed node is gone from the index.
+        edge_keys = {d.metadata["key"] for d in self._docstore(h._edge_memory).values()}
+        assert edge_keys == set()
+
+
 class TestSoftDelete:
     """edit_node / edit_edge: LLM-assisted fact removal with guardrails."""
 
@@ -259,9 +378,7 @@ class TestSoftDelete:
             )
         )
 
-        report = g.edit_edge(
-            "A-acquired-B", remove_fact="first announced in March"
-        )
+        report = g.edit_edge("A-acquired-B", remove_fact="first announced in March")
 
         assert report["applied"] is True
         assert "announced in March" not in g.edges[0].description
