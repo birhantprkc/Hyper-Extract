@@ -19,8 +19,10 @@ from .config import (
 )
 from .utils import (
     LOGO,
+    collect_directory_text_inputs,
     get_template_from_ka,
     read_input,
+    require_supported_text_input,
     validate_config,
     validate_ka_path,
     validate_ka_with_data,
@@ -329,12 +331,7 @@ def parse(
 
         if input_path.is_dir():
             progress.update(task, description="Processing directory...")
-            text_files = list(input_path.glob("*.txt")) + list(input_path.glob("*.md"))
-            if not text_files:
-                console.print(
-                    f"[red]Error:[/red] No .txt or .md files found in {input}"
-                )
-                raise typer.Exit(1)
+            text_files = collect_directory_text_inputs(input_path)
 
             all_text = []
             for file_path in text_files:
@@ -351,6 +348,7 @@ def parse(
             logger.info("stage=knowledge_extracted chars=%d", len(combined_text))
         else:
             progress.update(task, description="Reading input...")
+            require_supported_text_input(input)
             text = read_input(input)
             console.print(f"[dim]Input text: {len(text)} characters[/dim]")
 
@@ -1037,6 +1035,7 @@ def feed(
         ka.load(output_path)
 
         progress.update(task, description="Reading input...")
+        require_supported_text_input(input)
         text = read_input(input)
         console.print(f"[dim]Input text: {len(text)} characters[/dim]")
 

@@ -15,7 +15,9 @@ he feed KA_PATH INPUT [OPTIONS]
 | Argument | Description |
 |----------|-------------|
 | `KA_PATH` | Path to existing knowledge abstract directory |
-| `INPUT` | Input file path or `-` for stdin |
+| `INPUT` | Input file path (`.txt` or `.md`) or `-` for stdin |
+
+Supported suffixes are `.txt` and `.md` (case-insensitive, including `.TXT` and `.MD`). This CLI does not parse PDF or Office files and does not perform OCR — convert those documents to `.txt` or `.md` first. Stdin (`-`) is not suffix-checked.
 
 ## Options
 

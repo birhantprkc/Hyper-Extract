@@ -10,6 +10,10 @@ from .config import ConfigManager
 
 console = Console()
 
+TEXT_INPUT_SUFFIXES = {".txt", ".md"}
+_SKIPPED_FILE_PREVIEW_LIMIT = 10
+_DS_STORE = ".DS_Store"
+
 LOGO = r"""
                                                                                      
 ▄▄▄   ▄▄▄                                ▄▄▄▄▄▄▄                                     
@@ -20,6 +24,76 @@ LOGO = r"""
             ██  ██                                                                   
           ▀▀▀   ▀▀                                                                   
 """
+
+
+def _is_supported_text_suffix(path: Path) -> bool:
+    """Return True when the path suffix is .txt or .md (case-insensitive)."""
+    return path.suffix.lower() in TEXT_INPUT_SUFFIXES
+
+
+def require_supported_text_input(input_path: str) -> None:
+    """Reject a single-file input whose suffix is not .txt/.md.
+
+    Stdin (``-``) is not suffix-checked. Directories are left to
+    :func:`collect_directory_text_inputs`.
+    """
+    if input_path == "-":
+        return
+    path = Path(input_path)
+    if path.is_dir():
+        return
+    if _is_supported_text_suffix(path):
+        return
+    console.print(
+        f"[red]Error:[/red] Unsupported input type: {path.name or input_path}"
+    )
+    console.print(
+        "This CLI does not parse PDF/Office files. Please convert the file to .txt or .md."
+    )
+    raise typer.Exit(1)
+
+
+def collect_directory_text_inputs(directory: Path) -> list[Path]:
+    """Return non-recursive .txt/.md files in ``directory``.
+
+    Raises:
+        typer.Exit: If the directory contains no .txt or .md files.
+
+    Other regular files at the same level produce a warning (up to 10 names
+    plus a remaining count) and are skipped. ``.DS_Store`` is ignored.
+    """
+    text_files = sorted(
+        (
+            path
+            for path in directory.glob("*")
+            if path.is_file() and _is_supported_text_suffix(path)
+        ),
+        key=lambda path: path.name.lower(),
+    )
+    if not text_files:
+        console.print(f"[red]Error:[/red] No .txt or .md files found in {directory}")
+        raise typer.Exit(1)
+
+    skipped = sorted(
+        (
+            path
+            for path in directory.iterdir()
+            if path.is_file()
+            and path.name != _DS_STORE
+            and not _is_supported_text_suffix(path)
+        ),
+        key=lambda path: path.name.lower(),
+    )
+    if skipped:
+        preview = skipped[:_SKIPPED_FILE_PREVIEW_LIMIT]
+        listed = ", ".join(path.name for path in preview)
+        remaining = len(skipped) - len(preview)
+        extra = f" (+{remaining} more)" if remaining else ""
+        console.print(
+            f"[yellow]Warning:[/yellow] skipped unsupported file(s): {listed}{extra}"
+        )
+
+    return text_files
 
 
 def read_input(input_path: str) -> str:
