@@ -58,6 +58,15 @@
 
 <!-- 以下摘要来自最近合并的 PR，随版本更新而更新。 -->
 
+### v0.7.0
+
+- **🗑️ 两级知识删除** — `he remove --node/--edge` 按 key 硬删除；`he remove --edit-node --fact` 借助大模型移除单条错误事实（key 不变性校验、dry-run、自动备份）。*(#84)*
+- **📜 来源标注与溯源** — `he feed --source` / `he parse --source` 记录每份文档的原始贡献；`he remove --document` 精确回滚单份文档的贡献，共享 key 从幸存来源重新合并。*(#84)*
+- **📈 全链路增量** — feed/parse/删除/编辑均原地修补向量索引（只重嵌受影响向量）；`he feed` 对内容哈希未变的文档自动跳过（`--refeed` 强制重喂）。*(#84)*
+- **👁️ `he info --sources`** — 查看知识摘要的文档贡献者及贡献量。*(#84)*
+- **🧪 `he template validate`** — 在调用大模型前发现模板语义错误：9 条诊断规则、`--json` 接入 CI。*(#77)*
+- **📊 GraphML 与 CSV 导出** + **🌐 OrcaRouter 提供商** + **🔐 config.toml 0600 权限** + **🔗 Obsidian 链接修复**。*(#85, #71, #86, #87)*
+
 ### v0.6.0
 
 - **🗑️ 知识删除（两级）** — `he remove` / `ka.remove_nodes()` 按 key 硬删除（孤儿边自动清理）；`ka.edit_node()` 借助大模型移除单条错误事实，支持 dry-run 预览、key 不变性校验和自动备份。覆盖 graph、hypergraph 及时序/空间图谱。*(#84)*

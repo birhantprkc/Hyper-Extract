@@ -58,6 +58,15 @@
 
 <!-- News snippets are derived from the latest merged PRs. Update as new releases land. -->
 
+### v0.7.0
+
+- **🗑️ Two-Tier Knowledge Deletion** — `he remove --node/--edge` hard-deletes by key; `he remove --edit-node --fact` removes a single wrong fact via LLM rewrite (key-invariance check, dry-run, automatic backups). *(#84)*
+- **📜 Source Attribution & Provenance** — `he feed --source` / `he parse --source` record each document's raw contributions; `he remove --document` rolls back exactly what one document contributed, re-merging keys shared with surviving sources. *(#84)*
+- **📈 Incremental Everything** — feed/parse/removal/edit now patch the vector index in place (only affected vectors re-embedded); `he feed` skips documents whose content hash is unchanged (`--refeed` to force). *(#84)*
+- **👁️ `he info --sources`** — see which documents contributed to a knowledge abstract and how much. *(#84)*
+- **🧪 `he template validate`** — catch semantic template errors before paying for LLM calls: 9 diagnostic rules, `--json` for CI. *(#77)*
+- **📊 GraphML & CSV Export** + **🌐 OrcaRouter provider** + **🔐 config.toml saved 0600** + **🔗 Obsidian wikilink fix**. *(#85, #71, #86, #87)*
+
 ### v0.6.0
 
 - **🗑️ Knowledge Deletion (two-tier)** — `he remove` / `ka.remove_nodes()` hard-delete by key (orphan edges pruned); `ka.edit_node()` removes a single wrong fact via LLM rewrite, with dry-run, key-invariance checks, and automatic backups. Graph, hypergraph, and temporal/spatial KAs. *(#84)*
