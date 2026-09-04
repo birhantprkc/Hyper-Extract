@@ -68,11 +68,11 @@
 
     Ready-to-use templates for Finance, Legal, Medical, TCM, and Industry. Zero configuration needed.
 
--   :material-sync:{ .lg .middle } **Incremental Evolution**
+-   :material-sync:{ .lg .middle } **Incremental Evolution & Provenance**
 
     ---
 
-    Feed new documents to continuously expand your knowledge abstract. No need to reprocess everything.
+    Feed new documents to continuously expand your knowledge abstract — every source is attributed, and removal or rollback is incremental too. No full reprocessing, ever.
 
 </div>
 

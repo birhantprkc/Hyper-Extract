@@ -64,41 +64,27 @@
 - **📁 Per-File Source Attribution** — `he parse ./docs/` attributes each file by its name automatically; roll back or audit any single file later. An explicit `--source` still overrides.
 - **⏱️ Spatiotemporal Provenance** — temporal/spatial/spatio-temporal graphs fully support source attribution and rollback, with deterministic (MERGE_FIELD) replay tests.
 
-### v0.7.0
+<details>
+<summary><b>v0.5.0 – v0.7.0</b> — provenance, deletion, incremental index, template validator, GraphML/CSV export</summary>
 
-- **🗑️ Two-Tier Knowledge Deletion** — `he remove --node/--edge` hard-deletes by key; `he remove --edit-node --fact` removes a single wrong fact via LLM rewrite (key-invariance check, dry-run, automatic backups). *(#84)*
-- **📜 Source Attribution & Provenance** — `he feed --source` / `he parse --source` record each document's raw contributions; `he remove --document` rolls back exactly what one document contributed, re-merging keys shared with surviving sources. *(#84)*
-- **📈 Incremental Everything** — feed/parse/removal/edit now patch the vector index in place (only affected vectors re-embedded); `he feed` skips documents whose content hash is unchanged (`--refeed` to force). *(#84)*
-- **👁️ `he info --sources`** — see which documents contributed to a knowledge abstract and how much. *(#84)*
-- **🧪 `he template validate`** — catch semantic template errors before paying for LLM calls: 9 diagnostic rules, `--json` for CI. *(#77)*
-- **📊 GraphML & CSV Export** + **🌐 OrcaRouter provider** + **🔐 config.toml saved 0600** + **🔗 Obsidian wikilink fix**. *(#85, #71, #86, #87)*
+- **🗑️ Two-Tier Knowledge Deletion** — hard-delete by key (`he remove --node/--edge`, orphan edges pruned) or remove a single wrong fact via LLM-assisted editing (`he remove --edit-node --fact`), with dry-run, key-invariance checks, and automatic backups. *(#84)*
+- **📜 Source Attribution & Provenance** — `he feed --source` / `he parse --source` record each document's raw contributions; `he remove --document` rolls back exactly what one document contributed; `he info --sources` shows the ledger. *(#84)*
+- **📈 Incremental Everything** — feed/parse/removal/edit patch the vector index in place (only affected vectors re-embedded); `he feed` skips documents whose content hash is unchanged (`--refeed` to force). *(#84)*
+- **🧪 `he template validate`** — catch semantic template errors before paying for LLM calls: 9 diagnostic rules, `--json` for CI, `--all` for directories. *(#77)*
+- **📊 GraphML & CSV Export** — desktop graph tools and spreadsheets; hypergraphs get a hyperedges table. *(#85)*
+- **🌐 OrcaRouter Provider** — one key for 150+ models via `create_client("orcarouter")`. *(#71)*
+- **🔐 Config File Permissions** — `~/.he/config.toml` saved `0600`. *(#86)*
+- **🔗 Obsidian wikilink fix** — aliases no longer break on `[ ] | # ^`. *(#87)*
+- **🛡️ Chunk-Level Fault Isolation** — one failed chunk no longer discards the rest of a multi-chunk extraction. *(#78)*
+- **⚡ MCP Python SDK 2.x** — `he-mcp` works on mcp 1.x and 2.x. *(#72, #82)*
+- **🔀 Directed-Edge Fix** — `(source, target)` order preserved; custom endpoint field names. *(#74)*
+- **🔑 DeepSeek API Key Fix** — `DEEPSEEK_API_KEY` honored on the OpenAI-compatible path. *(#76)*
+- **🎓 Education Templates** — `course_concept_graph` + `curriculum_structure`. *(#80)*
+- **🧭 Smaller Fixes** — Graph_RAG.search 3-tuple; `he talk -i --top-k`; onboarding/docs overhaul. *(#70, #73, #57)*
 
-### v0.6.0
+</details>
 
-- **🗑️ Knowledge Deletion (two-tier)** — `he remove` / `ka.remove_nodes()` hard-delete by key (orphan edges pruned); `ka.edit_node()` removes a single wrong fact via LLM rewrite, with dry-run, key-invariance checks, and automatic backups. Graph, hypergraph, and temporal/spatial KAs. *(#84)*
-- **🧪 `he template validate`** — catch semantic template errors (missing `time_field`, unknown identifier fields, bad placeholders…) before calling an LLM: 9 diagnostic rules, `--json` for CI, `--all` for directories. *(#77)*
-- **📊 GraphML & CSV Export** — `he export graphml` for desktop graph tools, `he export csv` for spreadsheets (hypergraphs get a hyperedges table). *(#85)*
-- **🔐 Config File Permissions** — `~/.he/config.toml` is now saved `0600` (owner-only) instead of world-readable. *(#86)*
-- **🔗 Obsidian Link Fix** — wikilink aliases no longer break on titles containing `[ ] | # ^`. *(#87)*
-
-### v0.5.0
-
-- **🛡️ Chunk-Level Fault Isolation** — One failed chunk (rate limit, timeout, unparseable output) no longer discards the rest of a multi-chunk extraction. Graph-family extraction degrades to a partial result + warning. *(#78)*
-- **⚡ MCP Python SDK 2.x Support** — `he-mcp` now works with both mcp 1.x and 2.x; `hyperextract[mcp]` resolves `mcp<3` (protocol 2026-07-28). *(#72, #82)*
-- **🔀 Directed-Edge Fix** — `relation_members` now preserves `(source, target)` direction instead of sorting endpoints, so A→B and B→A stay distinct edges. Custom endpoint field names are supported. *(#74)*
-- **🔑 DeepSeek API Key Fix** — `create_llm("deepseek")` now reads `DEEPSEEK_API_KEY` on the OpenAI-compatible path. *(#76)*
-- **🎓 Education Templates** — Two new presets: `education/course_concept_graph` and `education/curriculum_structure`. *(#80)*
-- **🌐 OrcaRouter Provider** — One key for 150+ models (OpenAI, Anthropic, Google, DeepSeek, Qwen…) via `create_client("orcarouter")`. *(#71)*
-- **🧭 Smaller Fixes** — `Graph_RAG.search` returns a consistent 3-tuple in default mode; `he talk -i` honors `--top-k`; clearer docs on onboarding, dev install, and structured output. *(#70, #73, #57)*
-
-### Earlier
-
-- **🤖 DeepSeek Provider** — Use `deepseek-v4-flash` / `deepseek-v4-pro` directly via `create_client(llm="deepseek")`. V4 thinking mode is auto-disabled for structured extraction compatibility. *(#67, v0.4.0)*
-- **🔌 MCP Server** — Query your knowledge abstracts from Claude Desktop and IDE agents with `he-mcp`. *(PR #40)*
-- **🧠 Anthropic Claude Support** — Use `claude-opus-4-8`, `claude-sonnet-4-6`, and `claude-haiku-4-5` directly as your LLM provider. *(PR #38)*
-- **📝 Obsidian Export** — Turn any graph into an Obsidian vault with Markdown notes linked by `[[wikilinks]]`. *(PR #37)*
-- **🧹 `he clean`** — Remove a KA's index or the whole knowledge abstract in one command. *(PR #39)*
-- **🔧 Reliability Fixes** — True mean for multi-chunk embeddings, capped OpenAI-compatible batch sizes, and resolved multi-word `llm_*` merge strategies. *(PRs #35, #36, #41)*
+### Archived
 
 See the full changelog in the [GitHub releases](https://github.com/yifanfeng97/hyper-extract/releases).
 
@@ -111,7 +97,7 @@ Hyper-Extract is an intelligent, LLM-powered knowledge extraction and evolution 
 | 🔷 **8 Knowledge Structures** | From simple Lists to advanced Graphs, Hypergraphs, and Spatio-Temporal Graphs |
 | 🧠 **10+ Extraction Engines** | GraphRAG, LightRAG, Hyper-RAG, KG-Gen, and more — ready to use |
 | 📝 **80+ YAML Templates** | Zero-code extraction across Finance, Legal, Medical, TCM, Industry, and General domains |
-| 🔄 **Incremental Evolution** | Feed new documents anytime, and remove or refine knowledge (`he remove`) as your sources change |
+| 🔄 **Incremental Evolution & Provenance** | Feed new documents anytime — every source is attributed and the index updates incrementally; audit (`he info --sources`), roll back (`he remove --document`), or upsert updated versions as your sources change |
 | 📤 **Obsidian Export** | Turn any extracted graph into an Obsidian vault — Markdown notes linked by `[[wikilinks]]` |
 
 ## 🎯 What Can You Do With It?

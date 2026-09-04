@@ -64,41 +64,27 @@
 - **📁 逐文件来源标注** — `he parse ./docs/` 自动按文件名标注每个文件；之后可单独回滚或审计任意文件。显式 `--source` 仍可覆盖。*(#84)*
 - **⏱️ 时空图谱溯源** — 时序/空间/时空图谱完整支持来源标注与回滚，MERGE_FIELD 重放测试保证确定性。*(#84)*
 
-### v0.7.0
+<details>
+<summary><b>v0.5.0 – v0.7.0</b> — 溯源、删除、增量索引、模板校验、GraphML/CSV 导出</summary>
 
-- **🗑️ 两级知识删除** — `he remove --node/--edge` 按 key 硬删除；`he remove --edit-node --fact` 借助大模型移除单条错误事实（key 不变性校验、dry-run、自动备份）。*(#84)*
-- **📜 来源标注与溯源** — `he feed --source` / `he parse --source` 记录每份文档的原始贡献；`he remove --document` 精确回滚单份文档的贡献，共享 key 从幸存来源重新合并。*(#84)*
+- **🗑️ 两级知识删除** — 按 key 硬删除（`he remove --node/--edge`，孤儿边自动清理），或借助大模型移除单条错误事实（`he remove --edit-node --fact`），支持 dry-run、key 不变性校验与自动备份。*(#84)*
+- **📜 来源标注与溯源** — `he feed --source` / `he parse --source` 记录每份文档的原始贡献；`he remove --document` 精确回滚单份文档的贡献；`he info --sources` 查看来源账本。*(#84)*
 - **📈 全链路增量** — feed/parse/删除/编辑均原地修补向量索引（只重嵌受影响向量）；`he feed` 对内容哈希未变的文档自动跳过（`--refeed` 强制重喂）。*(#84)*
-- **👁️ `he info --sources`** — 查看知识摘要的文档贡献者及贡献量。*(#84)*
-- **🧪 `he template validate`** — 在调用大模型前发现模板语义错误：9 条诊断规则、`--json` 接入 CI。*(#77)*
-- **📊 GraphML 与 CSV 导出** + **🌐 OrcaRouter 提供商** + **🔐 config.toml 0600 权限** + **🔗 Obsidian 链接修复**。*(#85, #71, #86, #87)*
+- **🧪 `he template validate`** — 在调用大模型前发现模板语义错误：9 条诊断规则、`--json` 接入 CI、`--all` 批量校验。*(#77)*
+- **📊 GraphML 与 CSV 导出** — 对接桌面图分析工具与表格软件；超图附带超边表。*(#85)*
+- **🌐 OrcaRouter 提供商** — 一个 key 调用 150+ 模型：`create_client("orcarouter")`。*(#71)*
+- **🔐 配置文件权限** — `~/.he/config.toml` 以 `0600` 保存。*(#86)*
+- **🔗 Obsidian 链接修复** — wikilink 别名不再因 `[ ] | # ^` 断链。*(#87)*
+- **🛡️ Chunk 级故障隔离** — 单个 chunk 失败不再丢弃多 chunk 抽取的其余结果。*(#78)*
+- **⚡ MCP Python SDK 2.x** — `he-mcp` 同时兼容 mcp 1.x / 2.x。*(#72, #82)*
+- **🔀 有向边修复** — 保留 `(source, target)` 方向；支持自定义端点字段名。*(#74)*
+- **🔑 DeepSeek API Key 修复** — OpenAI 兼容路径正确读取 `DEEPSEEK_API_KEY`。*(#76)*
+- **🎓 教育领域模板** — `course_concept_graph` 与 `curriculum_structure`。*(#80)*
+- **🧭 其他修复** — Graph_RAG.search 3-tuple；`he talk -i` 支持 `--top-k`；入门/开发安装/结构化输出文档更新。*(#70, #73, #57)*
 
-### v0.6.0
+</details>
 
-- **🗑️ 知识删除（两级）** — `he remove` / `ka.remove_nodes()` 按 key 硬删除（孤儿边自动清理）；`ka.edit_node()` 借助大模型移除单条错误事实，支持 dry-run 预览、key 不变性校验和自动备份。覆盖 graph、hypergraph 及时序/空间图谱。*(#84)*
-- **🧪 `he template validate`** — 在调用大模型之前发现模板语义错误（缺 `time_field`、引用不存在的字段、占位符错误等）：9 条诊断规则、`--json` 便于接入 CI、`--all` 批量校验目录。*(#77)*
-- **📊 GraphML 与 CSV 导出** — `he export graphml` 导入桌面图分析工具，`he export csv` 导入表格软件（超图会额外生成超边表）。*(#85)*
-- **🔐 配置文件权限** — `~/.he/config.toml` 现在以 `0600`（仅所有者可读写）保存，而非全局可读。*(#86)*
-- **🔗 Obsidian 链接修复** — wikilink 别名不再因标题包含 `[ ] | # ^` 而断链。*(#87)*
-
-### v0.5.0
-
-- **🛡️ Chunk 级故障隔离** — 多 chunk 抽取中，单个 chunk 失败（限流、超时、解析错误）不再导致整个任务失败并丢弃其余数据，而是降级为部分结果 + 警告。*(#78)*
-- **⚡ 支持 MCP Python SDK 2.x** — `he-mcp` 同时兼容 mcp 1.x / 2.x；`hyperextract[mcp]` 放宽到 `mcp<3`（协议 2026-07-28）。*(#72, #82)*
-- **🔀 有向边修复** — `relation_members` 保留 `(source, target)` 方向，不再排序端点，A→B 与 B→A 不再被误合并；支持自定义端点字段名。*(#74)*
-- **🔑 DeepSeek API Key 修复** — `create_llm("deepseek")` 在 OpenAI 兼容路径上正确读取 `DEEPSEEK_API_KEY`。*(#76)*
-- **🎓 教育领域模板** — 新增 `education/course_concept_graph` 与 `education/curriculum_structure` 两个预设。*(#80)*
-- **🌐 OrcaRouter 提供商** — 一个 key 调用 150+ 模型（OpenAI、Anthropic、Google、DeepSeek、Qwen…）：`create_client("orcarouter")`。*(#71)*
-- **🧭 其他修复** — `Graph_RAG.search` 默认模式返回一致的 3-tuple；`he talk -i` 支持 `--top-k`；入门、开发安装与结构化输出文档更新。*(#70, #73, #57)*
-
-### 更早
-
-- **🤖 DeepSeek 提供商** — 直接通过 `create_client(llm="deepseek")` 使用 `deepseek-v4-flash` / `deepseek-v4-pro`。V4 thinking 模式自动关闭，保证结构化抽取兼容。*(#67, v0.4.0)*
-- **🔌 MCP 服务器** — 通过 `he-mcp` 在 Claude Desktop 和 IDE 智能体中查询你的知识摘要。*(PR #40)*
-- **🧠 Anthropic Claude 支持** — 直接调用 `claude-opus-4-8`、`claude-sonnet-4-6`、`claude-haiku-4-5` 作为 LLM 提供商。*(PR #38)*
-- **📝 Obsidian 导出** — 将任意图谱导出为 Obsidian 知识库，Markdown 笔记通过 `[[双向链接]]` 关联。*(PR #37)*
-- **🧹 `he clean` 命令** — 一条命令清理知识摘要的索引或整个 KA。*(PR #39)*
-- **🔧 稳定性修复** — 多 chunk 嵌入采用真实均值、限制 OpenAI 兼容接口的批处理大小、修复多词 `llm_*` 合并策略。*(PRs #35、#36、#41)*
+### 更早版本
 
 完整更新日志请参阅 [GitHub releases](https://github.com/yifanfeng97/hyper-extract/releases)。
 
@@ -111,7 +97,7 @@ Hyper-Extract 是一个智能的、由大语言模型（LLM）驱动的知识提
 | 🔷 **8 种知识结构** | 从简单的列表到复杂的图谱、超图、时空图谱 |
 | 🧠 **10+ 提取引擎** | GraphRAG、LightRAG、Hyper-RAG、KG-Gen 等开箱即用 |
 | 📝 **80+ YAML 模板** | 零代码提取，覆盖金融、法律、医疗、中医、工业、通用 6 大领域 |
-| 🔄 **增量演进** | 随时喂入新文档扩展知识库，也支持删除或修正已有知识（`he remove`） |
+| 🔄 **增量演进与溯源** | 随时喂入新文档——每个来源自动标注、索引增量更新；可审计（`he info --sources`）、回滚（`he remove --document`）或以 upsert 方式更新文档 |
 | 📤 **Obsidian 导出** | 将提取的图谱导出为 Obsidian 知识库——以 `[[双向链接]]` 关联的 Markdown 笔记 |
 
 ## 🎯 它能做什么？

@@ -68,64 +68,18 @@
 
     开箱即用的金融、法律、医疗、中医和工业模板。无需配置即可使用。
 
--   :material-sync:{ .lg .middle } **增量演进**
+-   :material-sync:{ .lg .middle } **增量演化与溯源**
 
     ---
 
-    向知识库持续添加新文档。无需重新处理所有内容。
+    持续喂入新文档扩展知识摘要——每个来源自动标注，删除与回滚同样增量完成，无需全量重处理。
 
-</div>
-
----
-
-## 🎯 选择您的路径
-
-<div class="grid cards" markdown>
-
--   :material-console:{ .lg .middle } __CLI 用户__
+-   :material-category:{ .lg .middle } **8 种知识结构**
 
     ---
 
-    直接从终端处理文档。非常适合：
-    
-    - 快速知识提取
-    - 批量文档处理
-    - 无需编码构建知识库
-    
-    [:octicons-arrow-right-24: CLI 指南](cli/index.md)
+    从简单集合到图谱、超图与时空图谱，按需选择最合适的数据结构。
 
--   :material-language-python:{ .lg .middle } __Python 开发者__
-
-    ---
-
-    集成到您的 Python 应用程序中。非常适合：
-    
-    - 自定义提取管道
-    - 与现有工作流程集成
-    - 构建 AI 驱动的应用程序
-    
-    [:octicons-arrow-right-24: Python SDK](python/index.md)
-
--   :material-school:{ .lg .middle } __想了解更多？__
-
-    ---
-
-    了解核心概念和架构：
-    
-    - 自动类型如何工作
-    - 选择提取方法
-    - 创建自定义模板
-    
-    [:octicons-arrow-right-24: 核心概念](concepts/index.md)
-
-</div>
-
----
-
-## 🧩 8 种自动类型一览
-
-| 类型 | 用例 | 示例输出 |
-|------|----------|----------------|
 | **AutoModel** | 结构化摘要 | 带有特定字段的 Pydantic 模型 |
 | **AutoList** | 项目集合 | 实体或事实的列表 |
 | **AutoSet** | 去重集合 | 唯一项目的集合 |
