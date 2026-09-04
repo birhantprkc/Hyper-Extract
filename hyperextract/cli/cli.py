@@ -359,6 +359,10 @@ def parse(
 
             progress.update(task, description="Extracting knowledge...")
             logger.debug("stage=feed_text_invoked")
+            if source:
+                from hyperextract.utils.document_store import SourceDocumentStore
+
+                SourceDocumentStore(output_path).store_file(source, input)
             ka.feed_text(text, source_id=source)
             logger.info("stage=knowledge_extracted chars=%d", len(text))
 
@@ -751,6 +755,7 @@ def info(
         sources_table.add_column("Source ID", style="cyan")
         sources_table.add_column("Raw Items", justify="right")
         sources_table.add_column("Content Hash")
+        sources_table.add_column("Archived Document")
 
         ledger_files = [
             (path / "sources_nodes.json", "nodes"),
@@ -767,6 +772,9 @@ def info(
                     "sources_ledger_read_failed path=%s error=%s", ledger_path, e
                 )
                 continue
+            from hyperextract.utils.document_store import SourceDocumentStore
+
+            doc_store = SourceDocumentStore(path)
             for entry in entries:
                 sid = entry.get("source_id")
                 if sid is None:
@@ -778,8 +786,13 @@ def info(
 
         if combined:
             for sid, info_row in sorted(combined.items()):
+                archived = doc_store.find(sid)
+                archived_name = archived[0].name if archived else "—"
                 sources_table.add_row(
-                    sid, str(info_row["raw_items"]), info_row["content_hash"] or "—"
+                    sid,
+                    str(info_row["raw_items"]),
+                    info_row["content_hash"] or "—",
+                    archived_name,
                 )
             console.print(sources_table)
         else:
@@ -998,6 +1011,11 @@ def feed(
         "--refeed",
         help="Re-ingest even if this source's content hash is unchanged",
     ),
+    store_doc: bool = typer.Option(
+        True,
+        "--store-doc/--no-store-doc",
+        help="Archive the source document under documents/ (requires --source)",
+    ),
 ):
     """Append knowledge to an existing Knowledge Abstract."""
     logger.info("command=feed ka_path=%s input=%s", ka_path, input)
@@ -1058,6 +1076,20 @@ def feed(
                         "Use --refeed to re-ingest anyway."
                     )
                     raise typer.Exit(0)
+
+        # Archive the source document (provenance evidence, kept across
+        # rollbacks; purge with he remove --document ... --purge-documents).
+        stored_doc = None
+        if store_doc and source:
+            from hyperextract.utils.document_store import SourceDocumentStore
+
+            original_name = "stdin.txt" if input == "-" else Path(input).name
+            store = SourceDocumentStore(output_path)
+            if input == "-":
+                stored_doc = store.store_text(source, text, original_name)
+            else:
+                stored_doc = store.store_file(source, input)
+            console.print(f"[dim]Document archived: {stored_doc}[/dim]")
 
         progress.update(task, description="Appending knowledge...")
         logger.debug("stage=feed_text_invoked")
@@ -1231,6 +1263,11 @@ def remove_items(
         help="Rollback strategy for --document: exact (re-merge surviving "
         "sources) or touched (delete all affected keys)",
     ),
+    purge_documents: bool = typer.Option(
+        False,
+        "--purge-documents",
+        help="With --document: also delete the archived source document file",
+    ),
 ):
     """Delete nodes/edges by key, remove a fact (LLM-assisted), or roll back a whole document.
 
@@ -1343,6 +1380,13 @@ def remove_items(
 
     console.print()
     if document:
+        if purge_documents:
+            from hyperextract.utils.document_store import SourceDocumentStore
+
+            removed_files = SourceDocumentStore(path).purge(document)
+            for f in removed_files:
+                console.print(f"[dim]Archived document deleted: {f}[/dim]")
+
         table = Table(title=f"Document Rollback Report — {document}")
         table.add_column("Field")
         table.add_column("Items")
