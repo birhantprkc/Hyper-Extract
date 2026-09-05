@@ -54,47 +54,89 @@
 <br/>
 </div>
 
-## 📰 最新动态
+## ⚡ 30 秒快速上手
 
-<!-- 以下摘要来自最近合并的 PR，随版本更新而更新。 -->
+**1. 安装：**
 
-### v0.8.1 / v0.8.2
+```bash
+# 先安装 uv（如果还没有）
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-- **🏷️ 来源标签与范围检索** — `he tag ./ka/ --source doc-1 --add legal`，然后 `he search ./ka/ "query" --tag legal` 即可只在已标注文档范围内检索。适用于 graph、hypergraph 和 set。*(#89, #84)*
-- **🛡️ 输入类型校验** — `he parse` / `he feed` 现在会拒绝不支持的文件类型（PDF/Office）并给出转换提示，而不是静默摄入乱码。*(#88)*
-- **📦 文档存档修复** — 同一来源换文件名重喂不再积累陈旧副本。*(#89)*
+# 安装 Hyper-Extract CLI
+uv tool install hyperextract
+# 或：pipx install hyperextract
+```
 
-### v0.8.0
+**2. 配置你的 provider**（任选其一）：
 
-- **🔄 文档级 Upsert** — 重新喂入已标注的文档时自动回滚其旧版本：更新后删掉的事实不再残留，共享 key 从幸存来源重新合并。*(#84)*
-- **📁 逐文件来源标注** — `he parse ./docs/` 自动按文件名标注每个文件；之后可单独回滚或审计任意文件。显式 `--source` 仍可覆盖。*(#84)*
-- **⏱️ 时空图谱溯源** — 时序/空间/时空图谱完整支持来源标注与回滚，MERGE_FIELD 重放测试保证确定性。*(#84)*
+**OpenAI：**
+```bash
+he config init -p openai -k YOUR_OPENAI_API_KEY
+```
+
+**Anthropic (Claude)：**
+```bash
+he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
+he config embedder -p openai -k YOUR_OPENAI_API_KEY
+```
+
+**DeepSeek：**
+```bash
+he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
+he config embedder -p openai -k YOUR_OPENAI_API_KEY
+```
+
+**百炼（阿里云）：**
+```bash
+he config init -p bailian -k YOUR_BAILIAN_API_KEY
+```
+
+**本地 vLLM：**
+```bash
+he config llm -p vllm -u http://localhost:8000/v1 -k dummy -m Qwen/Qwen3.5-9B
+he config embedder -p vllm -u http://localhost:8001/v1 -k dummy -m BAAI/bge-m3
+```
+
+**3. 提取、查询与可视化：**
+
+```bash
+# 从文档提取知识
+he parse examples/zh/sushi.md -t general/biography_graph -o ./output/ -l zh
+
+# 查询
+he search ./output/ "苏轼有哪些重要的作品？"
+
+# 可视化
+he show ./output/
+
+# 导出为 Obsidian 知识库（Markdown 笔记 + [[双向链接]]）
+he export obsidian ./output/ -o ./vault/
+```
+
+> **该用哪个 provider？** OpenAI 和百炼同时提供 LLM 和 embedding 模型。Anthropic 和 DeepSeek 仅提供 LLM（搜索/聊天功能需搭配 OpenAI 的 embedder）。本地 vLLM 免费但需要 GPU。DeepSeek 最经济（约 $0.001-0.005/页，而 OpenAI gpt-4o-mini 约 $0.01-0.05/页）。
 
 <details>
-<summary><b>v0.5.0 – v0.7.0</b> — 溯源、删除、增量索引、模板校验、GraphML/CSV 导出</summary>
+<summary><b>🐍 Python API</b>（点击展开）</summary>
+<br>
 
-- **🗑️ 两级知识删除** — 按 key 硬删除（`he remove --node/--edge`，孤儿边自动清理），或借助大模型移除单条错误事实（`he remove --edit-node --fact`），支持 dry-run、key 不变性校验与自动备份。*(#84)*
-- **📜 来源标注与溯源** — `he feed --source` / `he parse --source` 记录每份文档的原始贡献；`he remove --document` 精确回滚单份文档的贡献；`he info --sources` 查看来源账本。*(#84)*
-- **📈 全链路增量** — feed/parse/删除/编辑均原地修补向量索引（只重嵌受影响向量）；`he feed` 对内容哈希未变的文档自动跳过（`--refeed` 强制重喂）。*(#84)*
-- **🧪 `he template validate`** — 在调用大模型前发现模板语义错误：9 条诊断规则、`--json` 接入 CI、`--all` 批量校验。*(#77)*
-- **📊 GraphML 与 CSV 导出** — 对接桌面图分析工具与表格软件；超图附带超边表。*(#85)*
-- **🌐 OrcaRouter 提供商** — 一个 key 调用 150+ 模型：`create_client("orcarouter")`。*(#71)*
-- **🔐 配置文件权限** — `~/.he/config.toml` 以 `0600` 保存。*(#86)*
-- **🔗 Obsidian 链接修复** — wikilink 别名不再因 `[ ] | # ^` 断链。*(#87)*
-- **🛡️ Chunk 级故障隔离** — 单个 chunk 失败不再丢弃多 chunk 抽取的其余结果。*(#78)*
-- **⚡ MCP Python SDK 2.x** — `he-mcp` 同时兼容 mcp 1.x / 2.x。*(#72, #82)*
-- **🔀 有向边修复** — 保留 `(source, target)` 方向；支持自定义端点字段名。*(#74)*
-- **🔑 DeepSeek API Key 修复** — OpenAI 兼容路径正确读取 `DEEPSEEK_API_KEY`。*(#76)*
-- **🎓 教育领域模板** — `course_concept_graph` 与 `curriculum_structure`。*(#80)*
-- **🧭 其他修复** — Graph_RAG.search 3-tuple；`he talk -i` 支持 `--top-k`；入门/开发安装/结构化输出文档更新。*(#70, #73, #57)*
+```bash
+uv pip install hyperextract
+```
+
+```python
+from hyperextract import Template
+
+ka = Template.create("general/biography_graph")
+
+with open("examples/zh/sushi.md") as f:
+    result = ka.parse(f.read())
+
+result.show()
+```
+
+> 🔗 更多示例：[examples/zh](./examples/zh/)
 
 </details>
-
-### 更早版本
-
-完整更新日志请参阅 [GitHub releases](https://github.com/yifanfeng97/hyper-extract/releases)。
-
-Hyper-Extract 是一个智能的、由大语言模型（LLM）驱动的知识提取与演进框架。它极大地简化了将杂乱不堪的文本转化为持久化、强类型的**知识摘要（Knowledge Abstracts）**的过程。无论从基础的**集合（Collection/List）和**结构化模型（Model），还是到高阶复杂的**知识图谱（Knowledge Graph）**、**超图（Hypergraph）**，甚至是**时空图谱（Spatio-Temporal Graph）**，它都能轻松拿捏。
 
 ## ✨ 核心亮点
 
@@ -180,90 +222,6 @@ Hyper-Extract 通过 LangChain 结构化输出的 **function calling** 方法工
 
 > 📖 完整指南：[Provider 系统与本地模型支持](https://yifanfeng97.github.io/Hyper-Extract/latest/zh/concepts/provider-system/)
 
-## ⚡ 30 秒快速上手
-
-**1. 安装：**
-
-```bash
-# 先安装 uv（如果还没有）
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 安装 Hyper-Extract CLI
-uv tool install hyperextract
-# 或：pipx install hyperextract
-```
-
-**2. 配置你的 provider**（任选其一）：
-
-**OpenAI：**
-```bash
-he config init -p openai -k YOUR_OPENAI_API_KEY
-```
-
-**Anthropic (Claude)：**
-```bash
-he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
-he config embedder -p openai -k YOUR_OPENAI_API_KEY
-```
-
-**DeepSeek：**
-```bash
-he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
-he config embedder -p openai -k YOUR_OPENAI_API_KEY
-```
-
-**百炼（阿里云）：**
-```bash
-he config init -p bailian -k YOUR_BAILIAN_API_KEY
-```
-
-**本地 vLLM：**
-```bash
-he config llm -p vllm -u http://localhost:8000/v1 -k dummy -m Qwen/Qwen3.5-9B
-he config embedder -p vllm -u http://localhost:8001/v1 -k dummy -m BAAI/bge-m3
-```
-
-**3. 提取、查询与可视化：**
-
-```bash
-# 从文档提取知识
-he parse examples/zh/sushi.md -t general/biography_graph -o ./output/ -l zh
-
-# 查询
-he search ./output/ "苏轼有哪些重要的作品？"
-
-# 可视化
-he show ./output/
-
-# 导出为 Obsidian 知识库（Markdown 笔记 + [[双向链接]]）
-he export obsidian ./output/ -o ./vault/
-```
-
-> **该用哪个 provider？** OpenAI 和百炼同时提供 LLM 和 embedding 模型。Anthropic 和 DeepSeek 仅提供 LLM（搜索/聊天功能需搭配 OpenAI 的 embedder）。本地 vLLM 免费但需要 GPU。DeepSeek 最经济（约 $0.001-0.005/页，而 OpenAI gpt-4o-mini 约 $0.01-0.05/页）。
-
-<details>
-<summary><b>🐍 Python API</b>（点击展开）</summary>
-<br>
-
-```bash
-uv pip install hyperextract
-```
-
-```python
-from hyperextract import Template
-
-ka = Template.create("general/biography_graph")
-
-with open("examples/zh/sushi.md") as f:
-    result = ka.parse(f.read())
-
-result.show()
-```
-
-> 🔗 更多示例：[examples/zh](./examples/zh/)
-
-</details>
-
 ## 📈 为什么选择 Hyper-Extract？
 
 | 特性 | GraphRAG | LightRAG | KG-Gen | ATOM | **Hyper-Extract** |
@@ -332,6 +290,46 @@ identifiers:
 - [创建自定义模板](./hyperextract/templates/DESIGN_GUIDE_ZH.md)
 
 </details>
+
+## 📰 最新动态
+
+<!-- 以下摘要来自最近合并的 PR，随版本更新而更新。 -->
+
+### v0.8.1 / v0.8.2
+
+- **🏷️ 来源标签与范围检索** — `he tag ./ka/ --source doc-1 --add legal`，然后 `he search ./ka/ "query" --tag legal` 即可只在已标注文档范围内检索。适用于 graph、hypergraph 和 set。*(#89, #84)*
+- **🛡️ 输入类型校验** — `he parse` / `he feed` 现在会拒绝不支持的文件类型（PDF/Office）并给出转换提示，而不是静默摄入乱码。*(#88)*
+- **📦 文档存档修复** — 同一来源换文件名重喂不再积累陈旧副本。*(#89)*
+
+### v0.8.0
+
+- **🔄 文档级 Upsert** — 重新喂入已标注的文档时自动回滚其旧版本：更新后删掉的事实不再残留，共享 key 从幸存来源重新合并。*(#84)*
+- **📁 逐文件来源标注** — `he parse ./docs/` 自动按文件名标注每个文件；之后可单独回滚或审计任意文件。显式 `--source` 仍可覆盖。*(#84)*
+- **⏱️ 时空图谱溯源** — 时序/空间/时空图谱完整支持来源标注与回滚，MERGE_FIELD 重放测试保证确定性。*(#84)*
+
+<details>
+<summary><b>v0.5.0 – v0.7.0</b> — 溯源、删除、增量索引、模板校验、GraphML/CSV 导出</summary>
+
+- **🗑️ 两级知识删除** — 按 key 硬删除（`he remove --node/--edge`，孤儿边自动清理），或借助大模型移除单条错误事实（`he remove --edit-node --fact`），支持 dry-run、key 不变性校验与自动备份。*(#84)*
+- **📜 来源标注与溯源** — `he feed --source` / `he parse --source` 记录每份文档的原始贡献；`he remove --document` 精确回滚单份文档的贡献；`he info --sources` 查看来源账本。*(#84)*
+- **📈 全链路增量** — feed/parse/删除/编辑均原地修补向量索引（只重嵌受影响向量）；`he feed` 对内容哈希未变的文档自动跳过（`--refeed` 强制重喂）。*(#84)*
+- **🧪 `he template validate`** — 在调用大模型前发现模板语义错误：9 条诊断规则、`--json` 接入 CI、`--all` 批量校验。*(#77)*
+- **📊 GraphML 与 CSV 导出** — 对接桌面图分析工具与表格软件；超图附带超边表。*(#85)*
+- **🌐 OrcaRouter 提供商** — 一个 key 调用 150+ 模型：`create_client("orcarouter")`。*(#71)*
+- **🔐 配置文件权限** — `~/.he/config.toml` 以 `0600` 保存。*(#86)*
+- **🔗 Obsidian 链接修复** — wikilink 别名不再因 `[ ] | # ^` 断链。*(#87)*
+- **🛡️ Chunk 级故障隔离** — 单个 chunk 失败不再丢弃多 chunk 抽取的其余结果。*(#78)*
+- **⚡ MCP Python SDK 2.x** — `he-mcp` 同时兼容 mcp 1.x / 2.x。*(#72, #82)*
+- **🔀 有向边修复** — 保留 `(source, target)` 方向；支持自定义端点字段名。*(#74)*
+- **🔑 DeepSeek API Key 修复** — OpenAI 兼容路径正确读取 `DEEPSEEK_API_KEY`。*(#76)*
+- **🎓 教育领域模板** — `course_concept_graph` 与 `curriculum_structure`。*(#80)*
+- **🧭 其他修复** — Graph_RAG.search 3-tuple；`he talk -i` 支持 `--top-k`；入门/开发安装/结构化输出文档更新。*(#70, #73, #57)*
+
+</details>
+
+### 更早版本
+
+完整更新日志请参阅 [GitHub releases](https://github.com/yifanfeng97/hyper-extract/releases)。
 
 ## 📚 文档与资源
 
