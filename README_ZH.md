@@ -193,6 +193,35 @@ llm, emb = create_client(
 
 </details>
 
+<details>
+<summary><b>📜 知识库管理员 — 让知识库与文档同步演化</b></summary>
+<br>
+
+文档会变。Hyper-Extract 追踪每个来源，让你可以更新、回滚或审计，而不用从头重建。
+
+```bash
+# 带来源标注摄取——每条知识可追溯到来源文档
+he feed ./ka/ contract-v1.md --source contract-v1
+he tag ./ka/ --source contract-v1 --add legal --add acme
+
+# 文档更新了？同 source 重喂——旧事实自动回滚
+he feed ./ka/ contract-v2.md --source contract-v1
+
+# 文档过时了？回滚它贡献的全部知识
+he remove ./ka/ --document contract-v1
+
+# 删除单条错误事实（大模型辅助，支持 dry-run 预览）
+he remove ./ka/ --edit-node Apple --fact "founded by Steve Jobs" --dry-run
+
+# 只搜法律类文档
+he search ./ka/ "termination clause" --tag legal
+
+# 审计：哪些文档贡献了什么？
+he info ./ka/ --sources
+```
+
+</details>
+
 ## 🚀 支持的平台与模型
 
 Hyper-Extract 通过 LangChain 结构化输出的 **function calling** 方法工作。模型需支持 tool/function calling。

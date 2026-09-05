@@ -193,6 +193,35 @@ llm, emb = create_client(
 
 </details>
 
+<details>
+<summary><b>📜 Knowledge Base Manager — Keep your KB in sync with reality</b></summary>
+<br>
+
+Documents change. Hyper-Extract tracks every source so you can update, roll back, or audit without starting over.
+
+```bash
+# Ingest with attribution — every fact is traceable to its source
+he feed ./ka/ contract-v1.md --source contract-v1
+he tag ./ka/ --source contract-v1 --add legal --add acme
+
+# Document updated? Re-feed under the same source — old facts roll back automatically
+he feed ./ka/ contract-v2.md --source contract-v1
+
+# Document is obsolete? Roll back everything it contributed
+he remove ./ka/ --document contract-v1
+
+# Remove a single wrong fact (LLM-assisted, with dry-run preview)
+he remove ./ka/ --edit-node Apple --fact "founded by Steve Jobs" --dry-run
+
+# Search only within legal-tagged documents
+he search ./ka/ "termination clause" --tag legal
+
+# Audit: which documents contributed what?
+he info ./ka/ --sources
+```
+
+</details>
+
 ## 🚀 Supported Platforms & Models
 
 Hyper-Extract uses LangChain structured output with **function calling**. The model must support tool/function calling.
