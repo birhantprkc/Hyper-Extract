@@ -111,6 +111,16 @@ he show ./output/
 
 # Export to an Obsidian vault (Markdown notes + [[wikilinks]])
 he export obsidian ./output/ -o ./vault/
+
+# Your sources change? Feed updates under the same source — old facts roll back automatically
+he feed ./output/ updated-tesla.md --source tesla.md
+
+# Tag and scope your searches
+he tag ./output/ --source tesla.md --add biography
+he search ./output/ "inventions" --tag biography
+
+# Audit: which documents contributed what?
+he info ./output/ --sources
 ```
 
 > **Which provider should I use?** OpenAI and Bailian provide both LLM and embedding models in one API. Anthropic and DeepSeek are LLM-only (pair them with an OpenAI embedder for search/chat). Local vLLM is free but requires a GPU. DeepSeek is the most cost-effective option (~$0.001-0.005/page vs ~$0.01-0.05/page for OpenAI gpt-4o-mini).

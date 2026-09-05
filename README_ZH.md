@@ -111,6 +111,16 @@ he show ./output/
 
 # 导出为 Obsidian 知识库（Markdown 笔记 + [[双向链接]]）
 he export obsidian ./output/ -o ./vault/
+
+# 来源文档变化了？同 source 重喂——旧事实自动回滚
+he feed ./output/ updated-sushi.md --source sushi.md
+
+# 打标签并范围检索
+he tag ./output/ --source sushi.md --add biography
+he search ./output/ "作品" --tag biography
+
+# 审计：哪些文档贡献了什么？
+he info ./output/ --sources
 ```
 
 > **该用哪个 provider？** OpenAI 和百炼同时提供 LLM 和 embedding 模型。Anthropic 和 DeepSeek 仅提供 LLM（搜索/聊天功能需搭配 OpenAI 的 embedder）。本地 vLLM 免费但需要 GPU。DeepSeek 最经济（约 $0.001-0.005/页，而 OpenAI gpt-4o-mini 约 $0.01-0.05/页）。
