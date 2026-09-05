@@ -752,10 +752,17 @@ class AutoHypergraph(
         top_k_nodes: int = 3,
         top_k_edges: int = 3,
         top_k: int | None = None,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> tuple[list[NodeSchema], list[EdgeSchema]]:
         """Unified hypergraph search interface.
 
         Retrieves nodes and hyperedges semantically related to the query.
+
+        Args:
+            source_ids: Optional scope — only knowledge contributed by these source documents.
+            tags: Optional scope — only knowledge from sources carrying any of these tags.
         Always returns a tuple of (nodes, edges). If a count is 0, the corresponding list will be empty.
 
         Args:
@@ -797,13 +804,31 @@ class AutoHypergraph(
 
         return nodes, edges
 
-    def search_nodes(self, query: str, top_k: int = 3) -> list[NodeSchema]:
+    def search_nodes(
+        self,
+        query: str,
+        top_k: int = 3,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
+    ) -> list[NodeSchema]:
         """Semantic search for nodes/entities only."""
-        return self._node_memory.search(query=query, top_k=top_k)
+        return self._node_memory.search(
+            query=query, top_k=top_k, source_ids=source_ids, tags=tags
+        )
 
-    def search_edges(self, query: str, top_k: int = 3) -> list[EdgeSchema]:
+    def search_edges(
+        self,
+        query: str,
+        top_k: int = 3,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
+    ) -> list[EdgeSchema]:
         """Semantic search for hyperedges/relationships only."""
-        return self._edge_memory.search(query=query, top_k=top_k)
+        return self._edge_memory.search(
+            query=query, top_k=top_k, source_ids=source_ids, tags=tags
+        )
 
     def chat(
         self,

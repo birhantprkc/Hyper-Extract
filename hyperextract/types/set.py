@@ -184,7 +184,8 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
             embedder=embedder,
             strategy_or_merger=self._merger,
             verbose=verbose,
-            fields_for_index=fields_for_index,  # Pass field selection to OMem
+            fields_for_index=fields_for_index,
+            track_sources=True,  # source ledger for per-document rollback (#84)
         )
         # Store label extractor for visualization
         self._item_label_extractor = item_label_extractor
@@ -344,12 +345,21 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         """
         self._data_memory.build_index(force=force)
 
-    def search(self, query: str, top_k: int = 3) -> list[ItemSchema]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 3,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
+    ) -> list[ItemSchema]:
         """Searches items in the set using semantic similarity.
 
         Args:
             query: Search query string.
             top_k: Number of results to return.
+            source_ids: Optional scope — only items contributed by these source documents.
+            tags: Optional scope — only items from sources carrying any of these tags.
 
         Returns:
             List of relevant items.
@@ -359,7 +369,9 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
             return []
         if not self._data_memory.has_index():
             raise ValueError("Index not built. Call build_index() first.")
-        return self._data_memory.search(query, top_k=top_k)
+        return self._data_memory.search(
+            query, top_k=top_k, source_ids=source_ids, tags=tags
+        )
 
     # ==================== Index Storage ====================
 
