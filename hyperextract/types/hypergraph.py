@@ -795,12 +795,16 @@ class AutoHypergraph(
         if top_k_nodes > 0:
             if not self._node_memory.has_index():
                 raise ValueError("Node index not built. Call build_index() first.")
-            nodes = self.search_nodes(query, top_k=top_k_nodes)
+            nodes = self.search_nodes(
+                query, top_k=top_k_nodes, source_ids=source_ids, tags=tags
+            )
 
         if top_k_edges > 0:
             if not self._edge_memory.has_index():
                 raise ValueError("Edge index not built. Call build_index() first.")
-            edges = self.search_edges(query, top_k=top_k_edges)
+            edges = self.search_edges(
+                query, top_k=top_k_edges, source_ids=source_ids, tags=tags
+            )
 
         return nodes, edges
 
