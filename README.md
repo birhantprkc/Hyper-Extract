@@ -58,6 +58,12 @@
 
 <!-- News snippets are derived from the latest merged PRs. Update as new releases land. -->
 
+### v0.8.1 / v0.8.2
+
+- **🏷️ Source Tags & Scoped Search** — `he tag ./ka/ --source doc-1 --add legal`, then `he search ./ka/ "query" --tag legal` to retrieve only within tagged documents. Works for graph, hypergraph, and set KAs. *(#89, #84)*
+- **🛡️ Input Validation** — `he parse` / `he feed` now reject unsupported file types (PDF/Office) with a conversion hint instead of silently ingesting garbage. *(#88)*
+- **📦 Document Archive Fix** — re-feeding the same source from a differently-named file no longer accumulates stale copies. *(#89)*
+
 ### v0.8.0
 
 - **🔄 Document Upsert** — re-feed an attributed document and its previous version is rolled back automatically: removed facts disappear, shared keys re-merge from surviving sources. *(#84)*
