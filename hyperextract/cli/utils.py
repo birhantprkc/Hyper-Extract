@@ -6,11 +6,17 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from hyperextract.utils.readers import (
+    INGESTABLE_SUFFIXES,
+    TEXT_SUFFIXES,
+    markitdown_available,
+    read_document,
+)
+
 from .config import ConfigManager
 
 console = Console()
 
-TEXT_INPUT_SUFFIXES = {".txt", ".md"}
 _SKIPPED_FILE_PREVIEW_LIMIT = 10
 _DS_STORE = ".DS_Store"
 
@@ -27,12 +33,19 @@ LOGO = r"""
 
 
 def _is_supported_text_suffix(path: Path) -> bool:
-    """Return True when the path suffix is .txt or .md (case-insensitive)."""
-    return path.suffix.lower() in TEXT_INPUT_SUFFIXES
+    """Return True when the CLI can read this file in the current environment.
+
+    Plain text (``.txt``/``.md``) is always supported; document formats are
+    supported when the optional markitdown backend is installed.
+    """
+    suffix = path.suffix.lower()
+    if suffix in TEXT_SUFFIXES:
+        return True
+    return suffix in INGESTABLE_SUFFIXES and markitdown_available()
 
 
 def require_supported_text_input(input_path: str) -> None:
-    """Reject a single-file input whose suffix is not .txt/.md.
+    """Reject a single-file input the CLI cannot read.
 
     Stdin (``-``) is not suffix-checked. Directories are left to
     :func:`collect_directory_text_inputs`.
@@ -44,20 +57,29 @@ def require_supported_text_input(input_path: str) -> None:
         return
     if _is_supported_text_suffix(path):
         return
+    suffix = path.suffix.lower()
     console.print(
         f"[red]Error:[/red] Unsupported input type: {path.name or input_path}"
     )
-    console.print(
-        "This CLI does not parse PDF/Office files. Please convert the file to .txt or .md."
-    )
+    if suffix in INGESTABLE_SUFFIXES:
+        console.print(
+            f"{INGESTABLE_SUFFIXES[suffix]} input is supported with the "
+            "optional ingest extra: "
+            'pip install "hyperextract\\[ingest]"'
+        )
+    else:
+        console.print(
+            "Supported inputs: .txt/.md always; PDF/DOCX/PPTX/XLSX/HTML and "
+            'more via pip install "hyperextract\\[ingest]".'
+        )
     raise typer.Exit(1)
 
 
 def collect_directory_text_inputs(directory: Path) -> list[Path]:
-    """Return non-recursive .txt/.md files in ``directory``.
+    """Return non-recursive readable files in ``directory``.
 
     Raises:
-        typer.Exit: If the directory contains no .txt or .md files.
+        typer.Exit: If the directory contains no readable files.
 
     Other regular files at the same level produce a warning (up to 10 names
     plus a remaining count) and are skipped. ``.DS_Store`` is ignored.
@@ -71,7 +93,24 @@ def collect_directory_text_inputs(directory: Path) -> list[Path]:
         key=lambda path: path.name.lower(),
     )
     if not text_files:
-        console.print(f"[red]Error:[/red] No .txt or .md files found in {directory}")
+        skipped_ingestable = [
+            path
+            for path in directory.iterdir()
+            if path.is_file()
+            and path.suffix.lower() in INGESTABLE_SUFFIXES
+            and not markitdown_available()
+        ]
+        if skipped_ingestable:
+            console.print(
+                "[red]Error:[/red] No readable files found in "
+                f"{directory}. Document files (e.g. "
+                f"{skipped_ingestable[0].name}) need the ingest extra: "
+                'pip install "hyperextract\\[ingest]"'
+            )
+        else:
+            console.print(
+                f"[red]Error:[/red] No .txt or .md files found in {directory}"
+            )
         raise typer.Exit(1)
 
     skipped = sorted(
@@ -89,22 +128,35 @@ def collect_directory_text_inputs(directory: Path) -> list[Path]:
         listed = ", ".join(path.name for path in preview)
         remaining = len(skipped) - len(preview)
         extra = f" (+{remaining} more)" if remaining else ""
+        hint = (
+            " Install the ingest extra for documents: "
+            'pip install "hyperextract\\[ingest]"'
+            if any(p.suffix.lower() in INGESTABLE_SUFFIXES for p in skipped)
+            and not markitdown_available()
+            else ""
+        )
         console.print(
-            f"[yellow]Warning:[/yellow] skipped unsupported file(s): {listed}{extra}"
+            f"[yellow]Warning:[/yellow] skipped unsupported file(s): "
+            f"{listed}{extra}.{hint}"
         )
 
     return text_files
 
 
 def read_input(input_path: str) -> str:
-    """Read input from file or stdin."""
+    """Read input from file or stdin (document formats converted to text)."""
     if input_path == "-":
         return sys.stdin.read()
     path = Path(input_path)
     if not path.exists():
         raise FileNotFoundError(f"Input file not found: {input_path}")
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+    from hyperextract.utils.readers import ReaderError
+
+    try:
+        return read_document(path)
+    except ReaderError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
 
 
 def validate_ka_path(ka_path: str) -> Path:
@@ -184,8 +236,9 @@ def get_template_from_ka(ka_path: Path) -> tuple[str, str]:
     """Get template path for Knowledge Abstract.
 
     Load priority:
-    1. If template is in presets (e.g., "general/graph") -> use preset name
-    2. If template not in presets -> try to find {template}.yaml in KA directory
+    1. If template is a registered method (e.g., "method/chunk_rag") -> use it
+    2. If template is in presets (e.g., "general/graph") -> use preset name
+    3. If template not in presets -> try to find {template}.yaml in KA directory
 
     Raises:
         ValueError: If template not found and no local yaml file exists
@@ -202,7 +255,13 @@ def get_template_from_ka(ka_path: Path) -> tuple[str, str]:
     lang = metadata.get("lang")
 
     if template:
-        if Gallery.get(template) is not None:
+        if template.startswith("method/"):
+            # Method templates are code-registered, not gallery YAML files.
+            from hyperextract.methods.registry import get_method
+
+            if get_method(template[len("method/") :]) is not None:
+                return template, lang
+        elif Gallery.get(template) is not None:
             return template, lang
         else:
             local_yaml = ka_path / f"{template}.yaml"

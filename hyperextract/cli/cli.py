@@ -718,12 +718,15 @@ def info(
     if isinstance(data, dict):
         node_count = len(data.get("nodes", data.get("entities", [])))
         edge_count = len(data.get("edges", data.get("relations", [])))
+        chunk_count = len(data.get("chunks", []))
     elif isinstance(data, list):
         node_count = len(data)
         edge_count = 0
+        chunk_count = 0
     else:
         node_count = 0
         edge_count = 0
+        chunk_count = 0
 
     index_exists = (path / "index").exists() and any((path / "index").iterdir())
 
@@ -744,6 +747,8 @@ def info(
 
     table.add_row("Nodes", str(node_count))
     table.add_row("Edges", str(edge_count))
+    if chunk_count:
+        table.add_row("Chunks", str(chunk_count))
     table.add_row(
         "Index", "[green]Built[/green]" if index_exists else "[red]Not Built[/red]"
     )
@@ -760,6 +765,7 @@ def info(
         ledger_files = [
             (path / "sources_nodes.json", "nodes"),
             (path / "sources_edges.json", "edges"),
+            (path / "sources_chunks.json", "chunks"),
         ]
         combined: dict = {}
         for ledger_path, _kind in ledger_files:
@@ -1381,10 +1387,18 @@ def remove_items(
     ka = Template.create(template, lang)
     ka.load(path)
 
-    if not hasattr(ka, "remove_nodes"):
+    if document and not hasattr(ka, "remove_source"):
         console.print(
-            f"[red]Error:[/red] `he remove` supports graph-family knowledge "
-            f"abstracts (graph / hypergraph / temporal / spatial). "
+            f"[red]Error:[/red] Document rollback requires a source-tracked "
+            f"knowledge abstract (graph-family or chunk-based). "
+            f"'{template}' produced a {type(ka).__name__}, which does not "
+            "support it."
+        )
+        raise typer.Exit(1)
+    if not document and not hasattr(ka, "remove_nodes"):
+        console.print(
+            f"[red]Error:[/red] `he remove` keyed deletion supports graph-family "
+            f"knowledge abstracts (graph / hypergraph / temporal / spatial). "
             f"'{template}' produced a {type(ka).__name__}, which does not "
             "support keyed deletion. For lists/sets, use the Python API "
             "`ka.remove(item)`; or rebuild the KA with `he clean --all`."
@@ -1468,6 +1482,8 @@ def remove_items(
                 "remerged_nodes",
                 "removed_edges",
                 "remerged_edges",
+                "removed_chunks",
+                "remerged_chunks",
             )
         )
         if not changed_any:

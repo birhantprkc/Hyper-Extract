@@ -131,6 +131,33 @@ ka = Template.create("method/atom")
 
 ## 基于 RAG 的方法
 
+### chunk_rag
+
+**描述**：基于原始文本块的基线检索
+
+**特点**：
+- **零提取成本**：文档直接分块并向量化，摄入过程不调用 LLM
+- 检索返回原始文本块，而非结构化知识
+- 完整的溯源支持：来源账本、按文档回滚、标签、范围检索
+- 是评估各类图谱方法的参照基线
+
+**最适合**：
+- 语料库的快速问答
+- 投入提取成本前的基线对比
+- 提取成本敏感的超大规模语料
+
+**用法**：
+```bash
+he parse ./docs -m chunk_rag -o my_ka
+he search my_ka "这个语料库讲什么？"
+```
+
+```python
+ka = Template.create("method/chunk_rag")
+```
+
+---
+
 ### light_rag
 
 **描述**：轻量级基于图谱的 RAG
@@ -249,6 +276,7 @@ ka = Template.create("method/cog_rag")
 
 | 用例 | 推荐 |
 |----------|-------------|
+| 快速问答 / 基线 | chunk_rag |
 | 快速提取 | light_rag |
 | 最佳质量 | itext2kg_star |
 | 大型文档 | graph_rag |
@@ -271,6 +299,7 @@ ka = Template.create("method/cog_rag")
 
 | 方法 | 速度 | 质量 | 内存 | 最佳用途 |
 |--------|-------|---------|--------|----------|
+| chunk_rag | ⭐⭐⭐ | —（原始块） | ⭐⭐⭐ | 基线 / 语料问答 |
 | itext2kg | ⭐⭐⭐ | ⭐⭐⭐ | ⭐ | 质量优先 |
 | itext2kg_star | ⭐⭐⭐ | ⭐⭐⭐ | ⭐ | 生产质量 |
 | kg_gen | ⭐⭐⭐ | ⭐⭐ | ⭐ | 灵活性 |

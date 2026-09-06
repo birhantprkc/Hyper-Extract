@@ -50,17 +50,23 @@
 
 <div class="grid cards" markdown>
 
--   :material-shape:{ .lg .middle } **8 Auto-Types**
+-   :material-file-pdf-box:{ .lg .middle } **Rich Document Ingestion**
+
+    ---
+
+    Feed PDF, Word, PowerPoint, Excel, HTML, EPUB and more — not just `.txt`/`.md`. One optional extra: `pip install "hyperextract[ingest]"`.
+
+-   :material-shape:{ .lg .middle } **9 Auto-Types**
 
     ---
 
     From simple `AutoList`/`AutoModel` to advanced `AutoGraph`, `AutoHypergraph`, and `AutoSpatioTemporalGraph`. Pick the right structure for your data.
 
--   :material-brain:{ .lg .middle } **10+ Extraction Engines**
+-   :material-brain:{ .lg .middle } **11+ Extraction Engines**
 
     ---
 
-    Built-in support for GraphRAG, LightRAG, Hyper-RAG, KG-Gen, iText2KG, and more. Choose the best method for your use case.
+    Built-in support for the `chunk_rag` baseline, GraphRAG, LightRAG, Hyper-RAG, KG-Gen, iText2KG, and more. Choose the best method for your use case.
 
 -   :material-file-document:{ .lg .middle } **80+ Domain Templates**
 

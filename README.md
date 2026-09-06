@@ -152,8 +152,9 @@ result.show()
 
 | | |
 |:---|:---|
-| 🔷 **8 Knowledge Structures** | From simple Lists to advanced Graphs, Hypergraphs, and Spatio-Temporal Graphs |
-| 🧠 **10+ Extraction Engines** | GraphRAG, LightRAG, Hyper-RAG, KG-Gen, and more — ready to use |
+| 📄 **Rich Document Ingestion** | Feed PDF, Word, PowerPoint, Excel, HTML, EPUB and more — not just `.txt`/`.md` (`pip install "hyperextract[ingest]"`) |
+| 🔷 **9 Knowledge Structures** | From raw chunk corpora and simple Lists to advanced Graphs, Hypergraphs, and Spatio-Temporal Graphs |
+| 🧠 **11+ Extraction Engines** | chunk_rag (zero-cost baseline), GraphRAG, LightRAG, Hyper-RAG, KG-Gen, and more — ready to use |
 | 📝 **80+ YAML Templates** | Zero-code extraction across Finance, Legal, Medical, TCM, Industry, and General domains |
 | 🔄 **Incremental Evolution & Provenance** | Feed new documents anytime — every source is attributed and the index updates incrementally; audit (`he info --sources`), roll back (`he remove --document`), or upsert updated versions as your sources change |
 | 📤 **Obsidian Export** | Turn any extracted graph into an Obsidian vault — Markdown notes linked by `[[wikilinks]]` |
@@ -289,8 +290,8 @@ From simple to complex — pick the right structure for your data:
 
 Hyper-Extract follows a **three-layer architecture**:
 
-- **Auto-Types** — 8 strongly-typed data structures (Model, List, Set, Graph, Hypergraph, Temporal Graph, Spatial Graph, Spatio-Temporal Graph)
-- **Methods** — Extraction algorithms: KG-Gen, GraphRAG, LightRAG, Hyper-RAG, Cog-RAG, and more
+- **Auto-Types** — 9 strongly-typed data structures (Model, List, Set, Graph, Hypergraph, Temporal Graph, Spatial Graph, Spatio-Temporal Graph, Document corpus)
+- **Methods** — Extraction & retrieval algorithms: Chunk-RAG baseline, KG-Gen, GraphRAG, LightRAG, Hyper-RAG, Cog-RAG, and more
 - **Templates** — 80+ presets across 6 domains. Zero-code setup.
 
 <img src="docs/assets/arch.jpg" alt="Architecture" width="750" style="max-width: 100%;">
@@ -333,6 +334,12 @@ identifiers:
 ## 📰 What's New
 
 <!-- News snippets are derived from the latest merged PRs. Update as new releases land. -->
+
+### v0.9.0
+
+- **📄 Rich Document Ingestion** — `he parse` / `he feed` now accept PDF, Word, PowerPoint, Excel, HTML, CSV/JSON/XML, EPUB and more via the optional ingest extra (`pip install "hyperextract[ingest]"`, powered by [MarkItDown](https://github.com/microsoft/markitdown)). Non-UTF-8 text (GBK, etc.) is auto-detected; text-less (scanned) PDFs fail with a clear OCR hint instead of silently ingesting garbage.
+- **🧱 `chunk_rag` Baseline Method** — a new zero-extraction method: documents are chunked and embedded as-is, and search returns raw text chunks. Zero LLM cost at ingestion, with full provenance (tags, scoped search, per-document rollback). The chunk-retrieval baseline for corpus Q&A and method benchmarking.
+- **🐛 Fixes** — `he tag` crashed on every knowledge abstract (`tag_source` was never exposed on any type); `he search`/`he talk`/`he feed`/`he remove --document` crashed on method-built KAs (`method/*` templates were not resolvable from KA metadata).
 
 ### v0.8.1 / v0.8.2
 

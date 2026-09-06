@@ -52,6 +52,7 @@ import os
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 
 from .base import BaseAutoType
+from .document import AutoDocument, DocumentData, TextChunk
 from .graph import AutoGraph
 from .hypergraph import AutoHypergraph
 from .list import AutoList
@@ -62,6 +63,8 @@ from .spatio_temporal_graph import AutoSpatioTemporalGraph
 from .temporal_graph import AutoTemporalGraph
 
 __all__ = [
+    # Corpus type
+    "AutoDocument",
     # Graph types
     "AutoGraph",
     # Hypergraph type
@@ -76,4 +79,7 @@ __all__ = [
     "AutoTemporalGraph",
     # Base class
     "BaseAutoType",
+    # Corpus schemas
+    "DocumentData",
+    "TextChunk",
 ]

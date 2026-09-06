@@ -99,6 +99,7 @@ def list_method_cfgs() -> dict[str, MethodCfg]:
 def _init_registry():
     """Initialize the registry with built-in methods."""
     from hyperextract.methods.rag import (
+        Chunk_RAG,
         Cog_RAG,
         Graph_RAG,
         Hyper_RAG,
@@ -106,6 +107,15 @@ def _init_registry():
         Light_RAG,
     )
     from hyperextract.methods.typical import Atom, KG_Gen, iText2KG, iText2KG_Star
+
+    register_method(
+        name="chunk_rag",
+        method_class=Chunk_RAG,
+        autotype="document",
+        description=(
+            "Chunk RAG: baseline retrieval over raw text chunks (no LLM extraction)"
+        ),
+    )
 
     register_method(
         name="graph_rag",

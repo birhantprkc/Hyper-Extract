@@ -50,17 +50,23 @@
 
 <div class="grid cards" markdown>
 
--   :material-shape:{ .lg .middle } **8 种自动类型**
+-   :material-file-pdf-box:{ .lg .middle } **丰富的文档输入**
+
+    ---
+
+    不止 `.txt`/`.md`——PDF、Word、PowerPoint、Excel、HTML、EPUB 等直接喂入。安装可选依赖即可：`pip install "hyperextract[ingest]"`。
+
+-   :material-shape:{ .lg .middle } **9 种自动类型**
 
     ---
 
     从简单的 `AutoList`/`AutoModel` 到高级的 `AutoGraph`、`AutoHypergraph` 和 `AutoSpatioTemporalGraph`。为您的数据选择正确的结构。
 
--   :material-brain:{ .lg .middle } **10+ 种提取引擎**
+-   :material-brain:{ .lg .middle } **11+ 种提取引擎**
 
     ---
 
-    内置支持 GraphRAG、LightRAG、Hyper-RAG、KG-Gen、iText2KG 等。选择最适合您用例的方法。
+    内置支持 `chunk_rag` 基线、GraphRAG、LightRAG、Hyper-RAG、KG-Gen、iText2KG 等。选择最适合您用例的方法。
 
 -   :material-file-document:{ .lg .middle } **80+ 个领域模板**
 
@@ -74,14 +80,15 @@
 
     持续喂入新文档扩展知识摘要——每个来源自动标注，删除与回滚同样增量完成，无需全量重处理。
 
--   :material-category:{ .lg .middle } **8 种知识结构**
+-   :material-category:{ .lg .middle } **9 种知识结构**
 
     ---
 
-    从简单集合到图谱、超图与时空图谱，按需选择最合适的数据结构。
+    从原始语料块、简单集合到图谱、超图与时空图谱，按需选择最合适的数据结构。
 
 </div>
 
+| **AutoDocument** | 原始语料块 | 零提取成本的块检索基线 |
 | **AutoModel** | 结构化摘要 | 带有特定字段的 Pydantic 模型 |
 | **AutoList** | 项目集合 | 实体或事实的列表 |
 | **AutoSet** | 去重集合 | 唯一项目的集合 |

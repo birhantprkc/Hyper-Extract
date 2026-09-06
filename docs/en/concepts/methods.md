@@ -143,6 +143,35 @@ ka = Template.create("method/atom")
 
 ## RAG-Based Methods
 
+### chunk_rag
+
+**Description**: Baseline retrieval over raw text chunks
+
+**Characteristics**:
+
+- **Zero extraction cost**: documents are chunked and embedded as-is; no LLM calls at ingestion
+- Retrieval returns the raw chunks, not structured knowledge
+- Full provenance support: source ledger, per-document rollback, tags, scoped search
+- The reference point for judging graph-based methods
+
+**Best for**:
+
+- Quick document Q&A over a corpus
+- Baseline comparison before investing in extraction
+- Very large corpora where extraction cost matters
+
+**Usage**:
+```bash
+he parse ./docs -m chunk_rag -o my_ka
+he search my_ka "what is this corpus about?"
+```
+
+```python
+ka = Template.create("method/chunk_rag")
+```
+
+---
+
 ### light_rag
 
 **Description**: Lightweight Graph-based RAG
@@ -273,6 +302,7 @@ ka = Template.create("method/cog_rag")
 
 | Use Case | Recommended |
 |----------|-------------|
+| Quick Q&A / baseline | chunk_rag |
 | Quick extraction | light_rag |
 | Best quality | itext2kg_star |
 | Large documents | graph_rag |
@@ -295,6 +325,7 @@ ka = Template.create("method/cog_rag")
 
 | Method | Speed | Quality | Memory | Best For |
 |--------|-------|---------|--------|----------|
+| chunk_rag | ⭐⭐⭐ | — (raw chunks) | ⭐⭐⭐ | Baseline / corpus Q&A |
 | itext2kg | ⭐⭐⭐ | ⭐⭐⭐ | ⭐ | Quality focused |
 | itext2kg_star | ⭐⭐⭐ | ⭐⭐⭐ | ⭐ | Production quality |
 | kg_gen | ⭐⭐⭐ | ⭐⭐ | ⭐ | Flexibility |

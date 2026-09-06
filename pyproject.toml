@@ -1,6 +1,6 @@
 [project]
 name = "hyperextract"
-version = "0.8.2"
+version = "0.9.0"
 description = "An intelligent, LLM-powered knowledge extraction and evolution framework with semantic search capabilities"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -52,6 +52,8 @@ dev = [
     "pymdown-extensions>=10.0",
     "mike>=2.0",
     "pytest>=9.0.2",
+    # document conversion backend for readers.py (kept in dev so CI tests it)
+    "markitdown[pdf,docx,pptx,xlsx]>=0.1.4",
 ]
 
 
@@ -59,8 +61,9 @@ dev = [
 anthropic = ["langchain-anthropic>=0.3.0"]
 google = ["langchain-google-genai>=2.1.0"]
 mcp = ["mcp>=1.2.0,<3"]
+ingest = ["markitdown[pdf,docx,pptx,xlsx]>=0.1.4"]
 all = [
-    "hyperextract[anthropic,google,mcp]",
+    "hyperextract[anthropic,google,mcp,ingest]",
 ]
 
 [project.urls]

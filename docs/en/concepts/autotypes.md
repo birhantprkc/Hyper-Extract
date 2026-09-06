@@ -1,6 +1,6 @@
 # Auto-Types
 
-Understanding the 8 knowledge structure types: what they are and when to use them.
+Understanding the 9 knowledge structure types: what they are and when to use them.
 
 ---
 
@@ -19,14 +19,15 @@ Key characteristics:
 
 ---
 
-## The 8 Auto-Types
+## The 9 Auto-Types
 
-Organized into two categories:
+Organized into three categories:
 
 ```mermaid
 graph TD
     A[Auto-Types] --> B[Record Types<br/>Store data, no entity relations]
     A --> C[Graph Types<br/>Entity relationships]
+    A --> D[Corpus Type<br/>Raw chunk retrieval]
 
     B --> B1[AutoModel<br/>One structured object]
     B --> B2[AutoList<br/>Ordered items]
@@ -37,6 +38,8 @@ graph TD
     C --> C3[AutoTemporalGraph<br/>+ Time]
     C --> C4[AutoSpatialGraph<br/>+ Location]
     C --> C5[AutoSpatioTemporalGraph<br/>+ Time + Location]
+
+    D --> D1[AutoDocument<br/>Chunk-level retrieval,<br/>zero extraction cost]
 ```
 
 ---
@@ -306,12 +309,37 @@ Built on basic graphs with added **time** or **space** dimensions for richer rel
 
 ---
 
+## Corpus Type
+
+For **raw chunk-level retrieval** without any LLM extraction.
+
+### AutoDocument
+
+**Purpose**: Store documents as retrievable text chunks
+
+**Think of it as**: A smart, searchable archive of your documents
+
+**Example use cases**:
+
+- Quick Q&A over a document corpus
+- A baseline before investing in structured extraction
+- Cost-sensitive ingestion of very large collections
+
+**Key property**: Zero LLM cost at ingestion — chunks are embedded as-is; search returns raw text. Full provenance support (tags, scoped search, per-document rollback).
+
+**Common method**: `method/chunk_rag`
+
+---
+
 ## Selection Guide
 
 ### Decision Tree
 
 ```
 What do you need to extract?
+│
+├─ Nothing — just searchable raw chunks
+│  └─ AutoDocument (chunk_rag)
 │
 ├─ Single structured object (like a form)
 │  └─ AutoModel
@@ -335,6 +363,7 @@ What do you need to extract?
 
 | Use Case | Auto-Type | Why |
 |----------|-----------|-----|
+| Corpus Q&A / baseline | AutoDocument | Raw chunk retrieval, zero extraction |
 | Company financial report | AutoModel | Single structured summary |
 | Top 10 list | AutoList | Ordered/ranked items |
 | Keywords/tags | AutoSet | Unique collection |
@@ -345,6 +374,12 @@ What do you need to extract?
 | Historical events | AutoSpatioTemporalGraph | Full context needed |
 
 ### Quick Reference
+
+#### Corpus Type
+
+| Auto-Type | Output Shape | Key Feature |
+|-----------|--------------|-------------|
+| AutoDocument | Chunk array | Zero extraction, raw chunk retrieval |
 
 #### Record Types
 

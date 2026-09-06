@@ -14,9 +14,29 @@ he parse INPUT [OPTIONS]
 
 | 参数 | 描述 |
 |----------|-------------|
-| `INPUT` | 输入文件路径（`.txt` 或 `.md`）、目录或 `-` 表示标准输入 |
+| `INPUT` | 输入文件、目录或 `-` 表示标准输入 |
 
-支持的后缀为 `.txt` 与 `.md`（大小写不敏感，含 `.TXT`、`.MD`）。本 CLI 不解析 PDF / Office，也不做 OCR — 请先转为 `.txt` 或 `.md`。目录模式非递归：只读取该目录下的 `.txt`/`.md`；同层其它常规文件会 warning 并跳过。标准输入（`-`）不检查后缀。
+### 支持的输入格式
+
+纯文本始终支持；文档格式需要可选的 ingest 后端（由 [MarkItDown](https://github.com/microsoft/markitdown) 驱动）：
+
+```bash
+pip install "hyperextract[ingest]"
+```
+
+| 格式 | 后缀 | 要求 |
+|--------|----------|-------------|
+| 纯文本 / Markdown | `.txt` `.md` | 始终支持 |
+| PDF（文字层） | `.pdf` | ingest extra |
+| Word | `.docx` | ingest extra |
+| PowerPoint | `.pptx` | ingest extra |
+| Excel | `.xlsx` | ingest extra |
+| HTML | `.html` `.htm` | ingest extra |
+| CSV / JSON / XML | `.csv` `.json` `.xml` | ingest extra |
+| EPUB / ZIP | `.epub` `.zip` | ingest extra |
+| 邮件 | `.eml` `.msg` | ingest extra |
+
+后缀匹配大小写不敏感。扫描版（纯图片）PDF 没有文字层——请先做 OCR。目录模式非递归：读取该目录下受支持的文件；同层其它常规文件会 warning 并跳过。标准输入（`-`）不检查后缀。
 
 ## 选项
 
@@ -79,6 +99,15 @@ he parse document.md -m light_rag -o ./output/
 ```
 
 方法始终使用英文提示。
+
+### 用 chunk_rag 做零提取基线
+
+完全跳过知识结构化——文本块直接向量化，检索返回原文（零 LLM 提取成本）：
+
+```bash
+he parse ./documents/ -m chunk_rag -o ./corpus_kb/
+he search ./corpus_kb/ "这个语料库讲什么？"
+```
 
 ### 强制覆盖
 

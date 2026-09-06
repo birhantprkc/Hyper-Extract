@@ -194,6 +194,36 @@ class GraphEditMixin:
         ) or self._edge_memory._sources.get(source_id)
         return record.content_hash if record else None
 
+    def source_tags(self, source_id: str) -> list[str]:
+        """Return the tags of one source (empty if unknown/untagged)."""
+        for memory in (self._node_memory, self._edge_memory):
+            if source_id in memory._sources:
+                return memory.source_tags(source_id)
+        return []
+
+    def tag_source(
+        self,
+        source_id: str,
+        *,
+        add: list[str] | None = None,
+        remove: list[str] | None = None,
+    ) -> list[str]:
+        """Add/remove tags on one source across both ledgers.
+
+        Tags are applied to every ledger that knows the source so scoped
+        search stays consistent on the node and edge sides.
+
+        Raises:
+            KeyError: If no ledger knows ``source_id``.
+        """
+        tags: list[str] = []
+        for memory in (self._node_memory, self._edge_memory):
+            if source_id in memory._sources:
+                tags = memory.tag_source(source_id, add=add, remove=remove)
+        if not tags and source_id not in self.sources():
+            raise KeyError(f"Unknown source_id: {source_id!r}")
+        return tags
+
     # ==================== Document Upsert ====================
 
     def feed_text(

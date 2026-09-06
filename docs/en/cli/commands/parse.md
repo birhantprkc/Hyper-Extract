@@ -14,9 +14,33 @@ he parse INPUT [OPTIONS]
 
 | Argument | Description |
 |----------|-------------|
-| `INPUT` | Input file path (`.txt` or `.md`), directory, or `-` for stdin |
+| `INPUT` | Input file, directory, or `-` for stdin |
 
-Supported suffixes are `.txt` and `.md` (case-insensitive, including `.TXT` and `.MD`). This CLI does not parse PDF or Office files and does not perform OCR — convert those documents to `.txt` or `.md` first. Directory mode is non-recursive: only `.txt`/`.md` files in that folder are read; other regular files are skipped with a warning. Stdin (`-`) is not suffix-checked.
+### Supported Input Formats
+
+Plain text is always supported; document formats require the optional
+ingest backend (powered by [MarkItDown](https://github.com/microsoft/markitdown)):
+
+```bash
+pip install "hyperextract[ingest]"
+```
+
+| Format | Suffixes | Requirement |
+|--------|----------|-------------|
+| Plain text / Markdown | `.txt` `.md` | Always |
+| PDF (text layer) | `.pdf` | ingest extra |
+| Word | `.docx` | ingest extra |
+| PowerPoint | `.pptx` | ingest extra |
+| Excel | `.xlsx` | ingest extra |
+| HTML | `.html` `.htm` | ingest extra |
+| CSV / JSON / XML | `.csv` `.json` `.xml` | ingest extra |
+| EPUB / ZIP | `.epub` `.zip` | ingest extra |
+| Email | `.eml` `.msg` | ingest extra |
+
+Suffix matching is case-insensitive. Scanned (image-only) PDFs have no text
+layer — run OCR first. Directory mode is non-recursive: supported files in
+that folder are read; other regular files are skipped with a warning. Stdin
+(`-`) is not suffix-checked.
 
 ## Options
 
@@ -79,6 +103,16 @@ he parse document.md -m light_rag -o ./output/
 ```
 
 Methods always use English prompts.
+
+### Zero-Extraction Baseline with chunk_rag
+
+Skip knowledge structuring entirely — chunks are embedded as-is and search
+returns raw text (zero LLM extraction cost):
+
+```bash
+he parse ./documents/ -m chunk_rag -o ./corpus_kb/
+he search ./corpus_kb/ "what is this corpus about?"
+```
 
 ### Force Overwrite
 

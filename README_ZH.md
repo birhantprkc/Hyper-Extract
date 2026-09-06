@@ -152,8 +152,9 @@ result.show()
 
 | | |
 |:---|:---|
-| 🔷 **8 种知识结构** | 从简单的列表到复杂的图谱、超图、时空图谱 |
-| 🧠 **10+ 提取引擎** | GraphRAG、LightRAG、Hyper-RAG、KG-Gen 等开箱即用 |
+| 📄 **丰富的文档输入** | 不止 `.txt`/`.md`——PDF、Word、PowerPoint、Excel、HTML、EPUB 等直接喂入（`pip install "hyperextract[ingest]"`） |
+| 🔷 **9 种知识结构** | 从原始语料块、简单列表到复杂的图谱、超图、时空图谱 |
+| 🧠 **11+ 提取引擎** | chunk_rag（零成本基线）、GraphRAG、LightRAG、Hyper-RAG、KG-Gen 等开箱即用 |
 | 📝 **80+ YAML 模板** | 零代码提取，覆盖金融、法律、医疗、中医、工业、通用 6 大领域 |
 | 🔄 **增量演进与溯源** | 随时喂入新文档——每个来源自动标注、索引增量更新；可审计（`he info --sources`）、回滚（`he remove --document`）或以 upsert 方式更新文档 |
 | 📤 **Obsidian 导出** | 将提取的图谱导出为 Obsidian 知识库——以 `[[双向链接]]` 关联的 Markdown 笔记 |
@@ -333,6 +334,12 @@ identifiers:
 ## 📰 最新动态
 
 <!-- 以下摘要来自最近合并的 PR，随版本更新而更新。 -->
+
+### v0.9.0
+
+- **📄 丰富的文档输入** — `he parse` / `he feed` 现在支持 PDF、Word、PowerPoint、Excel、HTML、CSV/JSON/XML、EPUB 等格式，安装可选依赖即可启用（`pip install "hyperextract[ingest]"`，由 [MarkItDown](https://github.com/microsoft/markitdown) 驱动）。非 UTF-8 文本（GBK 等）自动识别编码；无文字层的扫描版 PDF 会给出明确的 OCR 提示，而不是静默摄入乱码。
+- **🧱 `chunk_rag` 基线方法** — 全新的零提取方法：文档直接分块并向量化，检索返回原始文本块。摄入零 LLM 成本，且具备完整溯源能力（标签、范围检索、按文档回滚）。语料问答与方法对比的块检索基线。
+- **🐛 修复** — `he tag` 在所有知识库上都会崩溃（`tag_source` 此前从未在任何类型上实现）；`he search`/`he talk`/`he feed`/`he remove --document` 在方法型知识库上会崩溃（`method/*` 模板无法从元数据解析）。
 
 ### v0.8.1 / v0.8.2
 
