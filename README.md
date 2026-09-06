@@ -69,33 +69,35 @@ uv tool install hyperextract
 
 **2. Configure your provider** (pick one):
 
-**OpenAI:**
 ```bash
+# OpenAI (LLM + embeddings in one key)
 he config init -p openai -k YOUR_OPENAI_API_KEY
-```
 
-**Anthropic (Claude):**
-```bash
-he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
-he config embedder -p openai -k YOUR_OPENAI_API_KEY
-```
-
-**DeepSeek:**
-```bash
+# DeepSeek (LLM only — pair with an OpenAI embedder, most cost-effective)
 he config llm -p deepseek -k YOUR_DEEPSEEK_API_KEY
 he config embedder -p openai -k YOUR_OPENAI_API_KEY
-```
 
-**Bailian (Alibaba Cloud):**
-```bash
-he config init -p bailian -k YOUR_BAILIAN_API_KEY
-```
-
-**Local vLLM:**
-```bash
+# Local vLLM (free, on-premise)
 he config llm -p vllm -u http://localhost:8000/v1 -k dummy -m Qwen/Qwen3.5-9B
 he config embedder -p vllm -u http://localhost:8001/v1 -k dummy -m BAAI/bge-m3
 ```
+
+<details>
+<summary><b>More providers</b> — Anthropic (Claude), Alibaba Bailian, OrcaRouter…</summary>
+<br>
+
+```bash
+# Anthropic (Claude) — LLM only
+he config llm -p anthropic -k YOUR_ANTHROPIC_API_KEY
+he config embedder -p openai -k YOUR_OPENAI_API_KEY
+
+# Alibaba Bailian (Qwen, LLM + embeddings in one key)
+he config init -p bailian -k YOUR_BAILIAN_API_KEY
+```
+
+> OpenAI and Bailian provide both LLM and embedding models in one API. Anthropic and DeepSeek are LLM-only (pair them with an OpenAI-compatible embedder). DeepSeek is the most cost-effective option (~$0.001-0.005/page).
+
+</details>
 
 **3. Extract, query & visualize:**
 
@@ -123,7 +125,7 @@ he search ./output/ "inventions" --tag biography
 he info ./output/ --sources
 ```
 
-> **Which provider should I use?** OpenAI and Bailian provide both LLM and embedding models in one API. Anthropic and DeepSeek are LLM-only (pair them with an OpenAI embedder for search/chat). Local vLLM is free but requires a GPU. DeepSeek is the most cost-effective option (~$0.001-0.005/page vs ~$0.01-0.05/page for OpenAI gpt-4o-mini).
+> **Which provider should I use?** OpenAI and Bailian provide both LLM and embedding models in one API; Anthropic and DeepSeek are LLM-only (pair with an OpenAI embedder); local vLLM is free but needs a GPU. Full guide: [Provider System](https://yifanfeng97.github.io/Hyper-Extract/latest/concepts/provider-system/).
 
 <details>
 <summary><b>🐍 Python API</b> (click to expand)</summary>
@@ -247,18 +249,25 @@ Hyper-Extract uses LangChain structured output with **function calling**. The mo
 
 **Embedding models** (semantic search) work with any OpenAI-compatible endpoint: `text-embedding-3-small`, `text-embedding-v4` (Bailian), `bge-m3` (local vLLM).
 
-> **DeepSeek note:** DeepSeek V4 models default to "thinking" mode, which Hyper-Extract auto-disables so structured extraction works. Set `DEEPSEEK_API_KEY`. DeepSeek has no embeddings API — pair it with an OpenAI-compatible embedder:
+<details>
+<summary><b>Provider notes</b> — DeepSeek & Anthropic pairing</summary>
+<br>
+
+> **DeepSeek:** V4 models default to "thinking" mode, which Hyper-Extract auto-disables so structured extraction works. Set `DEEPSEEK_API_KEY`. DeepSeek has no embeddings API:
+>
 > ```python
 > from hyperextract import create_client
 > llm, emb = create_client(llm="deepseek", embedder="openai:text-embedding-3-small")
 > ```
 
-> **Anthropic note:** Claude is used for the **LLM** (set `ANTHROPIC_API_KEY`). Anthropic has no embeddings API, so pair it with an OpenAI-compatible embedder:
+> **Anthropic:** Claude is used for the **LLM** (set `ANTHROPIC_API_KEY`, extra: `pip install 'hyperextract[anthropic]'`). No embeddings API:
+>
 > ```python
 > from hyperextract import create_client
 > llm, emb = create_client(llm="anthropic", embedder="openai:text-embedding-3-small")
 > ```
-> Requires the extra: `pip install 'hyperextract[anthropic]'`.
+
+</details>
 
 > 📖 Full guide: [Provider System & Local Model Support](https://yifanfeng97.github.io/Hyper-Extract/latest/concepts/provider-system/)
 
@@ -333,49 +342,9 @@ identifiers:
 
 ## 📰 What's New
 
-<!-- News snippets are derived from the latest merged PRs. Update as new releases land. -->
+**v0.9.0** — 📄 Rich document ingestion: `he parse` / `he feed` now take PDF, Word, PowerPoint, Excel, HTML, EPUB and more (`pip install "hyperextract[ingest]"`) · 🧱 New `chunk_rag` method: zero-extraction chunk baseline with full provenance · 🐛 `he tag` and method-KA command fixes.
 
-### v0.9.0
-
-- **📄 Rich Document Ingestion** — `he parse` / `he feed` now accept PDF, Word, PowerPoint, Excel, HTML, CSV/JSON/XML, EPUB and more via the optional ingest extra (`pip install "hyperextract[ingest]"`, powered by [MarkItDown](https://github.com/microsoft/markitdown)). Non-UTF-8 text (GBK, etc.) is auto-detected; text-less (scanned) PDFs fail with a clear OCR hint instead of silently ingesting garbage.
-- **🧱 `chunk_rag` Baseline Method** — a new zero-extraction method: documents are chunked and embedded as-is, and search returns raw text chunks. Zero LLM cost at ingestion, with full provenance (tags, scoped search, per-document rollback). The chunk-retrieval baseline for corpus Q&A and method benchmarking.
-- **🐛 Fixes** — `he tag` crashed on every knowledge abstract (`tag_source` was never exposed on any type); `he search`/`he talk`/`he feed`/`he remove --document` crashed on method-built KAs (`method/*` templates were not resolvable from KA metadata).
-
-### v0.8.1 / v0.8.2
-
-- **🏷️ Source Tags & Scoped Search** — `he tag ./ka/ --source doc-1 --add legal`, then `he search ./ka/ "query" --tag legal` to retrieve only within tagged documents. Works for graph, hypergraph, and set KAs. *(#89, #84)*
-- **🛡️ Input Validation** — `he parse` / `he feed` now reject unsupported file types (PDF/Office) with a conversion hint instead of silently ingesting garbage. *(#88)*
-- **📦 Document Archive Fix** — re-feeding the same source from a differently-named file no longer accumulates stale copies. *(#89)*
-
-### v0.8.0
-
-- **🔄 Document Upsert** — re-feed an attributed document and its previous version is rolled back automatically: removed facts disappear, shared keys re-merge from surviving sources. *(#84)*
-- **📁 Per-File Source Attribution** — `he parse ./docs/` attributes each file by its name automatically; roll back or audit any single file later. An explicit `--source` still overrides.
-- **⏱️ Spatiotemporal Provenance** — temporal/spatial/spatio-temporal graphs fully support source attribution and rollback, with deterministic (MERGE_FIELD) replay tests.
-
-<details>
-<summary><b>v0.5.0 – v0.7.0</b> — provenance, deletion, incremental index, template validator, GraphML/CSV export</summary>
-
-- **🗑️ Two-Tier Knowledge Deletion** — hard-delete by key (`he remove --node/--edge`, orphan edges pruned) or remove a single wrong fact via LLM-assisted editing (`he remove --edit-node --fact`), with dry-run, key-invariance checks, and automatic backups. *(#84)*
-- **📜 Source Attribution & Provenance** — `he feed --source` / `he parse --source` record each document's raw contributions; `he remove --document` rolls back exactly what one document contributed; `he info --sources` shows the ledger. *(#84)*
-- **📈 Incremental Everything** — feed/parse/removal/edit patch the vector index in place (only affected vectors re-embedded); `he feed` skips documents whose content hash is unchanged (`--refeed` to force). *(#84)*
-- **🧪 `he template validate`** — catch semantic template errors before paying for LLM calls: 9 diagnostic rules, `--json` for CI, `--all` for directories. *(#77)*
-- **📊 GraphML & CSV Export** — desktop graph tools and spreadsheets; hypergraphs get a hyperedges table. *(#85)*
-- **🌐 OrcaRouter Provider** — one key for 150+ models via `create_client("orcarouter")`. *(#71)*
-- **🔐 Config File Permissions** — `~/.he/config.toml` saved `0600`. *(#86)*
-- **🔗 Obsidian wikilink fix** — aliases no longer break on `[ ] | # ^`. *(#87)*
-- **🛡️ Chunk-Level Fault Isolation** — one failed chunk no longer discards the rest of a multi-chunk extraction. *(#78)*
-- **⚡ MCP Python SDK 2.x** — `he-mcp` works on mcp 1.x and 2.x. *(#72, #82)*
-- **🔀 Directed-Edge Fix** — `(source, target)` order preserved; custom endpoint field names. *(#74)*
-- **🔑 DeepSeek API Key Fix** — `DEEPSEEK_API_KEY` honored on the OpenAI-compatible path. *(#76)*
-- **🎓 Education Templates** — `course_concept_graph` + `curriculum_structure`. *(#80)*
-- **🧭 Smaller Fixes** — Graph_RAG.search 3-tuple; `he talk -i --top-k`; onboarding/docs overhaul. *(#70, #73, #57)*
-
-</details>
-
-### Archived
-
-See the full changelog in the [GitHub releases](https://github.com/yifanfeng97/hyper-extract/releases).
+📰 **[Full release notes](https://yifanfeng97.github.io/Hyper-Extract/latest/news/)** · [All releases](https://github.com/yifanfeng97/hyper-extract/releases)
 
 ## 📚 Documentation & Resources
 
@@ -384,6 +353,7 @@ See the full changelog in the [GitHub releases](https://github.com/yifanfeng97/h
 | Full Documentation | [yifanfeng97.github.io/Hyper-Extract](https://yifanfeng97.github.io/Hyper-Extract/latest/) |
 | CLI Guide | [Command-line interface](https://yifanfeng97.github.io/Hyper-Extract/latest/cli/) |
 | Provider System | [Model compatibility & local deployment](https://yifanfeng97.github.io/Hyper-Extract/latest/concepts/provider-system/) |
+| News | [Release notes & highlights](https://yifanfeng97.github.io/Hyper-Extract/latest/news/) |
 | Template Gallery | [80+ presets](./hyperextract/templates/presets/) |
 | Examples | [Working code](./examples/) |
 

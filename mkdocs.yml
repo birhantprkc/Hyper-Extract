@@ -156,6 +156,7 @@ plugins:
                 - resources/faq.md
                 - resources/troubleshooting.md
                 - resources/contributing.md
+            - News: news.md
         - locale: zh
           name: 中文
           build: true
@@ -256,6 +257,7 @@ plugins:
                 - zh/resources/faq.md
                 - zh/resources/troubleshooting.md
                 - zh/resources/contributing.md
+            - 新闻动态: zh/news.md
 
 extra:
   social:
