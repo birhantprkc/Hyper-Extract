@@ -543,6 +543,9 @@ class Graph_RAG(AutoGraph[NodeSchema, EdgeSchema]):
         top_k_edges: int = 3,
         top_k: int | None = None,
         use_community: bool = False,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> tuple[list, list, dict | None]:
         """Unified graph search interface with optional community enhancement.
 
@@ -553,15 +556,23 @@ class Graph_RAG(AutoGraph[NodeSchema, EdgeSchema]):
             top_k: If provided, sets both top_k_nodes and top_k_edges to this value.
             use_community: If True, enables community-aware search.
                           Requires networkx and graspologic. Default: False.
+            source_ids: Optional scope — only knowledge contributed by these
+                source documents (requires track_sources ledgers).
+            tags: Optional scope — only knowledge from sources carrying any
+                of these tags.
 
         Returns:
             Tuple of (nodes, edges, community_context).
             community_context is None when use_community=False.
         """
         if use_community:
-            return self._global_search_impl(query, top_k_nodes, top_k_edges)
+            return self._global_search_impl(
+                query, top_k_nodes, top_k_edges, source_ids=source_ids, tags=tags
+            )
         # Keep the 3-tuple contract: no community context in the default path.
-        nodes, edges = super().search(query, top_k_nodes, top_k_edges, top_k)
+        nodes, edges = super().search(
+            query, top_k_nodes, top_k_edges, top_k, source_ids=source_ids, tags=tags
+        )
         return nodes, edges, None
 
     def _global_search_impl(
@@ -569,6 +580,9 @@ class Graph_RAG(AutoGraph[NodeSchema, EdgeSchema]):
         query: str,
         top_k_nodes: int = 3,
         top_k_edges: int = 3,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> tuple[list, list, dict]:
         """Internal implementation for community-enhanced search."""
         if not self.community_reports:
@@ -577,7 +591,9 @@ class Graph_RAG(AutoGraph[NodeSchema, EdgeSchema]):
             self.build_communities()
 
         community_context = self._get_community_context_for_query(query)
-        nodes, edges = super().search(query, top_k_nodes, top_k_edges)
+        nodes, edges = super().search(
+            query, top_k_nodes, top_k_edges, source_ids=source_ids, tags=tags
+        )
 
         return nodes, edges, community_context
 

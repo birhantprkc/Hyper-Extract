@@ -295,12 +295,109 @@ class AutoSet(BaseAutoType[AutoSetSchema[ItemSchema]], Generic[ItemSchema]):
         Unlike the default behavior which uses merge_batch for full re-merge,
         AutoSet optimizes this by directly adding items to OMem, which
         handles deduplication and merging internally.
+
+        When parse/feed_text attributed a source, the raw items are recorded
+        in the ledger so the document can later be rolled back or scoped.
         """
+        source_id = getattr(self, "_pending_source_id", None)
+        if source_id is not None:
+            self._data_memory.record_source(
+                source_id,
+                [],
+                content_hash=getattr(self, "_pending_content_hash", None),
+            )
         if self.empty():
             self._set_data_state(incoming_data)
         elif incoming_data.items:
-            self._data_memory.add(incoming_data.items)
+            self._data_memory.add(incoming_data.items, source_id=source_id)
             self.clear_index()
+
+    # ==================== Source Provenance ====================
+
+    def _adopt_source_ledger(self, other: "AutoSet", source_id: str) -> None:
+        """Transfer the ledger entry for ``source_id`` from ``other``."""
+        if source_id in other._data_memory._sources:
+            self._data_memory._sources[source_id] = other._data_memory._sources[
+                source_id
+            ]
+
+    def _dump_provenance(self, root: Path) -> None:
+        """Persist the item source ledger alongside the KA."""
+        try:
+            self._data_memory.dump_sources(Path(root) / "sources_items.json")
+        except Exception as e:
+            logger.warning("provenance_dump_failed", error=str(e))
+
+    def _load_provenance(self, root: Path) -> None:
+        """Restore the item source ledger alongside the KA."""
+        try:
+            ledger_path = Path(root) / "sources_items.json"
+            if ledger_path.exists():
+                self._data_memory.load_sources(ledger_path)
+        except Exception as e:
+            logger.warning("provenance_load_failed", error=str(e))
+
+    def feed_text(
+        self,
+        text: str,
+        *,
+        source_id: str | None = None,
+        content_hash: str | None = None,
+    ) -> "AutoSet":
+        """Feed text with document-level upsert semantics.
+
+        When ``source_id`` was attributed before, the previous version's
+        items are rolled back first (exact re-merge from surviving sources),
+        so content removed from the updated document does not linger.
+        """
+        if (
+            source_id
+            and self._data_memory.track_sources
+            and source_id in self._data_memory.sources()
+        ):
+            logger.info("stage=source_upsert rollback source=%s", source_id)
+            self._data_memory.remove_source(source_id)
+        return super().feed_text(text, source_id=source_id, content_hash=content_hash)
+
+    def sources(self) -> dict[str, dict[str, Any]]:
+        """Summarize the source ledger."""
+        return {
+            source_id: dict(info)
+            for source_id, info in self._data_memory.sources().items()
+        }
+
+    def source_content_hash(self, source_id: str) -> str | None:
+        """Return the recorded content hash of a source (None if unknown)."""
+        record = self._data_memory._sources.get(source_id)
+        return record.content_hash if record else None
+
+    def source_tags(self, source_id: str) -> list[str]:
+        """Return the tags of one source (empty if unknown/untagged)."""
+        return self._data_memory.source_tags(source_id)
+
+    def tag_source(
+        self,
+        source_id: str,
+        *,
+        add: list[str] | None = None,
+        remove: list[str] | None = None,
+    ) -> list[str]:
+        """Add/remove tags on one source. Returns the resulting tag list."""
+        return self._data_memory.tag_source(source_id, add=add, remove=remove)
+
+    def remove_source(self, source_id: str, *, strategy: str = "exact") -> dict:
+        """Remove every item contributed by one source document.
+
+        Items shared with other documents are re-merged from the surviving
+        sources' raw contents. The search index is patched in place when built.
+        """
+        report = self._data_memory.remove_source(source_id, strategy=strategy)
+        return {
+            "source_id": source_id,
+            "removed_items": report["removed_keys"],
+            "remerged_items": report["remerged_keys"],
+            "index_patched": report["index_patched"],
+        }
 
     # ==================== Core Override Methods ====================
 

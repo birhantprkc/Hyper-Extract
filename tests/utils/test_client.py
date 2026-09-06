@@ -22,6 +22,7 @@ from hyperextract.utils.client import (
 # _parse_client_spec
 # =============================================================================
 
+
 class TestParseClientSpec:
     """Tests for _parse_client_spec string parser."""
 
@@ -53,7 +54,9 @@ class TestParseClientSpec:
 
     def test_embedder_defaults(self):
         """Embedder default kind uses embedder preset."""
-        result = _parse_client_spec("bailian", api_key="sk-test", default_kind="embedder")
+        result = _parse_client_spec(
+            "bailian", api_key="sk-test", default_kind="embedder"
+        )
         assert result["model"] == "text-embedding-v4"  # default_embedder preset
 
     def test_provider_orcarouter(self):
@@ -99,6 +102,7 @@ class TestParseClientSpec:
 # =============================================================================
 # create_llm / create_embedder
 # =============================================================================
+
 
 class TestCreateLLM:
     """Tests for create_llm factory."""
@@ -255,6 +259,7 @@ class TestCreateEmbedder:
 # create_client (unified API)
 # =============================================================================
 
+
 class TestCreateClient:
     """Tests for create_client unified factory."""
 
@@ -301,6 +306,7 @@ class TestCreateClient:
 # =============================================================================
 # CompatibleEmbeddings
 # =============================================================================
+
 
 class TestCompatibleEmbeddings:
     """Tests for CompatibleEmbeddings wrapper."""
@@ -436,9 +442,12 @@ class TestCompatibleEmbeddings:
             ]
         )
         # Force the single input text to split into three chunks.
-        with patch.object(
-            emb, "_split_texts", return_value=[("c1", 0), ("c2", 0), ("c3", 0)]
-        ), patch.object(emb, "_client", mock_openai_client):
+        with (
+            patch.object(
+                emb, "_split_texts", return_value=[("c1", 0), ("c2", 0), ("c3", 0)]
+            ),
+            patch.object(emb, "_client", mock_openai_client),
+        ):
             result = emb.embed_documents(["a long text"])
 
         assert result == [[6.0, 6.0, 6.0]]
@@ -514,6 +523,7 @@ class TestCompatibleEmbeddings:
 # get_client (config file)
 # =============================================================================
 
+
 class TestGetClient:
     """Tests for get_client reading from config file."""
 
@@ -521,12 +531,12 @@ class TestGetClient:
         """Read client config from TOML file."""
         config_file = tmp_path / "config.toml"
         config_file.write_text(
-            '[llm]\n'
+            "[llm]\n"
             'provider = "bailian"\n'
             'model = "qwen-plus"\n'
             'api_key = "sk-from-file"\n'
             'base_url = ""\n'
-            '[embedder]\n'
+            "[embedder]\n"
             'provider = "bailian"\n'
             'model = "text-embedding-v4"\n'
             'api_key = "sk-from-file"\n'
@@ -536,7 +546,9 @@ class TestGetClient:
         assert llm.model_name == "qwen-plus"
         assert isinstance(emb, CompatibleEmbeddings)
 
-    def test_get_client_missing_file(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    def test_get_client_missing_file(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
         """Missing config file returns default configs."""
         # Ensure consistent environment for default OpenAI fallback
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
@@ -552,6 +564,7 @@ class TestGetClient:
 # =============================================================================
 # PROVIDER_PRESETS consistency
 # =============================================================================
+
 
 class TestProviderPresets:
     """Tests for PROVIDER_PRESETS data consistency."""

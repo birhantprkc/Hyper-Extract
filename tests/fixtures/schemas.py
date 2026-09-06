@@ -19,7 +19,9 @@ class CompanySchema(BaseModel):
     name: str = Field(description="Company name")
     industry: Optional[str] = Field(default=None, description="Industry sector")
     founded_year: Optional[int] = Field(default=None, description="Year founded")
-    headquarters: Optional[str] = Field(default=None, description="Headquarters location")
+    headquarters: Optional[str] = Field(
+        default=None, description="Headquarters location"
+    )
 
 
 class EntitySchema(BaseModel):
@@ -36,7 +38,9 @@ class RelationSchema(BaseModel):
     source: str = Field(description="Source entity name")
     target: str = Field(description="Target entity name")
     relation_type: str = Field(description="Type of relationship")
-    description: Optional[str] = Field(default=None, description="Relationship description")
+    description: Optional[str] = Field(
+        default=None, description="Relationship description"
+    )
 
 
 class KeywordSchema(BaseModel):
@@ -63,7 +67,9 @@ class BiographySchema(BaseModel):
     birth_date: Optional[str] = Field(default=None, description="Date of birth")
     death_date: Optional[str] = Field(default=None, description="Date of death")
     nationality: Optional[str] = Field(default=None, description="Nationality")
-    occupation: List[str] = Field(default_factory=list, description="Professions/occupations")
+    occupation: List[str] = Field(
+        default_factory=list, description="Professions/occupations"
+    )
     summary: str = Field(description="Brief biography summary")
 
 
@@ -73,5 +79,7 @@ class EarningsSummarySchema(BaseModel):
     company_name: str = Field(description="Company name")
     quarter: str = Field(description="Fiscal quarter (e.g., Q1 2024)")
     revenue: Optional[float] = Field(default=None, description="Revenue in millions")
-    net_income: Optional[float] = Field(default=None, description="Net income in millions")
+    net_income: Optional[float] = Field(
+        default=None, description="Net income in millions"
+    )
     earnings_per_share: Optional[float] = Field(default=None, description="EPS")

@@ -64,8 +64,12 @@ class TestAutoSetOperations:
 
     def test_intersection_operator(self, llm_client, embedder):
         """Test intersection operator &."""
-        set1 = self._create_set_with_terms(llm_client, embedder, ["Python", "Java", "React"])
-        set2 = self._create_set_with_terms(llm_client, embedder, ["Java", "React", "Vue"])
+        set1 = self._create_set_with_terms(
+            llm_client, embedder, ["Python", "Java", "React"]
+        )
+        set2 = self._create_set_with_terms(
+            llm_client, embedder, ["Java", "React", "Vue"]
+        )
 
         result = set1 & set2
 
@@ -94,7 +98,9 @@ class TestAutoSetOperations:
 
     def test_difference_operator(self, llm_client, embedder):
         """Test difference operator -."""
-        set1 = self._create_set_with_terms(llm_client, embedder, ["Python", "Java", "React"])
+        set1 = self._create_set_with_terms(
+            llm_client, embedder, ["Python", "Java", "React"]
+        )
         set2 = self._create_set_with_terms(llm_client, embedder, ["Java", "React"])
 
         result = set1 - set2
@@ -199,7 +205,9 @@ class TestAutoSetComparison:
 
     def test_subset_not_reflexive_superset(self, llm_client, embedder):
         """Test that subset is not true when superset is smaller."""
-        set1 = self._create_set_with_terms(llm_client, embedder, ["Python", "Java", "React"])
+        set1 = self._create_set_with_terms(
+            llm_client, embedder, ["Python", "Java", "React"]
+        )
         set2 = self._create_set_with_terms(llm_client, embedder, ["Python", "Java"])
 
         assert not (set1 <= set2)
@@ -220,14 +228,18 @@ class TestAutoSetComparison:
 
     def test_superset_operator(self, llm_client, embedder):
         """Test superset operator >=."""
-        set1 = self._create_set_with_terms(llm_client, embedder, ["Python", "Java", "React"])
+        set1 = self._create_set_with_terms(
+            llm_client, embedder, ["Python", "Java", "React"]
+        )
         set2 = self._create_set_with_terms(llm_client, embedder, ["Python", "Java"])
 
         assert set1 >= set2
 
     def test_proper_superset_operator(self, llm_client, embedder):
         """Test proper superset operator >."""
-        set1 = self._create_set_with_terms(llm_client, embedder, ["Python", "Java", "React"])
+        set1 = self._create_set_with_terms(
+            llm_client, embedder, ["Python", "Java", "React"]
+        )
         set2 = self._create_set_with_terms(llm_client, embedder, ["Python", "Java"])
 
         assert set1 > set2
@@ -248,7 +260,9 @@ class TestAutoSetComparison:
 
     def test_issuperset_method(self, llm_client, embedder):
         """Test issuperset method."""
-        set1 = self._create_set_with_terms(llm_client, embedder, ["Python", "Java", "React"])
+        set1 = self._create_set_with_terms(
+            llm_client, embedder, ["Python", "Java", "React"]
+        )
         set2 = self._create_set_with_terms(llm_client, embedder, ["Python", "Java"])
 
         assert set1.issuperset(set2)

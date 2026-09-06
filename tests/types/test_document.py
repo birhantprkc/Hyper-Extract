@@ -146,7 +146,9 @@ class TestChunkKeys:
     def test_key_is_stable_and_content_based(self):
         a, b = TextChunk(content="same"), TextChunk(content="same")
         c = TextChunk(content="different")
-        assert chunk_key_extractor(a) == chunk_key_extractor(b) != chunk_key_extractor(c)
+        assert (
+            chunk_key_extractor(a) == chunk_key_extractor(b) != chunk_key_extractor(c)
+        )
 
 
 def test_registry_exports():

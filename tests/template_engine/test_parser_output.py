@@ -1,8 +1,6 @@
 """Unit tests for template parsers - output."""
 
 
-
-
 class TestParseOutputBasic:
     """Basic test cases for parse_output function."""
 

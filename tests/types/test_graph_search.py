@@ -38,10 +38,12 @@ class TestAutoGraphSearch:
             embedder=embedder,
         )
 
-        graph._node_memory.add([
-            Entity(name="Apple", type="ORGANIZATION", properties={}),
-            Entity(name="Steve Jobs", type="PERSON", properties={}),
-        ])
+        graph._node_memory.add(
+            [
+                Entity(name="Apple", type="ORGANIZATION", properties={}),
+                Entity(name="Steve Jobs", type="PERSON", properties={}),
+            ]
+        )
 
         graph.build_index(index_nodes=True, index_edges=False)
 
@@ -59,12 +61,18 @@ class TestAutoGraphSearch:
             embedder=embedder,
         )
 
-        graph._node_memory.add([
-            Entity(name="Apple", type="ORGANIZATION", properties={}),
-        ])
-        graph._edge_memory.add([
-            Relation(source="Apple", target="Steve Jobs", relation_type="founded_by"),
-        ])
+        graph._node_memory.add(
+            [
+                Entity(name="Apple", type="ORGANIZATION", properties={}),
+            ]
+        )
+        graph._edge_memory.add(
+            [
+                Relation(
+                    source="Apple", target="Steve Jobs", relation_type="founded_by"
+                ),
+            ]
+        )
 
         graph.build_index(index_nodes=True, index_edges=True)
 
@@ -83,9 +91,11 @@ class TestAutoGraphSearch:
             embedder=embedder,
         )
 
-        graph._node_memory.add([
-            Entity(name="Apple", type="ORGANIZATION", properties={}),
-        ])
+        graph._node_memory.add(
+            [
+                Entity(name="Apple", type="ORGANIZATION", properties={}),
+            ]
+        )
 
         graph.build_node_index()
 
@@ -103,10 +113,12 @@ class TestAutoGraphSearch:
             embedder=embedder,
         )
 
-        graph._node_memory.add([
-            Entity(name="Apple", type="ORGANIZATION", properties={}),
-            Entity(name="Steve Jobs", type="PERSON", properties={}),
-        ])
+        graph._node_memory.add(
+            [
+                Entity(name="Apple", type="ORGANIZATION", properties={}),
+                Entity(name="Steve Jobs", type="PERSON", properties={}),
+            ]
+        )
         graph.build_node_index()
 
         results = graph.search_nodes("technology company", top_k=2)
@@ -125,10 +137,14 @@ class TestAutoGraphSearch:
             embedder=embedder,
         )
 
-        graph._edge_memory.add([
-            Relation(source="Apple", target="Steve Jobs", relation_type="founded_by"),
-            Relation(source="Apple", target="Tim Cook", relation_type="led_by"),
-        ])
+        graph._edge_memory.add(
+            [
+                Relation(
+                    source="Apple", target="Steve Jobs", relation_type="founded_by"
+                ),
+                Relation(source="Apple", target="Tim Cook", relation_type="led_by"),
+            ]
+        )
         graph.build_edge_index()
 
         results = graph.search_edges("founder", top_k=2)
@@ -147,12 +163,18 @@ class TestAutoGraphSearch:
             embedder=embedder,
         )
 
-        graph._node_memory.add([
-            Entity(name="Apple", type="ORGANIZATION", properties={}),
-        ])
-        graph._edge_memory.add([
-            Relation(source="Apple", target="Steve Jobs", relation_type="founded_by"),
-        ])
+        graph._node_memory.add(
+            [
+                Entity(name="Apple", type="ORGANIZATION", properties={}),
+            ]
+        )
+        graph._edge_memory.add(
+            [
+                Relation(
+                    source="Apple", target="Steve Jobs", relation_type="founded_by"
+                ),
+            ]
+        )
 
         graph.build_index()
 
@@ -173,12 +195,18 @@ class TestAutoGraphSearch:
             embedder=embedder,
         )
 
-        graph._node_memory.add([
-            Entity(name="Apple", type="ORGANIZATION", properties={}),
-        ])
-        graph._edge_memory.add([
-            Relation(source="Apple", target="Steve Jobs", relation_type="founded_by"),
-        ])
+        graph._node_memory.add(
+            [
+                Entity(name="Apple", type="ORGANIZATION", properties={}),
+            ]
+        )
+        graph._edge_memory.add(
+            [
+                Relation(
+                    source="Apple", target="Steve Jobs", relation_type="founded_by"
+                ),
+            ]
+        )
 
         graph.build_index()
 

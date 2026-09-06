@@ -1,6 +1,5 @@
 """Unit tests for TemplateFactory."""
 
-
 import pytest
 
 from hyperextract.utils.template_engine import Gallery, TemplateFactory
@@ -81,6 +80,7 @@ class TestTemplateFactoryCreateAllTypes:
         )
 
         from hyperextract.types import AutoModel
+
         assert isinstance(result, AutoModel)
         assert result.metadata.get("type") == "model"
 
@@ -94,6 +94,7 @@ class TestTemplateFactoryCreateAllTypes:
         )
 
         from hyperextract.types import AutoList
+
         assert isinstance(result, AutoList)
         assert result.metadata.get("type") == "list"
 
@@ -107,6 +108,7 @@ class TestTemplateFactoryCreateAllTypes:
         )
 
         from hyperextract.types import AutoSet
+
         assert isinstance(result, AutoSet)
         assert result.metadata.get("type") == "set"
 
@@ -120,5 +122,6 @@ class TestTemplateFactoryCreateAllTypes:
         )
 
         from hyperextract.types import AutoGraph
+
         assert isinstance(result, AutoGraph)
         assert result.metadata.get("type") == "graph"

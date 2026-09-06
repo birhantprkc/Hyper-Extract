@@ -398,19 +398,34 @@ class Cog_RAG:
         self.theme_layer.build_index()
         self.detail_layer.build_index()
 
-    def search(self, query: str, top_k_themes: int = 3, top_k_entities: int = 3):
+    def search(
+        self,
+        query: str,
+        top_k_themes: int = 3,
+        top_k_entities: int = 3,
+        *,
+        source_ids: list[str] | None = None,
+        tags: list[str] | None = None,
+    ):
         """
         Dual-Layer Search.
         Strategy:
         1. Macro: Search for Themes in ThemeLayer (Edge-First).
         2. Micro: Search for Entities in DetailLayer (Node-First).
+
+        Scope (source_ids/tags) is forwarded to both layers when the
+        corresponding sources were attributed on them.
         """
         # 1. Macro Context: Themes
-        themes = self.theme_layer.search_edges(query, top_k=top_k_themes)
+        themes = self.theme_layer.search_edges(
+            query, top_k=top_k_themes, source_ids=source_ids, tags=tags
+        )
 
         # 2. Micro Context: Entities (Nodes)
         # Note: The user requested searching for "Specific Entities" in the second step.
-        entities = self.detail_layer.search_nodes(query, top_k=top_k_entities)
+        entities = self.detail_layer.search_nodes(
+            query, top_k=top_k_entities, source_ids=source_ids, tags=tags
+        )
 
         return {"themes": themes, "entities": entities}
 

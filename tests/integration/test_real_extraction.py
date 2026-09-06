@@ -13,8 +13,7 @@ from hyperextract.types import AutoModel, AutoList, AutoSet, AutoGraph
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.skipif(
-        not os.environ.get("OPENAI_API_KEY"),
-        reason="OPENAI_API_KEY not set"
+        not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set"
     ),
 ]
 
@@ -33,6 +32,7 @@ def embedder():
 
 class PersonInfo(BaseModel):
     """Schema for person information."""
+
     name: str = Field(description="The person's name")
     age: int = Field(description="The person's age")
     occupation: str = Field(description="The person's job or occupation")
@@ -136,12 +136,14 @@ class TestAutoSetIntegration:
 
 class NodeSchema(BaseModel):
     """Node schema for knowledge graph."""
+
     name: str = Field(description="Entity name")
     type: str = Field(description="Entity type")
 
 
 class EdgeSchema(BaseModel):
     """Edge schema for knowledge graph."""
+
     source: str = Field(description="Source entity name")
     target: str = Field(description="Target entity name")
     relation: str = Field(description="Relationship type")

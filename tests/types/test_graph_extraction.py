@@ -82,10 +82,12 @@ class TestAutoGraphExtraction:
             embedder=embedder,
         )
 
-        graph._node_memory.add([
-            Entity(name="Apple", type="ORGANIZATION", properties={}),
-            Entity(name="Steve Jobs", type="PERSON", properties={}),
-        ])
+        graph._node_memory.add(
+            [
+                Entity(name="Apple", type="ORGANIZATION", properties={}),
+                Entity(name="Steve Jobs", type="PERSON", properties={}),
+            ]
+        )
 
         assert len(graph._node_memory.items) == 2
         assert graph.empty() is False
@@ -102,7 +104,9 @@ class TestAutoGraphExtraction:
             embedder=embedder,
         )
 
-        graph._node_memory.add([Entity(name="Apple", type="ORGANIZATION", properties={})])
+        graph._node_memory.add(
+            [Entity(name="Apple", type="ORGANIZATION", properties={})]
+        )
 
         assert graph.empty() is False
 
@@ -118,7 +122,9 @@ class TestAutoGraphExtraction:
             embedder=embedder,
         )
 
-        graph._node_memory.add([Entity(name="Apple", type="ORGANIZATION", properties={})])
+        graph._node_memory.add(
+            [Entity(name="Apple", type="ORGANIZATION", properties={})]
+        )
 
         graph.clear()
 

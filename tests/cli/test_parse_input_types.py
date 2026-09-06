@@ -141,9 +141,7 @@ class TestParseInputTypes:
         ka.feed_text.assert_not_called()
         ka.dump.assert_not_called()
 
-    def test_document_without_backend_rejected_with_hint(
-        self, tmp_path, monkeypatch
-    ):
+    def test_document_without_backend_rejected_with_hint(self, tmp_path, monkeypatch):
         monkeypatch.setattr(
             "hyperextract.cli.utils.markitdown_available", lambda: False
         )

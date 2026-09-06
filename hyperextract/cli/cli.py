@@ -766,6 +766,7 @@ def info(
             (path / "sources_nodes.json", "nodes"),
             (path / "sources_edges.json", "edges"),
             (path / "sources_chunks.json", "chunks"),
+            (path / "sources_items.json", "items"),
         ]
         combined: dict = {}
         for ledger_path, _kind in ledger_files:
@@ -853,6 +854,20 @@ def search(
                 scope_kwargs["source_ids"] = list(source)
             if tag:
                 scope_kwargs["tags"] = list(tag)
+            if scope_kwargs:
+                # Fail with a clear message when the KA type has no ledger
+                # (e.g. AutoList/AutoModel) instead of a raw TypeError.
+                import inspect
+
+                search_params = inspect.signature(type(ka).search).parameters
+                for flag, key in (("--source", "source_ids"), ("--tag", "tags")):
+                    if key in scope_kwargs and key not in search_params:
+                        console.print(
+                            f"[red]Error:[/red] Scoped search ({flag}) is not "
+                            f"supported by {type(ka).__name__} knowledge "
+                            "abstracts (no source ledger)."
+                        )
+                        raise typer.Exit(1)
             results = ka.search(query, top_k=top_k, **scope_kwargs)
             logger.info("stage=search_complete results=%d", len(results))
 
@@ -1484,6 +1499,8 @@ def remove_items(
                 "remerged_edges",
                 "removed_chunks",
                 "remerged_chunks",
+                "removed_items",
+                "remerged_items",
             )
         )
         if not changed_any:

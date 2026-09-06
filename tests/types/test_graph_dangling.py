@@ -38,12 +38,18 @@ class TestAutoGraphDangling:
             embedder=embedder,
         )
 
-        graph._node_memory.add([
-            Entity(name="Apple", type="ORGANIZATION", properties={}),
-        ])
-        graph._edge_memory.add([
-            Relation(source="Apple", target="Steve Jobs", relation_type="founded_by"),
-        ])
+        graph._node_memory.add(
+            [
+                Entity(name="Apple", type="ORGANIZATION", properties={}),
+            ]
+        )
+        graph._edge_memory.add(
+            [
+                Relation(
+                    source="Apple", target="Steve Jobs", relation_type="founded_by"
+                ),
+            ]
+        )
 
         graph.build_index()
 
@@ -67,9 +73,11 @@ class TestAutoGraphMerge:
             embedder=embedder,
         )
 
-        graph._node_memory.add([
-            Entity(name="Apple", type="ORGANIZATION", properties={}),
-        ])
+        graph._node_memory.add(
+            [
+                Entity(name="Apple", type="ORGANIZATION", properties={}),
+            ]
+        )
 
         assert len(graph.nodes) == 1
 

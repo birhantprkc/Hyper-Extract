@@ -28,9 +28,7 @@ def _patch_create(llm_client, embedder):
     from hyperextract.utils.template_engine.factory import TemplateFactory
 
     def _factory(source, language=None, **kwargs):
-        return TemplateFactory.create(
-            source, llm_client=llm_client, embedder=embedder
-        )
+        return TemplateFactory.create(source, llm_client=llm_client, embedder=embedder)
 
     return patch.object(TemplateClass, "create", side_effect=_factory)
 
@@ -112,7 +110,15 @@ class TestCliOnDiskKA:
         ):
             result = runner.invoke(
                 app,
-                ["search", str(ka_dir), "alpha loves beta", "-n", "5", "--tag", "team-b"],
+                [
+                    "search",
+                    str(ka_dir),
+                    "alpha loves beta",
+                    "-n",
+                    "5",
+                    "--tag",
+                    "team-b",
+                ],
             )
 
         assert result.exit_code == 0, result.output

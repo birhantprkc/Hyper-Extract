@@ -39,7 +39,9 @@ def is_real_env() -> bool:
     """Fixture indicating whether tests should use real API or mock."""
     has_key = _has_openai_key()
     if has_key:
-        print("\n\n[PYTEST CONFIG] 🔌 Real OpenAI API detected - Using REAL LLM & Embeddings")
+        print(
+            "\n\n[PYTEST CONFIG] 🔌 Real OpenAI API detected - Using REAL LLM & Embeddings"
+        )
     else:
         print("\n\n[PYTEST CONFIG] 🎭 No API key found - Using MOCK LLM & Embeddings")
     return has_key

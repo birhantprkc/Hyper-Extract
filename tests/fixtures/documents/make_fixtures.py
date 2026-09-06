@@ -27,8 +27,11 @@ def make_pdf(path: Path, text: str | None) -> None:
             b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
             b"/Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>"
         ),
-        b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n"
-        + stream + b"\nendstream",
+        b"<< /Length "
+        + str(len(stream)).encode()
+        + b" >>\nstream\n"
+        + stream
+        + b"\nendstream",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     ]
     out = b"%PDF-1.4\n"
@@ -42,8 +45,10 @@ def make_pdf(path: Path, text: str | None) -> None:
     for off in offsets:
         out += f"{off:010d} 00000 n \n".encode()
     out += (
-        b"trailer\n<< /Size " + str(len(objects) + 1).encode()
-        + b" /Root 1 0 R >>\nstartxref\n" + str(xref_pos).encode()
+        b"trailer\n<< /Size "
+        + str(len(objects) + 1).encode()
+        + b" /Root 1 0 R >>\nstartxref\n"
+        + str(xref_pos).encode()
         + b"\n%%EOF\n"
     )
     path.write_bytes(out)

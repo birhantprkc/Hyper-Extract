@@ -51,7 +51,11 @@ class TestAutoHypergraphMerge:
         ]
         edges_lists = [
             [],
-            [HyperRelation(participants=["Apple", "Steve"], relation_type="founded_by")],
+            [
+                HyperRelation(
+                    participants=["Apple", "Steve"], relation_type="founded_by"
+                )
+            ],
         ]
 
         result = graph.merge_batch_data((nodes_lists, edges_lists))

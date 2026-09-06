@@ -70,7 +70,9 @@ class TestTemplateValidateCli:
         assert "OK" in result.output
 
     def test_identifier_error_exits_one(self, tmp_path):
-        path = _write(tmp_path, VALID_GRAPH.replace("entity_id: name", "entity_id: nope"))
+        path = _write(
+            tmp_path, VALID_GRAPH.replace("entity_id: name", "entity_id: nope")
+        )
         result = runner.invoke(app, ["template", "validate", str(path)])
         assert result.exit_code == 1
         assert "HE-T003" in result.output
@@ -141,16 +143,20 @@ class TestTemplateValidateCli:
         education = [
             item
             for item in payload["results"]
-            if item["file"].replace("\\", "/").endswith(
-                ("course_concept_graph.yaml", "curriculum_structure.yaml")
-            )
+            if item["file"]
+            .replace("\\", "/")
+            .endswith(("course_concept_graph.yaml", "curriculum_structure.yaml"))
         ]
         assert len(education) == 2
         assert all(item["ok"] for item in education)
 
     def test_batch_json_wraps_results(self, tmp_path):
         _write(tmp_path, VALID_GRAPH, name="a.yaml")
-        _write(tmp_path, VALID_GRAPH.replace("name: ValidGraph", "name: Other"), name="b.yaml")
+        _write(
+            tmp_path,
+            VALID_GRAPH.replace("name: ValidGraph", "name: Other"),
+            name="b.yaml",
+        )
         result = runner.invoke(
             app, ["template", "validate", str(tmp_path), "--all", "--json"]
         )

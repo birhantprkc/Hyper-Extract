@@ -155,8 +155,7 @@ class TestProvenanceRealAPI:
         # 5. Index patched in place throughout, consistent with storage.
         assert g._node_memory.has_index()
         doc_keys = {
-            d.metadata["key"]
-            for d in g._node_memory._index.docstore._dict.values()
+            d.metadata["key"] for d in g._node_memory._index.docstore._dict.values()
         }
         storage_keys = {g.node_key_extractor(n) for n in g.nodes}
         assert doc_keys == storage_keys, (

@@ -40,9 +40,7 @@ class MockStructuredRunnable(RunnableSerializable):
     class Config:
         arbitrary_types_allowed = True
 
-    def invoke(
-        self, input: Any, config: Optional[RunnableConfig] = None
-    ) -> BaseModel:
+    def invoke(self, input: Any, config: Optional[RunnableConfig] = None) -> BaseModel:
         """Generate and return a mock instance of the schema."""
         return self._generate_mock_instance(self.schema)
 
@@ -84,10 +82,7 @@ class MockStructuredRunnable(RunnableSerializable):
                 origin = get_origin(field_type)
 
             default = field_info.default
-            has_default = (
-                default is not None
-                or field_info.default_factory is not None
-            )
+            has_default = default is not None or field_info.default_factory is not None
 
             if is_optional and not has_default:
                 data[field_name] = None
@@ -149,11 +144,19 @@ class MockChatModel(BaseChatModel):
         **kwargs: Any,
     ) -> Any:
         """Generate mock response."""
-        return type("ChatResult", (), {
-            "generations": [
-                type("Generation", (), {"message": AIMessage(content="mock response")})
-            ]
-        })()
+        return type(
+            "ChatResult",
+            (),
+            {
+                "generations": [
+                    type(
+                        "Generation",
+                        (),
+                        {"message": AIMessage(content="mock response")},
+                    )
+                ]
+            },
+        )()
 
     def with_structured_output(
         self, schema: Type[BaseModel], **kwargs: Any

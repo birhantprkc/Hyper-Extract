@@ -346,9 +346,7 @@ class TestPresetBootstrap:
         seen_known = set()
         for item in results:
             relative = str(Path(item.file).relative_to(PRESETS_DIR)).replace("\\", "/")
-            error_codes = {
-                d.code for d in item.diagnostics if d.severity == "error"
-            }
+            error_codes = {d.code for d in item.diagnostics if d.severity == "error"}
             allowed = KNOWN_PRESET_ERRORS.get(relative, set())
             extra = error_codes - allowed
             missing = allowed - error_codes

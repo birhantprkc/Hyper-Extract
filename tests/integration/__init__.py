@@ -11,6 +11,6 @@ pytestmark = [
     pytest.mark.integration,
     pytest.mark.skipif(
         not pytest.importorskip("os").environ.get("OPENAI_API_KEY"),
-        reason="OPENAI_API_KEY not set"
+        reason="OPENAI_API_KEY not set",
     ),
 ]

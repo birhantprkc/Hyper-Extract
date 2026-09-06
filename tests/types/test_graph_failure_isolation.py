@@ -12,8 +12,6 @@ whole run and discard every other chunk's data. These tests pin the contract:
   subclasses alongside the isolation
 """
 
-
-
 from pydantic import BaseModel, Field
 
 from hyperextract.types import AutoGraph, AutoHypergraph, AutoTemporalGraph

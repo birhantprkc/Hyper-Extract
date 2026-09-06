@@ -1,6 +1,5 @@
 """Unit tests for template parsers - loader."""
 
-
 import pytest
 
 from hyperextract.utils.template_engine.parsers import (
