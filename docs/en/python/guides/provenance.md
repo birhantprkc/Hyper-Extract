@@ -146,17 +146,22 @@ See [`he remove`](../../cli/commands/remove.md) for all guardrails (key invarian
 ├── data.json             # Extracted knowledge
 ├── metadata.json         # Extraction metadata
 ├── sources_nodes.json    # Node ledger: raw items per source
-└── sources_edges.json    # Edge ledger: raw items per source
+├── sources_edges.json    # Edge ledger: raw items per source
+├── sources_chunks.json   # Chunk ledger (chunk-based KAs): raw chunks per source
+└── documents/            # Archived originals, one current copy per source
 ```
 
-- Keep these files together with the KA (treat them like `data.json` in version control): the raw per-source results live only there, so deleting the ledger disables rollback and change detection for that KA.
+- Keep the ledger files together with the KA (treat them like `data.json` in version control): the raw per-source results live only there, so deleting the ledger disables rollback and change detection for that KA.
+- `he feed --source` also archives the original document under `documents/` (raw bytes, one current copy per source; disable with `--no-store-doc`). Pass `--purge-documents` to `he remove --document` to delete the archived copy together with the rollback.
 - Before any write, `he remove` backs up `data.json` as `data.json.bak.<timestamp>` (unless `--no-backup`), so even a rollback can itself be undone.
 
 ---
 
 ## Roadmap
 
-Content-hash change detection ships today: `he feed --source` hashes the input and skips unchanged documents before any LLM call. Deeper lineage — mapping individual facts back to the exact chunk (passage) they were extracted from — is planned.
+- **Shipped (v0.8.0)** — content-hash change detection: `he feed --source` hashes the input and skips unchanged documents before any LLM call.
+- **Shipped (v0.9.0)** — original-document archiving (`documents/`) and the `chunk_rag` method, which retrieves raw text chunks directly (chunk-level *retrieval*).
+- **Planned** — deeper lineage for extracted facts: mapping each node/edge in a graph KA back to the exact chunk (passage) it was extracted from. Note this is distinct from `chunk_rag`, which retrieves chunks but does not structure them.
 
 ---
 

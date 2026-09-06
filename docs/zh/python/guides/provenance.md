@@ -146,17 +146,22 @@ he remove ./ka/ --edit-node Apple --fact "founded by Steve Jobs" -y
 ├── data.json             # 提取的知识
 ├── metadata.json         # 提取元数据
 ├── sources_nodes.json    # 节点台账：每个来源的原始条目
-└── sources_edges.json    # 边台账：每个来源的原始条目
+├── sources_edges.json    # 边台账：每个来源的原始条目
+├── sources_chunks.json   # 块台账（chunk 型知识库）：每个来源的原始块
+└── documents/            # 原始文档归档，每个来源保留一份当前副本
 ```
 
-- 请将这些文件与知识摘要放在一起保存（像 `data.json` 一样纳入版本控制）：每个来源的原始结果只存在于这里，删除台账文件会导致该知识摘要无法回滚、也无法做变更检测。
+- 请将台账文件与知识摘要放在一起保存（像 `data.json` 一样纳入版本控制）：每个来源的原始结果只存在于这里，删除台账文件会导致该知识摘要无法回滚、也无法做变更检测。
+- `he feed --source` 会同时把原始文档归档到 `documents/`（保留原始字节，每个来源一份当前副本；用 `--no-store-doc` 关闭）。`he remove --document` 时传入 `--purge-documents` 可在回滚的同时删除归档副本。
 - 每次写入前，`he remove` 会将 `data.json` 备份为 `data.json.bak.<时间戳>`（除非传入 `--no-backup`），因此回滚本身也可以撤销。
 
 ---
 
 ## 路线图
 
-基于内容哈希的变更检测已随本次发布落地：`he feed --source` 会在任何 LLM 调用之前计算输入哈希并跳过未变更文档。更细粒度的溯源——把单条事实映射回它被提取自的确切文本块（chunk）——已在规划中。
+- **已落地（v0.8.0）** —— 基于内容哈希的变更检测：`he feed --source` 会在任何 LLM 调用之前计算输入哈希并跳过未变更文档。
+- **已落地（v0.9.0）** —— 原始文档归档（`documents/`），以及直接检索原始文本块的 `chunk_rag` 方法（chunk 级*检索*）。
+- **规划中** —— 更细粒度的溯源：把图谱型知识库中的每个节点/边映射回它被提取自的确切文本块（chunk）。注意这与 `chunk_rag` 不同——后者检索 chunk，但不做结构化。
 
 ---
 

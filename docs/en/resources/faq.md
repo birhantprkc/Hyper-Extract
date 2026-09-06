@@ -125,11 +125,13 @@ he list template
 
 ### How do I process a PDF?
 
-Convert to text first:
+Feed it directly (requires the optional ingest extra — also supports Word, PowerPoint, Excel, HTML, EPUB and more):
 ```bash
-pdftotext document.pdf document.txt
-he parse document.txt -t general/graph -l en
+pip install "hyperextract[ingest]"
+he parse document.pdf -t general/graph -o ./ka/ -l en
 ```
+
+Scanned (image-only) PDFs have no text layer — run OCR first. See [he parse](../cli/commands/parse.md) for the full format table.
 
 ### Can I process multiple documents?
 

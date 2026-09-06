@@ -125,11 +125,13 @@ he list template
 
 ### 如何处理 PDF 文件？
 
-先转换为文本：
+直接喂入即可（需要可选的 ingest extra——同时支持 Word、PowerPoint、Excel、HTML、EPUB 等）：
 ```bash
-pdftotext document.pdf document.txt
-he parse document.txt -t general/graph -l zh
+pip install "hyperextract[ingest]"
+he parse document.pdf -t general/graph -o ./ka/ -l zh
 ```
+
+扫描版（纯图片）PDF 没有文字层——请先做 OCR。完整格式表见 [he parse](../cli/commands/parse.md)。
 
 ### 可以处理多个文档吗？
 
