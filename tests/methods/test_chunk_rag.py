@@ -96,8 +96,10 @@ class TestCliOnDiskKA:
             patch("hyperextract.cli.cli.validate_config"),
             _patch_create(llm_client, embedder),
         ):
+            # Fetch all 3 chunks: hash-based mock embeddings give no semantic
+            # ranking, so asserting on a top-2 slice would be order-fragile.
             result = runner.invoke(
-                app, ["search", str(ka_dir), "gamma document", "-n", "2"]
+                app, ["search", str(ka_dir), "gamma document", "-n", "3"]
             )
 
         assert result.exit_code == 0, result.output
